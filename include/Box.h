@@ -7,30 +7,32 @@ class Box
 
         Box() = delete;
 
-        explicit Box(const nlohmann::json& input_file) : grid_size{input_file.at("Box").at("grid_size")}, grid_spacing{input_file.at("Box").at("grid_size")}
+        explicit Box(const nlohmann::json& input_file) 
+        : grid_size{input_file.at("Box").at("grid_size")}
+        , grid_spacing{input_file.at("Box").at("grid_size")}
         {
             if (grid_size <= 0.0)
             {
-                throw std::invalid_argument("Grid size must be greater than zero. You entered: " + std::to_string(getGridSize()));
+                throw std::invalid_argument("Grid size must be greater than zero. You entered: " + std::to_string(GridSize()));
             }
             if (grid_spacing <= 0.0)
             {
-                throw std::invalid_argument("Grid spacing must be greater than zero. You entered: " + std::to_string(getGridSpacing()));
+                throw std::invalid_argument("Grid spacing must be greater than zero. You entered: " + std::to_string(GridSpacing()));
             }
         }
 
-        double getGridSize() const {return grid_size;}
-        double getGridSpacing() const {return grid_spacing;}
+        double GridSize() const {return grid_size;}
+        double GridSpacing() const {return grid_spacing;}
 
 
-        int getNr() const 
+        int Nr() const 
         {
-            return static_cast<int>(std::floor(getGridSize() / getGridSpacing()));
+            return static_cast<int>(std::floor(GridSize() / GridSpacing()));
         }
 
-        double getPosition(int i) const
+        double Position(int i) const
         {
-            return i * getGridSpacing();
+            return i * GridSpacing();
         }
 
     private:
