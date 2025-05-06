@@ -1,3 +1,5 @@
+#pragma once
+
 #include <string>
 #include "nlohmann/json.hpp"
 #include <optional>
@@ -18,7 +20,7 @@ class Angular
         , m_min{input_file.at("Angular").at("m_min")}
         , m_max{input_file.at("Angular").at("m_max")}
         {
-            if (l_max <= 0)
+            if (LMax() <= 0)
             {
                 throw std::invalid_argument("l_max size must be greater than zero. You entered: " + std::to_string(LMax()));
             }
@@ -34,6 +36,7 @@ class Angular
         int LMax() const {return l_max;}
         int MMin() const {return m_min;}
         int MMax() const {return m_max;}
+        int N_lm() const {return n_lm;}
 
         const lm_map& LMMap()  
         {
@@ -61,7 +64,7 @@ class Angular
         void buildXYZ();
         void buildOdd();
         void buildEven();
-        void dumpTo(const std::string& directory);
+        void dumpTo(const std::string& directory,int rank);
 
         
         
@@ -72,6 +75,7 @@ class Angular
         int l_max{};
         int m_min{};
         int m_max{};
+        int n_lm{};
 
         std::optional<lm_map> lm_to_block{};
         std::optional<block_map> block_to_lm{};

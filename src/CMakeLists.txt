@@ -3,6 +3,7 @@ set(HEADERLIST
   "${PROJECT_SOURCE_DIR}/include/Angular.h"
   "${PROJECT_SOURCE_DIR}/include/Box.h"
   "${PROJECT_SOURCE_DIR}/include/misc.h"
+  "${PROJECT_SOURCE_DIR}/include/Laser.h"
 )
 
 set(INCLUDEDIRS
@@ -14,6 +15,7 @@ set(SOURCELIST
     "${PROJECT_SOURCE_DIR}/src/main.cpp"
     "${PROJECT_SOURCE_DIR}/src/Box.cpp"
     "${PROJECT_SOURCE_DIR}/src/Angular.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Laser.cpp"
 
 )
 
