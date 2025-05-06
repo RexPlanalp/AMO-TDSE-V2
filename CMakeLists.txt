@@ -1,0 +1,29 @@
+cmake_minimum_required(VERSION 3.14)
+
+project(TDSE CXX)
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O3 -Wall -Wextra")
+
+set(PETSC $ENV{PETSC_DIR})
+set(SLEPC $ENV{SLEPC_DIR})
+set(ENV{PKG_CONFIG_PATH} ${PETSC}/lib/pkgconfig:${SLEPC}/lib/pkgconfig)
+
+set(MPI_CXX_COMPILER "$ENV{MPI_DIR}/bin/mpicxx")
+find_package(MPI REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_search_module(PETSC REQUIRED IMPORTED_TARGET PETSc)
+pkg_search_module(SLEPC REQUIRED IMPORTED_TARGET SLEPc)
+
+
+
+
+
+
+add_subdirectory(src)
+
+

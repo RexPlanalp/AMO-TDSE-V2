@@ -1,0 +1,45 @@
+# Build products
+/build/
+/CMakeFiles/
+/CMakeCache.txt
+/cmake_install.cmake
+/Makefile
+/install_manifest.txt
+
+# Compiled object files and libraries
+*.o
+*.obj
+*.so
+*.a
+*.dylib
+*.lib
+*.dll
+*.exe
+
+# Test output
+CTestTestfile.cmake
+Testing/
+
+# Dependency files
+compile_commands.json
+
+# IDE / editor directories
+.vscode/
+.idea/
+*.code-workspace
+
+# Backup and temp files
+*~
+*.swp
+*.swo
+*.tmp
+*.log
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Spack environment files (if you keep them in the repo)
+.spack-env/
+spack.yaml
+spack.lock
