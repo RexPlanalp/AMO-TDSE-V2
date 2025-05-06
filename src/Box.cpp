@@ -1,11 +1,11 @@
 #include "Box.h"
 
-int Box::getNr() const 
+int Box::Nr() const 
 {
-    return static_cast<int>(std::floor(getGridSize() / getGridSpacing()));
+    return static_cast<int>(std::floor(GridSize() / GridSpacing()));
 }
 
-double Box::getPosition(int i) const
+double Box::Position(int i) const
 {
-    return i * getGridSpacing();
+    return i * GridSpacing();
 }

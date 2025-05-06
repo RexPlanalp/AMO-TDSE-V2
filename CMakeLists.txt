@@ -27,7 +27,7 @@ pkg_search_module(SLEPC REQUIRED IMPORTED_TARGET SLEPc)
 
 find_package(GSL REQUIRED)
 
-
+find_package(nlohmann_json REQUIRED)
 
 
 

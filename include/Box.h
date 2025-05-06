@@ -1,5 +1,5 @@
 #include <string>
-#include "json.hpp"
+#include "nlohmann/json.hpp"
 
 class Box 
 {
@@ -25,15 +25,9 @@ class Box
         double GridSpacing() const {return grid_spacing;}
 
 
-        int Nr() const 
-        {
-            return static_cast<int>(std::floor(GridSize() / GridSpacing()));
-        }
+        int Nr() const;
 
-        double Position(int i) const
-        {
-            return i * GridSpacing();
-        }
+        double Position(int i) const;
 
     private:
         double grid_size{};

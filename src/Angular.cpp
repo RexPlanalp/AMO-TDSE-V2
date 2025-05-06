@@ -1,5 +1,6 @@
 #include "Angular.h"
-
+#include <fstream>
+#include <iostream>
 void Angular::buildMaps(const std::array<int,3>& components,const std::array<int,3>& initial_state)
 {   
     lm_to_block.emplace();
@@ -10,7 +11,7 @@ void Angular::buildMaps(const std::array<int,3>& components,const std::array<int
 
     if (components[2] && !(components[0] || components[1]))
     {
-        buildZ(l_i,m_i);
+        buildZ(m_i);
     }
     else if ((components[0] || components[1]) && !components[2])
     {
@@ -27,7 +28,7 @@ void Angular::buildMaps(const std::array<int,3>& components,const std::array<int
     }
 }
 
-void Angular::buildZ(int l_i, int m_i)
+void Angular::buildZ(int m_i)
 {
     for (int l = 0; l <= LMax(); ++l)
     {
@@ -99,6 +100,25 @@ void Angular::buildOdd()
             temp_idx++;
         }
     }
+}
+
+void Angular::dumpTo(const std::string& directory)
+{
+    std::string filename = directory + "/lm_map.txt";
+
+    std::ofstream outFile(filename);
+
+    if (!outFile)
+    {
+        std::cerr << "Error opening file: " << filename << '\n';
+    }
+
+    for (const auto& entry : LMMap()) 
+    {
+        outFile << entry.first.first << " " << entry.first.second << " " << entry.second << "\n";
+    }
+
+    outFile.close();
 }
 
 namespace AngularCoupling

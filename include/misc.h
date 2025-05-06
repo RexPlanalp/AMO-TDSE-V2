@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
-#include <json.hpp>
+#include <filesystem>
+#include <nlohmann/json.hpp>
 
 inline nlohmann::json loadJson(const std::string& path)
 {
@@ -23,4 +24,19 @@ inline nlohmann::json loadJson(const std::string& path)
     }
 
     return j;
+}
+
+inline void createDirectory(int rank, const std::string& directory)
+{
+    try 
+    {
+        std::filesystem::create_directories(directory);
+    } catch (const std::filesystem::filesystem_error& e) 
+    {
+        throw std::runtime_error(
+            "Rank " + std::to_string(rank)
+          + ": Failed to create directory '" + directory
+          + "': " + e.what()
+        );
+    }
 }

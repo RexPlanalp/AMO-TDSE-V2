@@ -1,5 +1,5 @@
 #include <string>
-#include "json.hpp"
+#include "nlohmann/json.hpp"
 #include <optional>
 
 using lm_pair = std::pair<int,int>;
@@ -22,14 +22,7 @@ class Angular
             {
                 throw std::invalid_argument("l_max size must be greater than zero. You entered: " + std::to_string(LMax()));
             }
-            if (m_min <= 0)
-            {
-                throw std::invalid_argument("m_min spacing must be greater than zero. You entered: " + std::to_string(MMin()));
-            }
-            if (m_max <= 0)
-            {
-                throw std::invalid_argument("m_max spacing must be greater than zero. You entered: " + std::to_string(MMax()));
-            }
+            
 
             if ((abs(MMin()) > LMax()) || (abs(MMax()) > LMax() ))
             {
@@ -63,11 +56,12 @@ class Angular
         }
 
         void buildMaps(const std::array<int,3>& components, const std::array<int,3>& initial_state);
-        void buildZ(int l_i, int m_i);
+        void buildZ(int m_i);
         void buildXY(int l_i, int m_i);
         void buildXYZ();
         void buildOdd();
         void buildEven();
+        void dumpTo(const std::string& directory);
 
         
         
