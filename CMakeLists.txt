@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.14)
 
 project(TDSE CXX)
+
+set(CMAKE_CXX_STANDARD        17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS       OFF)  
+
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
@@ -18,6 +23,8 @@ find_package(MPI REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_search_module(PETSC REQUIRED IMPORTED_TARGET PETSc)
 pkg_search_module(SLEPC REQUIRED IMPORTED_TARGET SLEPc)
+
+find_package(GSL REQUIRED)
 
 
 
