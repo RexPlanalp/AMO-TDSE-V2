@@ -33,8 +33,10 @@ class BSpline
 
         std::complex<double> ecs_x(double x) const;
         std::complex<double> ecs_w(double x, double w) const;
-        std::complex<double> B(int i, std::complex<double> x) const;
-        std::complex<double> dB(int i, std::complex<double> x) const;
+        std::complex<double> B(int degree, int i, std::complex<double> x) const;
+        std::complex<double> B(int i, std::complex<double> x) const {return B(degree, i, x);}
+        std::complex<double> dB(int degree, int i, std::complex<double> x) const;
+        std::complex<double> dB(int i, std::complex<double> x) const {return dB(degree, i ,x);}
 
         void dumpTo(const Box& box, const std::string& directory, int rank);
 
