@@ -4,12 +4,12 @@
 #include <fstream>
 #include <iostream>
 #include "Box.h"
+#include "GaussLegendre.h"
 
 void BSpline::buildLinearKnots(const Box& box)
 {
     int N_knots   = n_bspline + order;
     int N_middle  = N_knots - 2 * order;
-    // use (N_middle - 1) here to get exactly N_middle interior knots spanning [0,GridSize]
     double step   = box.GridSize() / (N_middle - 1);
 
     knots.resize(N_knots);
@@ -160,6 +160,53 @@ std::complex<double> BSpline::dB(int i, std::complex<double> x) const
         term2 = pd / denom2 * N_ip1;
 
     return term1 - term2;
+}
+
+std::complex<double> BSpline::integrateMatrixElement(int i, int j,std::function<std::complex<double>(int, int, std::complex<double>)> integrand,bool use_ecs) const
+{
+    std::complex<double> total{0.0,0.0};
+
+    int lower = std::min(i, j);
+    int upper = std::max(i, j);
+
+    for (int k = lower; k <= upper + degree; ++k)
+    {
+        double a = knots[k];
+        double b = knots[k + 1];
+
+
+        if (a == b)
+        {
+            continue;
+        }
+
+        double half_b_minus_a = 0.5 * (b - a);
+        double half_b_plus_a = 0.5 * (b + a);
+
+
+        for (size_t r = 0; r < roots.size(); ++r)
+        {
+            double x_val = half_b_minus_a * roots[r] + half_b_plus_a;
+            double weight_val = weights[r];
+
+            if (use_ecs)
+            {
+                std::complex<double> x = ecs_x(x_val);
+                std::complex<double> weight = ecs_w(x_val, weight_val) * half_b_minus_a;
+                std::complex<double> integrand_val = integrand(i, j, x);
+                total += weight * integrand_val;
+            }
+            else
+            {
+                std::complex<double> x = x_val;
+                std::complex<double> weight = weight_val* half_b_minus_a;
+                std::complex<double> integrand_val = integrand(i, j, x);
+                total += weight * integrand_val;
+            }
+        }
+    }
+
+    return total;
 }
 
 void BSpline::dumpTo(const Box& box, const std::string& directory, int rank)

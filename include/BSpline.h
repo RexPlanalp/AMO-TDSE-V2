@@ -2,8 +2,15 @@
 #include "nlohmann/json.hpp"
 #include "Box.h"
 #include <complex>
+#include "Potentials.h"
+
 class BSpline
 {
+    
+        
+       
+
+
     public:
         BSpline() = delete;
         explicit BSpline(const nlohmann::json& input_file)
@@ -13,6 +20,9 @@ class BSpline
         , eta     {input_file.at("BSpline").at("eta_r")}
         {
             degree = order - 1;
+
+            roots = GS::Gauss.at(order).first;
+            weights = GS::Gauss.at(order).second;
         }
 
         void buildLinearKnots(const Box& box);
@@ -35,4 +45,27 @@ class BSpline
 
         std::vector<double> knots{};
         std::vector<std::complex<double>> complex_knots{};
+
+        std::vector<double> roots{};
+        std::vector<double> weights{};
+
+        std::complex<double> overlapIntegrand(int i, int j, std::complex<double> x) const {return B(i, x) * B(j, x);}
+
+        std::complex<double> kineticIntegrand(int i, int j, std::complex<double> x) const {return 0.5 * dB(i, x) * dB(j, x);}
+
+        std::complex<double> invrIntegrand(int i, int j, std::complex<double> x) const {return B(i, x) * B(j, x) / (x + 1E-25);}
+
+        std::complex<double> invr2Integrand(int i, int j, std::complex<double> x) const {return B(i, x) * B(j, x) / (x*x + 1E-25);}
+
+        std::complex<double> derIntegrand(int i, int j, std::complex<double> x) const {return B(i, x) * dB(j,x);}
+
+        std::complex<double> HIntegrand(int i, int j, std::complex<double> x) const {return B(i, x) * B(j, x) * Potentials::hydrogenPotential(x);}
+
+        std::complex<double> integrateMatrixElement(int i, int j,std::function<std::complex<double>(int, int, std::complex<double>)> integrand,bool use_ecs) const;
+
 };
+
+
+
+
+    

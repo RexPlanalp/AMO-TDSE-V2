@@ -3,7 +3,7 @@
 
 namespace GS
 {
-    inline const std::unordered_map<int, std::pair<std::vector<double>, std::vector<double>>> gauss = {
+    inline const std::unordered_map<int, std::pair<std::vector<double>, std::vector<double>>> Gauss = {
         {2, {{-0.57735027, 0.57735027}, {1, 1}}},
         {3, {{-0.77459667, 0.0, 0.77459667}, {0.55555556, 0.88888889, 0.55555556}}},
         {4, {{-0.86113631, -0.33998104, 0.33998104, 0.86113631}, {0.34785485, 0.65214515, 0.65214515, 0.34785485}}},
