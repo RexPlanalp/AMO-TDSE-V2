@@ -6,6 +6,33 @@
 #include "Box.h"
 #include "GaussLegendre.h"
 
+void BSpline::buildKnots(const Box& box)
+{
+    if (spacing == "linear")
+    {
+        buildLinearKnots(box);
+    }
+    else
+    {
+        throw std::invalid_argument("No matching BSpline Spacing. You entered: " + spacing);
+    }
+
+
+    buildR0();
+    buildComplexKnots();
+}
+
+void BSpline::buildComplexKnots()
+{
+    int N_knots = n_bspline + order;
+
+    complex_knots.resize(N_knots);
+
+    for (int idx = 0; idx < N_knots; ++idx) {
+        complex_knots[idx] = ecs_x(knots[idx]);
+    }
+}
+
 void BSpline::buildLinearKnots(const Box& box)
 {
     int N_knots   = n_bspline + order;
@@ -28,22 +55,8 @@ void BSpline::buildLinearKnots(const Box& box)
             knots[idx] = j * step;
         }
     }
-
-    buildR0();
-    buildComplexKnots();
 }
 
-void BSpline::buildComplexKnots()
-{
-    int N_knots = n_bspline + order;
-
-    complex_knots.clear();
-    complex_knots.reserve(N_knots);
-
-    for (int idx = 0; idx < N_knots; ++idx) {
-        complex_knots.push_back(ecs_x(knots[idx]));
-    }
-}
 
 std::complex<double> BSpline::ecs_x(double x) const
 {

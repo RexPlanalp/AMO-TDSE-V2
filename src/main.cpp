@@ -17,11 +17,11 @@ int main()
     Angular angular{J};
     Laser laser{J};
     Atom atom{J};
-    BSpline bspline{J};
+    BSpline bspline{J,box};
 
 
     angular.buildMaps(components,initial_state);
-    bspline.buildLinearKnots(box);
+
 
 
     bspline.dumpTo(box,"misc",rank);
