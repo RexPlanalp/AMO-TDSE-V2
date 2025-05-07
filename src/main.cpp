@@ -2,6 +2,8 @@
 #include "Box.h"
 #include "Angular.h"
 #include "Laser.h"
+#include "BSpline.h"
+#include "Atom.h"
 
 int main()
 {   
@@ -14,8 +16,15 @@ int main()
     Box box{J};
     Angular angular{J};
     Laser laser{J};
+    Atom atom{J};
+    BSpline bspline{J};
+
 
     angular.buildMaps(components,initial_state);
+    bspline.buildLinearKnots(box);
+
+
+    bspline.dumpTo(box,"misc",rank);
     angular.dumpTo("misc",rank);
     laser.dumpTo("misc",rank);
 

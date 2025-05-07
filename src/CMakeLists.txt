@@ -4,6 +4,9 @@ set(HEADERLIST
   "${PROJECT_SOURCE_DIR}/include/Box.h"
   "${PROJECT_SOURCE_DIR}/include/misc.h"
   "${PROJECT_SOURCE_DIR}/include/Laser.h"
+  "${PROJECT_SOURCE_DIR}/include/BSpline.h"
+  "${PROJECT_SOURCE_DIR}/include/Potentials.h"
+  "${PROJECT_SOURCE_DIR}/include/Atom.h"
 )
 
 set(INCLUDEDIRS
@@ -16,6 +19,8 @@ set(SOURCELIST
     "${PROJECT_SOURCE_DIR}/src/Box.cpp"
     "${PROJECT_SOURCE_DIR}/src/Angular.cpp"
     "${PROJECT_SOURCE_DIR}/src/Laser.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Atom.cpp"
+    "${PROJECT_SOURCE_DIR}/src/BSpline.cpp"
 
 )
 

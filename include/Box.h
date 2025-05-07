@@ -11,7 +11,7 @@ class Box
 
         explicit Box(const nlohmann::json& input_file) 
         : grid_size{input_file.at("Box").at("grid_size")}
-        , grid_spacing{input_file.at("Box").at("grid_size")}
+        , grid_spacing{input_file.at("Box").at("grid_spacing")}
         {
             if (grid_size <= 0.0)
             {
