@@ -26,7 +26,7 @@ double Laser::A(double t, int idx)
 
 int Laser::Nt() const 
 {
-    return static_cast<int>(std::floor(TMAX() / TimeSpacing())) + 1;
+    return static_cast<int>(std::round(TMAX() / TimeSpacing())) + 1;
 }
 
 double Laser::Time(int i) const

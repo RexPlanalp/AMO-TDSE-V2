@@ -13,7 +13,7 @@ class Atom
         T potentialVal(T position)
         {
         if (species == "H")
-            return hydrogenPotential(position);
+            return Potentials::hydrogenPotential(position);
 
         throw std::runtime_error("unknown species");
         }
@@ -22,7 +22,7 @@ class Atom
         T potentialDerivativeVal(T position)
         {
         if (species == "H")
-            return hydrogenPotentialDerivative(position);
+            return Potentials::hydrogenPotentialDerivative(position);
 
         throw std::runtime_error("unknown species");
         }
