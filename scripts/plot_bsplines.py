@@ -53,3 +53,5 @@ plt.title('B-spline basis functions (real:black, imag:brown)')
 plt.tight_layout()
 plt.show()
 plt.savefig("images/dbsplines.png",dpi = 200)
+
+
