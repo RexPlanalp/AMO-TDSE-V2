@@ -34,10 +34,11 @@ class BSpline
         double R0_R() const {return R0_r;}
         double ETA_R() const {return eta_r;}
         const std::string& Spacing() const {return spacing;}
-        const std::string& Spacing() const {return spacing;}
         const std::vector<double> Knots() const {return knots;}
         const std::vector<std::complex<double>> ComplexKnots() const {return complex_knots;}
 
+        std::complex<double> BTest(int i, std::complex<double> x) const;
+        std::complex<double> dBTest(int i, std::complex<double> x) const;
         std::complex<double> B(int degree, int i, std::complex<double> x) const;
         std::complex<double> B(int i, std::complex<double> x) const {return B(degree, i, x);}
         std::complex<double> dB(int degree, int i, std::complex<double> x) const;
@@ -63,8 +64,10 @@ class BSpline
 
         // Member Functions
         void validateInput();
+    public:
         std::complex<double> ecs_x(double x) const;
         std::complex<double> ecs_w(double x, double w) const;
+    private:
         void buildKnots(const Box& box);
         void buildLinearKnots(const Box& box);
         void buildComplexKnots();
