@@ -9,7 +9,6 @@ int main()
 {   
 
     nlohmann::json J = loadJson("input.json");
-    std::array<int,3> components{1,0,1};
     std::array<int,3> initial_state{1,1,0};
     int rank = 0;
 
@@ -20,7 +19,7 @@ int main()
     BSpline bspline{J,box};
 
 
-    angular.buildMaps(components,initial_state);
+    angular.buildMaps(laser,initial_state);
 
 
 

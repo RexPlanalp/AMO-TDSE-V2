@@ -3,6 +3,7 @@
 #include <string>
 #include "nlohmann/json.hpp"
 #include <optional>
+#include "Laser.h"
 
 using lm_pair = std::pair<int,int>;
 using lm_map = std::map<lm_pair,int>;
@@ -58,7 +59,7 @@ class Angular
             return block_to_lm.value();
         }
 
-        void buildMaps(const std::array<int,3>& components, const std::array<int,3>& initial_state);
+        void buildMaps(const Laser& laser, const std::array<int,3>& initial_state);
         void buildZ(int m_i);
         void buildXY(int l_i, int m_i);
         void buildXYZ();

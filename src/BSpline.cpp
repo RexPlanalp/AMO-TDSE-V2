@@ -28,7 +28,8 @@ void BSpline::buildComplexKnots()
 
     complex_knots.resize(N_knots);
 
-    for (int idx = 0; idx < N_knots; ++idx) {
+    for (int idx = 0; idx < N_knots; ++idx) 
+    {
         complex_knots[idx] = ecs_x(knots[idx]);
     }
 }
@@ -43,44 +44,51 @@ void BSpline::buildLinearKnots(const Box& box)
     int start_mid = order;
     int end_mid   = N_knots - order - 1;
 
-    for (int idx = 0; idx < N_knots; ++idx) {
-        if (idx < start_mid) {
+    for (int idx = 0; idx < N_knots; ++idx) 
+    {
+        if (idx < start_mid) 
+        {
             knots[idx] = 0.0;
         }
-        else if (idx > end_mid) {
+        else if (idx > end_mid) 
+        {
             knots[idx] = box.GridSize();
         }
-        else {
+        else 
+        {
             int j = idx - start_mid;
             knots[idx] = j * step;
         }
     }
 }
 
-
 std::complex<double> BSpline::ecs_x(double x) const
 {
-    if (x < R0) {
+    if (x < R0) 
+    {
         return std::complex<double>{x, 0.0};
     }
-    else {
-        return R0 + (x - R0) * std::exp(std::complex<double>{0, M_PI * eta});
+    else 
+    {
+        return R0 + (x - R0) * std::exp(std::complex<double>{0, eta});
     }
 }
 
 std::complex<double> BSpline::ecs_w(double x, double w) const
 {
-    if (x < R0) {
+    if (x < R0) 
+    {
         return std::complex<double>{w, 0.0};
     }
-    else {
-        return w * std::exp(std::complex<double>{0, M_PI * eta});
+    else 
+    {
+        return w * std::exp(std::complex<double>{0, eta});
     }
 }
 
 void BSpline::buildR0()
 {
-    double target   = R0 * knots.back();
+    double target   = R0_r * knots.back();
     double min_val  = std::abs(knots[0] - target);
     double knot_val = knots[0];
 

@@ -1,7 +1,9 @@
 #include "Angular.h"
 #include <fstream>
 #include <iostream>
-void Angular::buildMaps(const std::array<int,3>& components,const std::array<int,3>& initial_state)
+#include "Laser.h"
+
+void Angular::buildMaps(const Laser& laser,const std::array<int,3>& initial_state)
 {   
     lm_to_block.emplace();
     block_to_lm.emplace();
@@ -9,11 +11,11 @@ void Angular::buildMaps(const std::array<int,3>& components,const std::array<int
     int l_i = initial_state[1];
     int m_i = initial_state[2];
 
-    if (components[2] && !(components[0] || components[1]))
+    if (laser.Components()[2] && !(laser.Components()[0] || laser.Components()[1]))
     {
         buildZ(m_i);
     }
-    else if ((components[0] || components[1]) && !components[2])
+    else if ((laser.Components()[0] || laser.Components()[1]) && !laser.Components()[2])
     {
         buildXY(l_i,m_i);
     }

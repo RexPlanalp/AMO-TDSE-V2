@@ -26,14 +26,11 @@ class Box
         double GridSize() const {return grid_size;}
         double GridSpacing() const {return grid_spacing;}
 
-
         int Nr() const;
-
         double Position(int i) const;
 
     private:
+        // Member List Initialized
         double grid_size{};
         double grid_spacing{};
-
-
 };

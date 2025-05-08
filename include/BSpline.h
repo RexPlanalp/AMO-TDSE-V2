@@ -7,56 +7,59 @@
 
 class BSpline
 {
-    
-        
-       
-
-
     public:
         BSpline() = delete;
         explicit BSpline(const nlohmann::json& input_file, const Box& box)
         : n_bspline{input_file.at("BSpline").at("n_bspline")}
         , order   {input_file.at("BSpline").at("order")}
-        , R0      {input_file.at("BSpline").at("R0_r")}
-        , eta     {input_file.at("BSpline").at("eta_r")}
+        , R0_r      {input_file.at("BSpline").at("R0_r")}
+        , eta_r     {input_file.at("BSpline").at("eta_r")}
         , spacing {input_file.at("BSpline").at("spacing")}
         {
             degree = order - 1;
             roots = GS::Gauss.at(order).first;
             weights = GS::Gauss.at(order).second;
             
+            eta = eta_r * M_PI;
+
+            
             buildKnots(box);
         }
 
-        void buildKnots(const Box& box);
-        
+        int NBSpline() const {return n_bspline;}
+        int Order() const {return order;}
+        int Degree() const {return degree;}
+        const std::string& Spacing() const {return spacing;}
+        const std::vector<double> Knots() const {return knots;}
+        const std::vector<std::complex<double>> ComplexKnots() const {return complex_knots;}
 
-        std::complex<double> ecs_x(double x) const;
-        std::complex<double> ecs_w(double x, double w) const;
         std::complex<double> B(int degree, int i, std::complex<double> x) const;
         std::complex<double> B(int i, std::complex<double> x) const {return B(degree, i, x);}
         std::complex<double> dB(int degree, int i, std::complex<double> x) const;
         std::complex<double> dB(int i, std::complex<double> x) const {return dB(degree, i ,x);}
-
         void dumpTo(const Box& box, const std::string& directory, int rank);
 
     private:
-        
         // Member List Initialized
         int n_bspline{};
         int order{};
         int degree{};
-        double R0{};
-        double eta{};
+        double R0_r{};
+        double eta_r{};
         std::string spacing{};
 
         // Default Initialized
+        double R0;
+        double eta;
         std::vector<double> knots;
         std::vector<std::complex<double>> complex_knots;
         std::vector<double> roots;
         std::vector<double> weights;
 
         // Member Functions
+        std::complex<double> ecs_x(double x) const;
+        std::complex<double> ecs_w(double x, double w) const;
+        void buildKnots(const Box& box);
         void buildLinearKnots(const Box& box);
         void buildComplexKnots();
         void buildR0();
