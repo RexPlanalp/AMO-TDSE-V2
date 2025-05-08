@@ -1,6 +1,38 @@
 #include "Laser.h"
 
-void Laser::nonzeroComponents()
+void Laser::validateInput()
+{
+    if (N() <= 0.0)
+    {
+        throw std::invalid_argument("N_cycles must be greater than or equal to zero. You entered: " + std::to_string(N()));
+    }
+    if (TimeSpacing() <= 0.0)
+    {
+        throw std::invalid_argument("dt must be greater than or equal to zero. You entered: " + std::to_string(TimeSpacing()));
+    }
+    if (W() <= 0.0)
+    {
+        throw std::invalid_argument("w must be greater than or equal to zero. You entered: " + std::to_string(W()));
+    }
+    if (I() <= 0.0)
+    {
+        throw std::invalid_argument("I must be greater than or equal to zero. You entered: " + std::to_string(I()));
+    }
+    if (realDotProduct(Polarization(),Poynting()) != 0.0)
+    {
+        throw std::invalid_argument("Polarization and Poynting vectors must be orthogonal.");
+    }
+    if (!((CEP_R() >= 0.0) && (CEP_R() <= 1.0)))
+    {
+        throw std::invalid_argument("CEP ratio should be between 0.0 and 1.0. You entered: " + std::to_string(CEP_R()));
+    }
+    if (!((ELL() <= 1.0) && (ELL() >= 0.0)))
+    {
+        throw std::invalid_argument("Ell must be between 0.0 and 1.0. You entered: " + std::to_string(ELL()));
+    }
+}
+
+void Laser::buildNonzeroComponents()
 {
     for (size_t idx{0}; idx < 3; ++idx)
     {

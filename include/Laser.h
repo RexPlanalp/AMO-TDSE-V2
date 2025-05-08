@@ -12,13 +12,14 @@ class Laser
         : N_cycles{input_file.at("Laser").at("N")}
         , dt{input_file.at("Laser").at("time_spacing")}
         , w{input_file.at("Laser").at("w")}
-        
         , I_si{input_file.at("Laser").at("I")}
         , polarization{input_file.at("Laser").at("polarization").get<std::array<double,3>>()}
         , poynting{input_file.at("Laser").at("poynting").get<std::array<double,3>>()}
         , ell{input_file.at("Laser").at("ell")}
         , cep_r{input_file.at("Laser").at("cep_r")}
         {
+            validateInput();
+
             I_au = I_si / 3.51E16;
             A_0 = std::sqrt(I_au) / W();
 
@@ -30,33 +31,7 @@ class Laser
             normalize(polarization);
             normalize(poynting);
             normalize(ellipticity);
-
-            nonzeroComponents();
-
-
-
-            if (N() <= 0.0)
-            {
-                throw std::invalid_argument("N_cycles must be greater than or equal to zero. You entered: " + std::to_string(N()));
-            }
-            if (W() <= 0.0)
-            {
-                throw std::invalid_argument("w must be greater than or equal to zero. You entered: " + std::to_string(W()));
-            }
-            if (TimeSpacing() <= 0.0)
-            {
-                throw std::invalid_argument("dt must be greater than or equal to zero. You entered: " + std::to_string(TimeSpacing()));
-            }
-            if (realDotProduct(Polarization(),Poynting()) != 0.0)
-            {
-                throw std::invalid_argument("Polarization and Poynting vectors must be orthogonal.");
-            }
-            if (!((ELL() <= 1.0) && (ELL() >= 0.0)))
-            {
-                throw std::invalid_argument("Ell must be between 0.0 and 1.0. You entered: " + std::to_string(ELL()));
-            }
-
-
+            buildNonzeroComponents();
         }
 
         double N() const {return N_cycles;} 
@@ -67,6 +42,7 @@ class Laser
         double TMAX() const {return t_max;}
         double ELL() const {return ell;}
         double CEP() const {return cep;}
+        double CEP_R() const {return cep_r;}
         const std::array<double,3>& Polarization() const {return polarization;}
         const std::array<double,3>& Poynting() const {return poynting;}
         const std::array<double,3>& Ellipticity() const {return ellipticity;}
@@ -100,8 +76,9 @@ class Laser
         double cep;
 
         // Member functions
-        void nonzeroComponents();
+        void buildNonzeroComponents();
         double sin2_envelope(double t);
         double A(double t, int idx);
+        void validateInput();
 
 };
