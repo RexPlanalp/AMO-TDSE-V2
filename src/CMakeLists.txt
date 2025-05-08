@@ -7,6 +7,10 @@ set(HEADERLIST
   "${PROJECT_SOURCE_DIR}/include/BSpline.h"
   "${PROJECT_SOURCE_DIR}/include/Potentials.h"
   "${PROJECT_SOURCE_DIR}/include/Atom.h"
+  "${PROJECT_SOURCE_DIR}/include/Simulation.h"
+  "${PROJECT_SOURCE_DIR}/include/PetscWrappers/PetscEPS.h"
+  "${PROJECT_SOURCE_DIR}/include/PetscWrappers/PetscVec.h"
+  "${PROJECT_SOURCE_DIR}/include/PetscWrappers/PetscMat.h"
 )
 
 set(INCLUDEDIRS
@@ -21,6 +25,7 @@ set(SOURCELIST
     "${PROJECT_SOURCE_DIR}/src/Laser.cpp"
     "${PROJECT_SOURCE_DIR}/src/Atom.cpp"
     "${PROJECT_SOURCE_DIR}/src/BSpline.cpp"
+    
 
 )
 
