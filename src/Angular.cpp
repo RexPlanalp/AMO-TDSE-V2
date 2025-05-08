@@ -3,6 +3,20 @@
 #include <iostream>
 #include "Laser.h"
 
+void Angular::validateInput()
+{
+    if (LMax() <= 0)
+    {
+        throw std::invalid_argument("l_max size must be greater than zero. You entered: " + std::to_string(LMax()));
+    }
+    
+
+    if ((abs(MMin()) > LMax()) || (abs(MMax()) > LMax() ))
+    {
+        throw std::invalid_argument("m_min and m_max should be less than or equal in magnitude to l_max.");
+    }
+}
+
 void Angular::buildMaps(const Laser& laser,const std::array<int,3>& initial_state)
 {   
     lm_to_block.emplace();

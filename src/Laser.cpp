@@ -18,6 +18,14 @@ void Laser::validateInput()
     {
         throw std::invalid_argument("I must be greater than or equal to zero. You entered: " + std::to_string(I()));
     }
+    if (!Polarization()[0] && !Polarization()[1] && !Polarization()[2])
+    {
+        throw std::invalid_argument("Polarization must have a non-zero component.");
+    }
+    if (!Poynting()[0] && !Poynting()[1] && !Poynting()[2])
+    {
+        throw std::invalid_argument("Polarization must have a non-zero component.");
+    }
     if (realDotProduct(Polarization(),Poynting()) != 0.0)
     {
         throw std::invalid_argument("Polarization and Poynting vectors must be orthogonal.");

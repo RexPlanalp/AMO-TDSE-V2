@@ -7,7 +7,7 @@ class Atom
         Atom() = delete;
         explicit Atom(const nlohmann::json& input_file)
         : species(input_file.at("Atom").at("potential"))
-        {}
+        {validateInput();}
 
         template<typename T>
         T potentialVal(T position)
@@ -28,7 +28,12 @@ class Atom
         }
 
     private:
+
+        // Member List Initialized
         std::string species{};
+
+        // Member Functions
+        void validateInput();
 };
 
 

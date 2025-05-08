@@ -20,19 +20,7 @@ class Angular
         : l_max{input_file.at("Angular").at("l_max")}
         , m_min{input_file.at("Angular").at("m_min")}
         , m_max{input_file.at("Angular").at("m_max")}
-        {
-            if (LMax() <= 0)
-            {
-                throw std::invalid_argument("l_max size must be greater than zero. You entered: " + std::to_string(LMax()));
-            }
-            
-
-            if ((abs(MMin()) > LMax()) || (abs(MMax()) > LMax() ))
-            {
-                throw std::invalid_argument("m_min and m_max should be less than or equal in magnitude to l_max.");
-            }
-            
-        }
+        {validateInput();}
 
         int LMax() const {return l_max;}
         int MMin() const {return m_min;}
@@ -60,11 +48,6 @@ class Angular
         }
 
         void buildMaps(const Laser& laser, const std::array<int,3>& initial_state);
-        void buildZ(int m_i);
-        void buildXY(int l_i, int m_i);
-        void buildXYZ();
-        void buildOdd();
-        void buildEven();
         void dumpTo(const std::string& directory,int rank);
 
         
@@ -73,20 +56,31 @@ class Angular
         
 
     private:
+
+        // Member List Initialized
         int l_max{};
         int m_min{};
         int m_max{};
         int n_lm{};
 
+        // Default Initialized
         std::optional<lm_map> lm_to_block{};
         std::optional<block_map> block_to_lm{};
+
+        // Member Functions
+        void validateInput();
+        void buildZ(int m_i);
+        void buildXY(int l_i, int m_i);
+        void buildXYZ();
+        void buildOdd();
+        void buildEven();
 
 
 };
 
 
 
-namespace AngularElement
+namespace AngularCoupling
 {
     inline double f(int l, int m)
     {   

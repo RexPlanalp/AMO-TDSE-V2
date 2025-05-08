@@ -6,6 +6,30 @@
 #include "Box.h"
 #include "GaussLegendre.h"
 
+void BSpline::validateInput()
+{
+    if (NBSpline() <= 0)
+    {
+        throw std::invalid_argument("n_bspline must be greater than zero. You entered: " + std::to_string(NBSpline()));
+    }
+    if (Order() < 0)
+    {
+        throw std::invalid_argument("order must be greater than or equal to zero. You entered: " + std::to_string(Order()));
+    }
+    if (!((R0_R() >= 0.0) && (R0_R() <= 1.0)))
+    {
+        throw std::invalid_argument("R0_r must be between 0.0 and 1.0. You entered: " + std::to_string(R0_R()));
+    }
+    if (!((ETA_R() >= 0.0) && (ETA_R() <= 1.0)))
+    {
+        throw std::invalid_argument("eta_r must be between 0.0 and 1.0. You entered: " + std::to_string(ETA_R()));
+    }
+    if (Spacing() == std::string{})
+    {
+        throw std::invalid_argument("BSpline spacing must be non-empty. You entered: " + spacing);
+    }
+}
+
 void BSpline::buildKnots(const Box& box)
 {
     if (spacing == "linear")
@@ -152,10 +176,6 @@ std::complex<double> BSpline::dB( int degree, int i, std::complex<double> x) con
 
     return term1 + term2;
 }
-
-
-
-
 
 std::complex<double> BSpline::integrateMatrixElement(int i, int j,std::function<std::complex<double>(int, int, std::complex<double>)> integrand,bool use_ecs) const
 {

@@ -16,6 +16,8 @@ class BSpline
         , eta_r     {input_file.at("BSpline").at("eta_r")}
         , spacing {input_file.at("BSpline").at("spacing")}
         {
+            validateInput();
+
             degree = order - 1;
             roots = GS::Gauss.at(order).first;
             weights = GS::Gauss.at(order).second;
@@ -29,6 +31,9 @@ class BSpline
         int NBSpline() const {return n_bspline;}
         int Order() const {return order;}
         int Degree() const {return degree;}
+        double R0_R() const {return R0_r;}
+        double ETA_R() const {return eta_r;}
+        const std::string& Spacing() const {return spacing;}
         const std::string& Spacing() const {return spacing;}
         const std::vector<double> Knots() const {return knots;}
         const std::vector<std::complex<double>> ComplexKnots() const {return complex_knots;}
@@ -57,6 +62,7 @@ class BSpline
         std::vector<double> weights;
 
         // Member Functions
+        void validateInput();
         std::complex<double> ecs_x(double x) const;
         std::complex<double> ecs_w(double x, double w) const;
         void buildKnots(const Box& box);
