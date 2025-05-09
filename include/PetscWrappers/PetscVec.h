@@ -80,6 +80,9 @@ class Vector
     Vec& get() { return v; }
     const Vec& get() const {return v;}
 
+    PetscInt getStart() { return iStart;}
+    PetscInt getEnd() { return iEnd;}
+
 
   private:
     Vec v;

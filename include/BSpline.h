@@ -4,6 +4,7 @@
 #include <complex>
 #include "Potentials.h"
 #include "GaussLegendre.h"
+#include "PetscWrappers/PetscMat.h"
 
 class BSpline
 {
@@ -80,7 +81,11 @@ class BSpline
         std::complex<double> derIntegrand(int i, int j, std::complex<double> x) const {return B(i, x) * dB(j,x);}
         std::complex<double> HIntegrand(int i, int j, std::complex<double> x) const {return B(i, x) * B(j, x) * Potentials::hydrogenPotential(x);}
         std::complex<double> integrateMatrixElement(int i, int j,std::function<std::complex<double>(int, int, std::complex<double>)> integrand,bool use_ecs) const;
+
+        void PopulateMatrix(Matrix& matrix,std::function<std::complex<double>(int, int, std::complex<double>)> integrand,bool use_ecs);
 };
+
+
 
 
 

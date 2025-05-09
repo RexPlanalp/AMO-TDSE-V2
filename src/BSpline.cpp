@@ -360,3 +360,19 @@ std::complex<double> BSpline::BTest(int i, std::complex<double> x) const
 
     return N[0];
 }
+
+void BSpline::PopulateMatrix(Matrix& matrix,std::function<std::complex<double>(int, int, std::complex<double>)> integrand,bool use_ecs)
+{
+    for (int i = matrix.getStart(); i < matrix.getEnd(); i++) 
+    {
+        int col_start = std::max(0, i - order + 1);
+        int col_end = std::min(NBSpline(), i + order);
+
+        for (int j = col_start; j < col_end; j++) 
+        {
+            std::complex<double> result = integrateMatrixElement(i, j,integrand,use_ecs);
+            MatSetValue(matrix.get(), i, j, result, INSERT_VALUES); 
+        }
+    }
+    matrix.assemble();
+}

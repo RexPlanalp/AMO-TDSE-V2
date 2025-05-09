@@ -13,7 +13,7 @@ class Matrix
         {
             MatCreate(comm, &m);
             MatSetSizes(m , localRows, localCols, globalRows, globalCols);
-            if (comm = PETSC_COMM_WORLD)
+            if (comm == PETSC_COMM_WORLD)
             {
                 MatMPIAIJSetPreallocation(m, nnz_p, NULL, nnz_p, NULL);
             }
@@ -72,9 +72,17 @@ class Matrix
         b.m = tmp;
         }
     
+    void assemble()
+    {
+        MatAssemblyBegin(get(), MAT_FINAL_ASSEMBLY); 
+        MatAssemblyEnd(get(), MAT_FINAL_ASSEMBLY); 
+    }
 
     Mat& get() { return m; }
     const Mat& get() const {return m;}
+
+    PetscInt getStart() { return iStart;}
+    PetscInt getEnd() { return iEnd;}
 
 
     private:
