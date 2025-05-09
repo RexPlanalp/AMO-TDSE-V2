@@ -13,8 +13,14 @@ class TISE
         , tolerance(input_file.at("TISE").at("tolerance"))
         , on{input_file.at("TISE").at("on")}
         , outputPath{input_file.at("TISE").at("output")}
-        , nmax(input_file.at("TISE").at("n_max"))
-        {}
+        , n_max(input_file.at("TISE").at("n_max"))
+        {validateInput();}
+
+        PetscInt MAXITER() const {return maxIter;}
+        PetscReal Tol() const {return tolerance;}
+        bool ON() const {return on;}
+        const std::string& OUT() const {return outputPath;}
+        PetscInt NMAX() const {return n_max;}
     
     private:
         // Member List Initialized
@@ -22,7 +28,10 @@ class TISE
         PetscReal tolerance{};
         bool on{};
         std::string outputPath{};
-        PetscInt nmax{};
+        PetscInt n_max{};
+
+        // Member Functions
+        void validateInput();
 
         
     
