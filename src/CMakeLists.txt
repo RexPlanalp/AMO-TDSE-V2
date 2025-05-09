@@ -25,6 +25,7 @@ set(SOURCELIST
     "${PROJECT_SOURCE_DIR}/src/Laser.cpp"
     "${PROJECT_SOURCE_DIR}/src/Atom.cpp"
     "${PROJECT_SOURCE_DIR}/src/BSpline.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Simulation.cpp"
     
 
 )

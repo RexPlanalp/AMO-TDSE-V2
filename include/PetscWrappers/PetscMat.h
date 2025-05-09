@@ -78,6 +78,11 @@ class Matrix
         MatAssemblyEnd(get(), MAT_FINAL_ASSEMBLY); 
     }
 
+    void AXPY(PetscScalar alpha, const Matrix& other, MatStructure pattern)
+    {
+        MatAXPY(get(), alpha,other.get(),pattern);
+    }
+
     Mat& get() { return m; }
     const Mat& get() const {return m;}
 

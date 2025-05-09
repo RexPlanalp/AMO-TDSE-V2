@@ -37,11 +37,12 @@ class Simulation
         
     
     private:
+        // Member List Initialized
         MPI_Comm comm{};
         int size{};
         int rank{};
-    
-    public:
+
+        // Default InitializedBox box;
         Box box;
         Angular angular;
         BSpline bspline;

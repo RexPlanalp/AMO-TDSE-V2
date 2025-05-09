@@ -68,11 +68,6 @@ class BSpline
     public:
         std::complex<double> ecs_x(double x) const;
         std::complex<double> ecs_w(double x, double w) const;
-    private:
-        void buildKnots(const Box& box);
-        void buildLinearKnots(const Box& box);
-        void buildComplexKnots();
-        void buildR0();
 
         std::complex<double> overlapIntegrand(int i, int j, std::complex<double> x) const {return B(i, x) * B(j, x);}
         std::complex<double> kineticIntegrand(int i, int j, std::complex<double> x) const {return 0.5 * dB(i, x) * dB(j, x);}
@@ -82,7 +77,14 @@ class BSpline
         std::complex<double> HIntegrand(int i, int j, std::complex<double> x) const {return B(i, x) * B(j, x) * Potentials::hydrogenPotential(x);}
         std::complex<double> integrateMatrixElement(int i, int j,std::function<std::complex<double>(int, int, std::complex<double>)> integrand,bool use_ecs) const;
 
-        void PopulateMatrix(Matrix& matrix,std::function<std::complex<double>(int, int, std::complex<double>)> integrand,bool use_ecs);
+        Matrix PopulateMatrix(std::function<std::complex<double>(int, int, std::complex<double>)> integrand,bool use_ecs);
+    private:
+        void buildKnots(const Box& box);
+        void buildLinearKnots(const Box& box);
+        void buildComplexKnots();
+        void buildR0();
+
+        
 };
 
 
