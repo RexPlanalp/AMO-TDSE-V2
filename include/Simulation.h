@@ -15,8 +15,8 @@ class Simulation
     public:
         Simulation() = delete;
 
-        explicit Simulation(const std::string& inputPath, int current_rank, int ranks,  MPI_Comm comm)
-        : inputParams{loadJson(inputPath)}, comm{comm}, ranks{ranks}, current_rank{current_rank}
+        explicit Simulation(const std::string& inputPath, int rank, int size,  MPI_Comm comm)
+        : comm{comm}, size{size}, rank{rank}
         , box{loadJson(inputPath)}
         , angular{loadJson(inputPath)}
         , bspline{loadJson(inputPath),box}
@@ -33,10 +33,9 @@ class Simulation
         
     
     private:
-        nlohmann::json inputParams{};
         MPI_Comm comm{};
-        int ranks{};
-        int current_rank{};
+        int size{};
+        int rank{};
     
     public:
         Box box;
