@@ -33,9 +33,7 @@ int main(int argc, char **argv)
 
    
 
-    simulation.bspline.dumpTo(simulation.box,"misc",rank);
-    simulation.angular.dumpTo("misc",rank);
-    simulation.laser.dumpTo("misc",rank);
+
 
   
 

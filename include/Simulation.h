@@ -10,6 +10,7 @@
 #include "Laser.h"
 #include "Atom.h"
 #include "misc.h"
+#include "TISE.h"
 
 class Simulation
 {   
@@ -23,6 +24,7 @@ class Simulation
         , bspline{inputPar,box}
         , atom{inputPar}
         , laser{inputPar}
+        , tise{inputPar}
         
         {
 
@@ -31,6 +33,10 @@ class Simulation
 
             std::array<int,3> initial_state= inputPar.at("TDSE").at("initial_state").get<std::array<int,3>>();
             angular.buildMaps(laser,initial_state);
+
+            bspline.dumpTo(box,"misc",rank);
+            angular.dumpTo("misc",rank);
+            laser.dumpTo("misc",rank);
         }
     
        
@@ -48,4 +54,5 @@ class Simulation
         BSpline bspline;
         Atom atom;
         Laser laser;
+        TISE tise;
 };      
