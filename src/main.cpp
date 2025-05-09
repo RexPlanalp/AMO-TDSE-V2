@@ -1,3 +1,6 @@
+
+
+#include "Simulation.h"
 #include "misc.h"
 #include "Box.h"
 #include "Angular.h"
@@ -5,47 +8,31 @@
 #include "BSpline.h"
 #include "Atom.h"
 
-#include <chrono>
+#include <array>
+#include <nlohmann/json.hpp>
+#include "Simulation.h"
 
-int main()
+#include "slepc.h"
+
+
+int main(int argc, char **argv)
 {   
+    
+    SlepcInitialize(&argc, &argv, nullptr, nullptr);
+    MPI_Comm comm = PETSC_COMM_WORLD;
+    PetscMPIInt rank, size;
+    MPI_Comm_rank(comm, &rank);
+    MPI_Comm_size(comm, &size);
 
-    nlohmann::json J = loadJson("input.json");
-    std::array<int,3> initial_state{1,1,0};
-    int rank = 0;
+    std::string inputPath = "input.json";
 
-    Box box{J};
-    Angular angular{J};
-    Laser laser{J};
-    Atom atom{J};
-    BSpline bspline{J,box};
+    Simulation simulation(inputPath, rank, size, comm);
 
+   
 
-    std::string filename = "test.txt";
-    std::ofstream outFile(filename);
-
-    for (int spline{0}; spline < bspline.NBSpline(); ++spline)
-    {
-        for (int ridx{0}; ridx < box.Nr(); ++ridx)
-        {   
-
-            auto val1 = bspline.dB(spline,bspline.ecs_x(ridx * box.GridSpacing()));
-            auto val2 = bspline.dBTest(spline,bspline.ecs_x(ridx * box.GridSpacing()));
-            auto diff = std::abs(val1 - val2);
-            outFile << diff << " ";
-        }
-    }
-    outFile.close();
-
-
-
-    angular.buildMaps(laser,initial_state);
-
-
-
-    bspline.dumpTo(box,"misc",rank);
-    angular.dumpTo("misc",rank);
-    laser.dumpTo("misc",rank);
+    simulation.bspline.dumpTo(simulation.box,"misc",rank);
+    simulation.angular.dumpTo("misc",rank);
+    simulation.laser.dumpTo("misc",rank);
 
   
 

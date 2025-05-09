@@ -10,8 +10,8 @@ class Box
         Box() = delete;
 
         explicit Box(const nlohmann::json& input_file) 
-        : grid_size{input_file.at("Box").at("grid_size")}
-        , grid_spacing{input_file.at("Box").at("grid_spacing")}
+        : grid_size{input_file["Box"]["grid_size"].get<double>()}
+        , grid_spacing{input_file["Box"]["grid_spacing"].get<double>()}
         {validateInput();}
 
         double GridSize() const {return grid_size;}
