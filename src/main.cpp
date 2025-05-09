@@ -9,6 +9,7 @@
 #include "Atom.h"
 
 #include <array>
+#include "misc.h"
 #include <nlohmann/json.hpp>
 #include "Simulation.h"
 
@@ -24,9 +25,11 @@ int main(int argc, char **argv)
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &size);
 
-    std::string inputPath = "input.json";
+    std::string inputPath = argv[1];
 
-    Simulation simulation(inputPath, rank, size, comm);
+    nlohmann::json inputPar = loadJson(inputPath);
+
+    Simulation simulation(inputPar, rank, size, comm);
 
    
 

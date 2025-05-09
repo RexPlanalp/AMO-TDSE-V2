@@ -1,5 +1,6 @@
 #pragma once
 
+#include "nlohmann/json.hpp"
 #include <string>
 #include "mpi.h"
 
@@ -15,17 +16,20 @@ class Simulation
     public:
         Simulation() = delete;
 
-        explicit Simulation(const std::string& inputPath, int rank, int size,  MPI_Comm comm)
+        explicit Simulation(const nlohmann::json& inputPar, int rank, int size,  MPI_Comm comm)
         : comm{comm}, size{size}, rank{rank}
-        , box{loadJson(inputPath)}
-        , angular{loadJson(inputPath)}
-        , bspline{loadJson(inputPath),box}
-        , atom{loadJson(inputPath)}
-        , laser{loadJson(inputPath)}
+        , box{inputPar}
+        , angular{inputPar}
+        , bspline{inputPar,box}
+        , atom{inputPar}
+        , laser{inputPar}
         
         {
 
-            std::array<int,3> initial_state= loadJson(inputPath).at("TDSE").at("initial_state").get<std::array<int,3>>();
+            createDirectory(rank, "misc");
+            createDirectory(rank, "images");
+
+            std::array<int,3> initial_state= inputPar.at("TDSE").at("initial_state").get<std::array<int,3>>();
             angular.buildMaps(laser,initial_state);
         }
     
