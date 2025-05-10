@@ -1,29 +1,44 @@
 #pragma once
 
-#include <string>
-#include "nlohmann/json.hpp"
+#include "Input.h"
 
 class Box 
 {
     public:
 
-        Box() = delete;
+        explicit Box(const Input& input) 
+        : gridSize{input.params.at("Box").at("gridSize")}
+        , gridSpacing{input.params.at("Box").at("gridSpacing")}
+        {   
+           
 
-        explicit Box(const nlohmann::json& input_file) 
-        : grid_size{input_file.at("Box").at("grid_size")}
-        , grid_spacing{input_file.at("Box").at("grid_spacing")}
-        {validateInput();}
+            Nr = static_cast<int>(std::round(getGridSize() / getGridSpacing())) + 1;
 
-        double GridSize() const {return grid_size;}
-        double GridSpacing() const {return grid_spacing;}
+            positions.resize(Nr);
+            for (int idx = 0; idx < Nr; ++idx)
+            {
+                positions[idx] = idx * getGridSpacing();
+            }
 
-        int Nr() const;
-        double Position(int i) const;
+        
+
+        }
+
+        double getGridSize() const {return gridSize;}
+        double getGridSpacing() const {return gridSpacing;}
+        int getNr() const {return Nr;}
+
+        double getPosition(int i) const;
+        void printConfiguration(int rank) const;
 
     private:
         // Member List Initialized
-        double grid_size{};
-        double grid_spacing{};
+        double gridSize{};
+        double gridSpacing{};
+        
+        // Default Initialized
+        int Nr;
+        std::vector<double> positions;
 
         // Member Functions
         void validateInput();

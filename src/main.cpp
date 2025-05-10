@@ -1,19 +1,8 @@
 
-
-#include "Simulation.h"
-#include "misc.h"
-#include "Box.h"
-#include "Angular.h"
-#include "Laser.h"
-#include "BSpline.h"
-#include "Atom.h"
-
-#include <array>
-#include "misc.h"
-#include <nlohmann/json.hpp>
-#include "Simulation.h"
-
 #include "slepc.h"
+
+#include "Input.h"
+#include "Box.h"
 
 
 int main(int argc, char **argv)
@@ -27,10 +16,17 @@ int main(int argc, char **argv)
 
     std::string inputPath = argv[1];
 
-    nlohmann::json inputPar = loadJson(inputPath);
+    Input input{inputPath};
+    input.validate();
 
-    Simulation simulation(inputPar, rank, size, comm);
-    simulation.solveTISE();
+    Box box{input};
+    box.printConfiguration(rank);
+
+    
+
+
+
+    
    
 
 

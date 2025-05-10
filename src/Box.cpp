@@ -1,23 +1,19 @@
 #include "Box.h"
 
-void Box::validateInput()
+#include "common.h"
+
+double Box::getPosition(int i) const
 {
-    if (grid_size <= 0.0)
-    {
-        throw std::invalid_argument("Grid size must be greater than zero. You entered: " + std::to_string(GridSize()));
-    }
-    if (grid_spacing <= 0.0)
-    {
-        throw std::invalid_argument("Grid spacing must be greater than zero. You entered: " + std::to_string(GridSpacing()));
-    }
+    return positions[i];
 }
 
-int Box::Nr() const 
+void Box::printConfiguration(int rank) const
 {
-    return static_cast<int>(std::round(GridSize() / GridSpacing())) + 1;
-}
-
-double Box::Position(int i) const
-{
-    return i * GridSpacing();
+    if (rank == 0)
+    {
+        std::cout << "Box Configuration: " << "\n\n";
+        std::cout << "rmax: " << getGridSize() << '\n';
+        std::cout << "dr: " << getGridSpacing() << '\n';
+        std::cout << "Nr: " << getNr() << '\n';
+    }
 }

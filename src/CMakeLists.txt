@@ -1,17 +1,22 @@
 set(HEADERLIST
 
-  "${PROJECT_SOURCE_DIR}/include/Angular.h"
-  "${PROJECT_SOURCE_DIR}/include/Box.h"
+  #"${PROJECT_SOURCE_DIR}/include/Angular.h"
+  #"${PROJECT_SOURCE_DIR}/include/Box.h"
+  #"${PROJECT_SOURCE_DIR}/include/misc.h"
+  #"${PROJECT_SOURCE_DIR}/include/Laser.h"
+  #"${PROJECT_SOURCE_DIR}/include/BSpline.h"
+  #"${PROJECT_SOURCE_DIR}/include/Potentials.h"
+  #"${PROJECT_SOURCE_DIR}/include/Atom.h"
+  #"${PROJECT_SOURCE_DIR}/include/Simulation.h"
+  #"${PROJECT_SOURCE_DIR}/include/PetscWrappers/PetscEPS.h"
+  #"${PROJECT_SOURCE_DIR}/include/PetscWrappers/PetscVec.h"
+  #"${PROJECT_SOURCE_DIR}/include/PetscWrappers/PetscMat.h"
+  #"${PROJECT_SOURCE_DIR}/include/TISE.h"
+
+
+  "${PROJECT_SOURCE_DIR}/include/Input.h"
   "${PROJECT_SOURCE_DIR}/include/misc.h"
-  "${PROJECT_SOURCE_DIR}/include/Laser.h"
-  "${PROJECT_SOURCE_DIR}/include/BSpline.h"
-  "${PROJECT_SOURCE_DIR}/include/Potentials.h"
-  "${PROJECT_SOURCE_DIR}/include/Atom.h"
-  "${PROJECT_SOURCE_DIR}/include/Simulation.h"
-  "${PROJECT_SOURCE_DIR}/include/PetscWrappers/PetscEPS.h"
-  "${PROJECT_SOURCE_DIR}/include/PetscWrappers/PetscVec.h"
-  "${PROJECT_SOURCE_DIR}/include/PetscWrappers/PetscMat.h"
-  "${PROJECT_SOURCE_DIR}/include/TISE.h"
+  "${PROJECT_SOURCE_DIR}/include/Common.h"
 )
 
 set(INCLUDEDIRS
@@ -22,11 +27,11 @@ set(SOURCELIST
 
     "${PROJECT_SOURCE_DIR}/src/main.cpp"
     "${PROJECT_SOURCE_DIR}/src/Box.cpp"
-    "${PROJECT_SOURCE_DIR}/src/Angular.cpp"
-    "${PROJECT_SOURCE_DIR}/src/Laser.cpp"
-    "${PROJECT_SOURCE_DIR}/src/Atom.cpp"
-    "${PROJECT_SOURCE_DIR}/src/BSpline.cpp"
-    "${PROJECT_SOURCE_DIR}/src/TISE.cpp"
+    #"${PROJECT_SOURCE_DIR}/src/Angular.cpp"
+    #"${PROJECT_SOURCE_DIR}/src/Laser.cpp"
+    #"${PROJECT_SOURCE_DIR}/src/Atom.cpp"
+    #"${PROJECT_SOURCE_DIR}/src/BSpline.cpp"
+    #"${PROJECT_SOURCE_DIR}/src/TISE.cpp"
     
 
 )
