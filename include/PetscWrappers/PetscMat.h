@@ -38,7 +38,7 @@ class Matrix
         }
 
         // Copy Assignment
-        Matrix& operator=(Matrix other)
+        Matrix& operator=(Matrix other) noexcept
         {
             swap(*this, other);
             return *this;
@@ -49,6 +49,8 @@ class Matrix
         : m{other.m}
         {
             other.m = nullptr;
+            other.iStart = 0;
+            other.iEnd = 0;
         }
         
         // Move Assignment 
@@ -62,14 +64,16 @@ class Matrix
                 }
                 m = other.m;
                 other.m = nullptr;
+                other.iStart = 0;
+                other.iEnd = 0;
             }
             return *this;
         }
         friend void swap(Matrix& a, Matrix& b) noexcept
         {
-        Mat tmp = a.m;
-        a.m = b.m;
-        b.m = tmp;
+            std::swap(a.m,b.m);
+            std::swap(a.iStart, b.iStart);
+            std::swap(a.iEnd,   b.iEnd);
         }
     
     void assemble()

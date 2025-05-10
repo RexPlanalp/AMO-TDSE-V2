@@ -42,7 +42,7 @@ class Vector
     }
 
     // Copy Assignment
-    Vector& operator=(Vector other)
+    Vector& operator=(Vector other) noexcept
     {
       swap(*this, other);
       return *this;
@@ -53,6 +53,8 @@ class Vector
     : v{other.v}
     {
       other.v = nullptr;
+      other.iStart = 0;
+      other.iEnd= 0;
     }
 
     // Move Assignment
@@ -66,22 +68,24 @@ class Vector
         }
         v = other.v;
         other.v = nullptr;
+        other.iStart = 0;
+        other.iEnd = 0;
       }
       return *this;
     }
 
     friend void swap(Vector& a, Vector& b) noexcept
     {
-      Vec tmp = a.v;
-      a.v = b.v;
-      b.v = tmp;
+      std::swap(a.v,b.v);
+      std::swap(a.iStart, b.iStart);
+      std::swap(a.iEnd,   b.iEnd);
     }
 
     Vec& get() { return v; }
     const Vec& get() const {return v;}
 
-    PetscInt getStart() { return iStart;}
-    PetscInt getEnd() { return iEnd;}
+    PetscInt getStart() const { return iStart;}
+    PetscInt getEnd() const { return iEnd;}
 
 
   private:

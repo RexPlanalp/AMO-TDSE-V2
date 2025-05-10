@@ -76,17 +76,14 @@ class BSpline
         void buildComplexKnots();
         void buildR0();
 
-
-
-    public:
-       
-        
-
         std::complex<double> overlapIntegrand(int i, int j, std::complex<double> x) const {return B(i, x) * B(j, x);}
         std::complex<double> kineticIntegrand(int i, int j, std::complex<double> x) const {return 0.5 * dB(i, x) * dB(j, x);}
         std::complex<double> invrIntegrand(int i, int j, std::complex<double> x) const {return B(i, x) * B(j, x) / (x + 1E-25);}
         std::complex<double> invr2Integrand(int i, int j, std::complex<double> x) const {return B(i, x) * B(j, x) / (x*x + 1E-25);}
         std::complex<double> derIntegrand(int i, int j, std::complex<double> x) const {return B(i, x) * dB(j,x);}
+
+
+
         // std::complex<double> HIntegrand(int i, int j, std::complex<double> x) const {return B(i, x) * B(j, x) * Potentials::hydrogenPotential(x);}
         
 
