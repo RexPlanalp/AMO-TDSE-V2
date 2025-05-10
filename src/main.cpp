@@ -6,6 +6,7 @@
 #include "Angular.h"
 #include "Laser.h"
 #include "Atom.h"
+#include "BSpline.h"
 
 
 int main(int argc, char **argv)
@@ -41,6 +42,11 @@ int main(int argc, char **argv)
 
     Atom atom{input};
     atom.printConfiguration(rank);
+
+    BSpline bspline{input};
+    bspline.buildKnots(box);
+    bspline.printConfiguration(rank);
+    bspline.dumpTo(box,"misc",rank);
 
 
     SlepcFinalize();

@@ -1,34 +1,20 @@
 
-#include "BSpline.h"
-#include <complex>
-#include <fstream>
-#include <iostream>
-#include "Box.h"
-#include "GaussLegendre.h"
+#include "common.h"
 
-void BSpline::validateInput()
+#include "BSpline.h"
+#include "Box.h"
+
+
+const std::unordered_map<int, std::pair<std::vector<double>, std::vector<double>>> BSpline::GaussLegendre::RootsAndWeights = 
 {
-    if (NBSpline() <= 0)
-    {
-        throw std::invalid_argument("n_bspline must be greater than zero. You entered: " + std::to_string(NBSpline()));
-    }
-    if (Order() < 0)
-    {
-        throw std::invalid_argument("order must be greater than or equal to zero. You entered: " + std::to_string(Order()));
-    }
-    if (!((R0_R() >= 0.0) && (R0_R() <= 1.0)))
-    {
-        throw std::invalid_argument("R0_r must be between 0.0 and 1.0. You entered: " + std::to_string(R0_R()));
-    }
-    if (!((ETA_R() >= 0.0) && (ETA_R() <= 1.0)))
-    {
-        throw std::invalid_argument("eta_r must be between 0.0 and 1.0. You entered: " + std::to_string(ETA_R()));
-    }
-    if (Spacing() == std::string{})
-    {
-        throw std::invalid_argument("BSpline spacing must be non-empty. You entered: " + spacing);
-    }
-}
+    {2, {{-0.57735027, 0.57735027}, {1, 1}}},
+    {3, {{-0.77459667, 0.0, 0.77459667}, {0.55555556, 0.88888889, 0.55555556}}},
+    {4, {{-0.86113631, -0.33998104, 0.33998104, 0.86113631}, {0.34785485, 0.65214515, 0.65214515, 0.34785485}}},
+    {5, {{-0.90617985, -0.53846931, 0.0, 0.53846931, 0.90617985}, {0.23692689, 0.47862867, 0.56888889, 0.47862867, 0.23692689}}},
+    {6, {{-0.93246951, -0.66120939, -0.23861919, 0.23861919, 0.66120939, 0.93246951}, {0.17132449, 0.36076157, 0.46791393, 0.46791393, 0.36076157, 0.17132449}}},
+    {7, {{-0.94910791, -0.74153119, -0.40584515, 0, 0.40584515, 0.74153119, 0.94910791}, {0.12948497, 0.27970539, 0.38183005, 0.41795918, 0.38183005, 0.27970539, 0.12948497}}},
+    {8, {{-0.96028986, -0.79666648, -0.52553241, -0.18343464, 0.18343464, 0.52553241, 0.79666648, 0.96028986}, {0.10122854, 0.22238103, 0.31370665, 0.36268378, 0.36268378, 0.31370665, 0.22238103, 0.10122854}}}
+};
 
 void BSpline::buildKnots(const Box& box)
 {
@@ -36,19 +22,14 @@ void BSpline::buildKnots(const Box& box)
     {
         buildLinearKnots(box);
     }
-    else
-    {
-        throw std::invalid_argument("No matching BSpline Spacing. You entered: " + spacing);
-    }
-
-
+   
     buildR0();
     buildComplexKnots();
 }
 
 void BSpline::buildComplexKnots()
 {
-    int N_knots = n_bspline + order;
+    int N_knots = getNbasis() + getOrder();
 
     complex_knots.resize(N_knots);
 
@@ -60,9 +41,9 @@ void BSpline::buildComplexKnots()
 
 void BSpline::buildLinearKnots(const Box& box)
 {
-    int N_knots   = n_bspline + order;
-    int N_middle  = N_knots - 2 * order;
-    double step   = box.GridSize() / (N_middle - 1);
+    int N_knots   = getNbasis() + getOrder();
+    int N_middle  = N_knots - 2 * getOrder();
+    double step   = box.getGridSize() / (N_middle - 1);
 
     knots.resize(N_knots);
     int start_mid = order;
@@ -76,7 +57,7 @@ void BSpline::buildLinearKnots(const Box& box)
         }
         else if (idx > end_mid) 
         {
-            knots[idx] = box.GridSize();
+            knots[idx] = box.getGridSize();
         }
         else 
         {
@@ -86,33 +67,9 @@ void BSpline::buildLinearKnots(const Box& box)
     }
 }
 
-std::complex<double> BSpline::ecs_x(double x) const
-{
-    if (x < R0) 
-    {
-        return std::complex<double>{x, 0.0};
-    }
-    else 
-    {
-        return R0 + (x - R0) * std::exp(std::complex<double>{0, eta});
-    }
-}
-
-std::complex<double> BSpline::ecs_w(double x, double w) const
-{
-    if (x < R0) 
-    {
-        return std::complex<double>{w, 0.0};
-    }
-    else 
-    {
-        return w * std::exp(std::complex<double>{0, eta});
-    }
-}
-
 void BSpline::buildR0()
 {
-    double target   = R0_r * knots.back();
+    double target   = R0 * knots.back();
     double min_val  = std::abs(knots[0] - target);
     double knot_val = knots[0];
 
@@ -127,64 +84,14 @@ void BSpline::buildR0()
     R0 = knot_val;
 }
 
-std::complex<double> BSpline::B(int degree, int i, std::complex<double> x) const
-{
-    if (degree == 0)
-    {
-        return (complex_knots[i].real() <= x.real() && x.real() < complex_knots[i + 1].real() ? 1.0 : 0.0);
-    }
-
-    std::complex<double> denom1 = complex_knots[i + degree] - complex_knots[i];
-    std::complex<double> denom2 = complex_knots[i + degree + 1] - complex_knots[i + 1];
-
-    std::complex<double> term1 = 0.0;
-    std::complex<double> term2 = 0.0;
-
-    if (denom1.real() > 0)
-    {
-        term1 = (x - complex_knots[i]) / denom1 * B(degree - 1, i, x);
-    }
-    if (denom2.real() > 0)
-    {
-        term2 = (complex_knots[i + degree + 1] - x) / denom2 * B(degree - 1, i + 1, x);
-    }
-
-    return term1 + term2;
-}
-
-std::complex<double> BSpline::dB( int degree, int i, std::complex<double> x) const
-{
-    if (degree == 0)
-    {
-        return 0.0;
-    }
-
-    std::complex<double> denom1 = complex_knots[i + degree] - complex_knots[i];
-    std::complex<double> denom2 = complex_knots[i + degree + 1] - complex_knots[i + 1];
-
-    std::complex<double> term1 = 0.0;
-    std::complex<double> term2 = 0.0;
-
-    if (denom1.real() > 0)
-    {
-        term1 = std::complex<double>(degree) / denom1 * B(degree - 1, i, x);
-    }
-    if (denom2.real() > 0)
-    {
-        term2 = -std::complex<double>(degree) / denom2 * B(degree - 1, i + 1, x);
-    }
-
-    return term1 + term2;
-}
-
-std::complex<double> BSpline::integrateMatrixElement(int i, int j,std::function<std::complex<double>(int, int, std::complex<double>)> integrand,bool use_ecs) const
+std::complex<double> BSpline::integrateMatrixElement(int i, int j, BSpline::MatrixIntegrand integrand,bool use_ecs) const
 {
     std::complex<double> total{0.0,0.0};
 
     int lower = std::min(i, j);
     int upper = std::max(i, j);
 
-    for (int k = lower; k <= upper + degree; ++k)
+    for (int k = lower; k <= upper + getDegree(); ++k)
     {
         double a = knots[k];
         double b = knots[k + 1];
@@ -208,20 +115,32 @@ std::complex<double> BSpline::integrateMatrixElement(int i, int j,std::function<
             {
                 std::complex<double> x = ecs_x(x_val);
                 std::complex<double> weight = ecs_w(x_val, weight_val) * half_b_minus_a;
-                std::complex<double> integrand_val = integrand(i, j, x);
+                std::complex<double> integrand_val = (this->*integrand)(i, j, x);
                 total += weight * integrand_val;
             }
             else
             {
                 std::complex<double> x = x_val;
                 std::complex<double> weight = weight_val* half_b_minus_a;
-                std::complex<double> integrand_val = integrand(i, j, x);
+                std::complex<double> integrand_val = (this->*integrand)(i, j, x);
                 total += weight * integrand_val;
             }
         }
     }
 
     return total;
+}
+
+void BSpline::printConfiguration(int rank)
+{
+    if (rank == 0)
+    {
+        std::cout << "BSpline Configuration: " << "\n\n";
+        std::cout << "nbasis: " << getNbasis() <<  "\n\n";
+        std::cout << "order: " << getOrder() <<  "\n\n";
+        std::cout << "degree: " << getDegree() <<  "\n\n";
+        std::cout << "spacing: " << getSpacing() <<  "\n\n";
+    }
 }
 
 void BSpline::dumpTo(const Box& box, const std::string& directory, int rank)
@@ -237,11 +156,11 @@ void BSpline::dumpTo(const Box& box, const std::string& directory, int rank)
             std::cerr << "Error opening file: " << filename << '\n';
         }
 
-        for (int spline = 0; spline < n_bspline; ++spline) 
+        for (int spline = 0; spline < getNbasis(); ++spline) 
         {
-            for (int ridx = 0; ridx < box.Nr(); ++ridx) 
+            for (int ridx = 0; ridx < box.getNr(); ++ridx) 
             {   
-                std::complex<double> value = B(spline, ecs_x(ridx * box.GridSpacing()));
+                std::complex<double> value = B(spline, ecs_x(ridx * box.getGridSpacing()));
                 outFile << value.real() << " " << value.imag() << '\n';
             }
         }
@@ -256,11 +175,11 @@ void BSpline::dumpTo(const Box& box, const std::string& directory, int rank)
             std::cerr << "Error opening file: " << filename2 << '\n';
         }
 
-        for (int spline = 0; spline < n_bspline; ++spline) 
+        for (int spline = 0; spline < getNbasis(); ++spline) 
         {
-            for (int ridx = 0; ridx < box.Nr(); ++ridx) 
+            for (int ridx = 0; ridx < box.getNr(); ++ridx) 
             {
-                std::complex<double> value = dB(spline, ecs_x(ridx * box.GridSpacing()));
+                std::complex<double> value = dB(spline, ecs_x(ridx * box.getGridSpacing()));
                 outFile2 << value.real() << " " << value.imag() << '\n';
             }
         }
@@ -275,13 +194,13 @@ void BSpline::dumpTo(const Box& box, const std::string& directory, int rank)
             std::cerr << "Error opening file: " << filename2 << '\n';
         }
 
-        outFile3 << box.Nr() << " " << box.GridSpacing() << '\n';
+        outFile3 << box.getNr() << " " << box.getGridSpacing() << '\n';
 
         outFile3.close();
     }
 }
 
-std::complex<double> BSpline::dBTest(int i, std::complex<double> x) const
+std::complex<double> BSpline::dB(int i, std::complex<double> x) const
 {
     const int p = degree;
     if (p == 0)
@@ -329,7 +248,7 @@ std::complex<double> BSpline::dBTest(int i, std::complex<double> x) const
     return term1 - term2;
 }
 
-std::complex<double> BSpline::BTest(int i, std::complex<double> x) const
+std::complex<double> BSpline::B(int i, std::complex<double> x) const
 {
     std::vector<std::complex<double>> N(degree + 1);
 
@@ -361,23 +280,85 @@ std::complex<double> BSpline::BTest(int i, std::complex<double> x) const
     return N[0];
 }
 
-Matrix BSpline::PopulateMatrix(std::function<std::complex<double>(int, int, std::complex<double>)> integrand,bool use_ecs) const
-{   
-    Matrix matrix{PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,NBSpline(),NBSpline(),2*Degree() + 1};
+// Matrix BSpline::PopulateMatrix(std::function<std::complex<double>(int, int, std::complex<double>)> integrand,bool use_ecs) const
+// {   
+//     Matrix matrix{PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,NBSpline(),NBSpline(),2*Degree() + 1};
 
    
 
-    for (int i = matrix.getStart(); i < matrix.getEnd(); i++) 
-    {
-        int col_start = std::max(0, i - order + 1);
-        int col_end = std::min(NBSpline(), i + order);
+//     for (int i = matrix.getStart(); i < matrix.getEnd(); i++) 
+//     {
+//         int col_start = std::max(0, i - order + 1);
+//         int col_end = std::min(NBSpline(), i + order);
 
-        for (int j = col_start; j < col_end; j++) 
-        {
-            std::complex<double> result = integrateMatrixElement(i, j,integrand,use_ecs);
-            MatSetValue(matrix.get(), i, j, result, INSERT_VALUES); 
-        }
-    }
-    matrix.assemble();
-    return matrix;
-}
+//         for (int j = col_start; j < col_end; j++) 
+//         {
+//             std::complex<double> result = integrateMatrixElement(i, j,integrand,use_ecs);
+//             MatSetValue(matrix.get(), i, j, result, INSERT_VALUES); 
+//         }
+//     }
+//     matrix.assemble();
+//     return matrix;
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+// std::complex<double> BSpline::B(int degree, int i, std::complex<double> x) const
+// {
+//     if (degree == 0)
+//     {
+//         return (complex_knots[i].real() <= x.real() && x.real() < complex_knots[i + 1].real() ? 1.0 : 0.0);
+//     }
+
+//     std::complex<double> denom1 = complex_knots[i + degree] - complex_knots[i];
+//     std::complex<double> denom2 = complex_knots[i + degree + 1] - complex_knots[i + 1];
+
+//     std::complex<double> term1 = 0.0;
+//     std::complex<double> term2 = 0.0;
+
+//     if (denom1.real() > 0)
+//     {
+//         term1 = (x - complex_knots[i]) / denom1 * B(degree - 1, i, x);
+//     }
+//     if (denom2.real() > 0)
+//     {
+//         term2 = (complex_knots[i + degree + 1] - x) / denom2 * B(degree - 1, i + 1, x);
+//     }
+
+//     return term1 + term2;
+// }
+
+// std::complex<double> BSpline::dB( int degree, int i, std::complex<double> x) const
+// {
+//     if (degree == 0)
+//     {
+//         return 0.0;
+//     }
+
+//     std::complex<double> denom1 = complex_knots[i + degree] - complex_knots[i];
+//     std::complex<double> denom2 = complex_knots[i + degree + 1] - complex_knots[i + 1];
+
+//     std::complex<double> term1 = 0.0;
+//     std::complex<double> term2 = 0.0;
+
+//     if (denom1.real() > 0)
+//     {
+//         term1 = std::complex<double>(degree) / denom1 * B(degree - 1, i, x);
+//     }
+//     if (denom2.real() > 0)
+//     {
+//         term2 = -std::complex<double>(degree) / denom2 * B(degree - 1, i + 1, x);
+//     }
+
+//     return term1 + term2;
+// }

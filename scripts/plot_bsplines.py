@@ -58,7 +58,7 @@ import json
 with open("input.json") as f:
     data = json.load(f)
 
-n_bspline = data["BSpline"]["n_bspline"]
+n_bspline = data["BSpline"]["nbasis"]
 
 
 bspline_data = np.loadtxt("misc/bsplines.txt")
