@@ -14,7 +14,7 @@ class Atom
         template<typename T>
         T potentialVal(T position)
         {
-        if (species == "H")
+        if (Species() == "H")
             return Potentials::hydrogenPotential(position);
 
         throw std::runtime_error("unknown species");
@@ -23,11 +23,13 @@ class Atom
         template<typename T>
         T potentialDerivativeVal(T position)
         {
-        if (species == "H")
+        if (Species() == "H")
             return Potentials::hydrogenPotentialDerivative(position);
 
         throw std::runtime_error("unknown species");
         }
+
+        const std::string& Species() const {return species;}
 
     private:
 

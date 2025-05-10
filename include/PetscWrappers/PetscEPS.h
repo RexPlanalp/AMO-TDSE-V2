@@ -36,6 +36,8 @@ class EPSSolver
     EPSSolver(EPSSolver&&)                 = delete;
     EPSSolver& operator=(EPSSolver&&)      = delete;
 
+    PetscInt NCONV() const {return nconv;}
+
 
     void reset()
     {

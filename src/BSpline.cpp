@@ -361,7 +361,7 @@ std::complex<double> BSpline::BTest(int i, std::complex<double> x) const
     return N[0];
 }
 
-Matrix BSpline::PopulateMatrix(std::function<std::complex<double>(int, int, std::complex<double>)> integrand,bool use_ecs)
+Matrix BSpline::PopulateMatrix(std::function<std::complex<double>(int, int, std::complex<double>)> integrand,bool use_ecs) const
 {   
     Matrix matrix{PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,NBSpline(),NBSpline(),2*Degree() + 1};
 

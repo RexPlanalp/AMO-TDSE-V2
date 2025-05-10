@@ -2,7 +2,9 @@
 
 #include "nlohmann/json.hpp"
 #include "PetscWrappers/PetscEPS.h"
-
+#include "Atom.h"
+#include "Angular.h"
+#include "BSpline.h"
 class TISE
 {
     public:
@@ -21,6 +23,8 @@ class TISE
         bool ON() const {return on;}
         const std::string& OUT() const {return outputPath;}
         PetscInt NMAX() const {return n_max;}
+
+        void solve(const BSpline& bspline, const Atom& atom, const Angular& angular);
     
     private:
         // Member List Initialized

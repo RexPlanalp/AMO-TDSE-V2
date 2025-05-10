@@ -38,6 +38,11 @@ class Simulation
             angular.dumpTo("misc",rank);
             laser.dumpTo("misc",rank);
         }
+
+        void solveTISE()
+        {
+            tise.solve(bspline,atom, angular);
+        }
     
        
         

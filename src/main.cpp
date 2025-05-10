@@ -30,7 +30,7 @@ int main(int argc, char **argv)
     nlohmann::json inputPar = loadJson(inputPath);
 
     Simulation simulation(inputPar, rank, size, comm);
-
+    simulation.solveTISE();
    
 
 
