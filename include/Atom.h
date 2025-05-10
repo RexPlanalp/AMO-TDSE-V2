@@ -1,43 +1,46 @@
 #pragma once
 
+#include <string>
 #include <complex>
-#include "Potentials.h"
-#include "nlohmann/json.hpp"
+#include <stdexcept>
+#include "Input.h"
 
-class Atom
-{   public:
-        Atom() = delete;
-        explicit Atom(const nlohmann::json& input_file)
-        : species(input_file.at("Atom").at("potential"))
-        {validateInput();}
+class Atom {
+public:
 
-        template<typename T>
-        T potentialVal(T position)
+    struct Potentials 
+    {
+        static std::complex<double> hydrogen(const std::complex<double>& x) 
         {
-        if (Species() == "H")
-            return Potentials::hydrogenPotential(position);
-
-        throw std::runtime_error("unknown species");
+            return -std::complex<double>{1.0} / (x + std::complex<double>{1e-25});
         }
 
-        template<typename T>
-        T potentialDerivativeVal(T position)
+        static std::complex<double> hydrogenDeriv(const std::complex<double>& x) 
         {
-        if (Species() == "H")
-            return Potentials::hydrogenPotentialDerivative(position);
-
-        throw std::runtime_error("unknown species");
+            return  std::complex<double>{1.0} / (x * x + std::complex<double>{1e-25});
         }
+    };
 
-        const std::string& Species() const {return species;}
 
-    private:
 
-        // Member List Initialized
-        std::string species{};
+    explicit Atom(const Input& input)
+      : species{input.getJSON().at("Atom").at("potential")}
+    {
+        if (species == "H") 
+        {
+            potential  = &Potentials::hydrogen;
+            derivative = &Potentials::hydrogenDeriv;
+        }
+    }
 
-        // Member Functions
-        void validateInput();
+    std::complex<double> operator()(const std::complex<double>& x) const {return (*potential)(x);}
+
+    std::complex<double> dpotential(const std::complex<double>& x) const {return (*derivative)(x);}
+
+    void printConfiguration(int rank);
+
+private:
+    std::complex<double> (*potential)(const std::complex<double>&);
+    std::complex<double> (*derivative)(const std::complex<double>&);
+    std::string    species;
 };
-
-

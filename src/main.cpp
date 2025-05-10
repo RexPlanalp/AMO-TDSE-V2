@@ -5,6 +5,7 @@
 #include "Box.h"
 #include "Angular.h"
 #include "Laser.h"
+#include "Atom.h"
 
 
 int main(int argc, char **argv)
@@ -37,6 +38,10 @@ int main(int argc, char **argv)
     angular.buildMaps(laser,initial_state);
     angular.printConfiguration(rank);
     angular.dumpTo("misc",rank);
+
+    Atom atom{input};
+    atom.printConfiguration(rank);
+
 
     SlepcFinalize();
 

@@ -1,9 +1,10 @@
 #include "Atom.h"
 
-void Atom::validateInput()
+void Atom::printConfiguration(int rank)
 {
-    if (species == std::string{})
+    if (rank == 0)
     {
-        throw std::invalid_argument("Species must be non-empty. You entered: " + species);
+        std::cout << "Atom Configuration: " << "\n\n";
+        std::cout << "Potential: " << species <<  "\n\n";
     }
 }
