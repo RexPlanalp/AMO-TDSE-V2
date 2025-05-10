@@ -3,6 +3,8 @@
 
 #include "Input.h"
 #include "Box.h"
+#include "Angular.h"
+#include "Laser.h"
 
 
 int main(int argc, char **argv)
@@ -16,11 +18,33 @@ int main(int argc, char **argv)
 
     std::string inputPath = argv[1];
 
+    // Bootstraping
+    std::array<int,3> initial_state{1,0,0};
+    createDirectory("misc",rank);
+    createDirectory("images",rank);
+
     Input input{inputPath};
     input.validate();
 
     Box box{input};
     box.printConfiguration(rank);
+
+    Laser laser{input};
+    laser.printConfiguration(rank);
+    laser.dumpTo("misc",rank);
+
+    Angular angular{input};
+    angular.buildMaps(laser,initial_state);
+    angular.printConfiguration(rank);
+    angular.dumpTo("misc",rank);
+
+    SlepcFinalize();
+
+    
+
+    
+
+
 
     
 

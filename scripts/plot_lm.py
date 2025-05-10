@@ -6,7 +6,7 @@ with open("input.json") as f:
     data = json.load(f)
 
 
-lmax = data["Angular"]["l_max"]
+lmax = data["Angular"]["lmax"]
 lm_to_block_txt = np.loadtxt("misc/lm_map.txt")
 fig,ax = plt.subplots()
 space_size =lmax + 1

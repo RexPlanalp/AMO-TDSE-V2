@@ -7,8 +7,8 @@ class Box
     public:
 
         explicit Box(const Input& input) 
-        : gridSize{input.params.at("Box").at("gridSize")}
-        , gridSpacing{input.params.at("Box").at("gridSpacing")}
+        : gridSize{input.getJSON().at("Box").at("gridSize")}
+        , gridSpacing{input.getJSON().at("Box").at("gridSpacing")}
         {   
            
 
@@ -36,9 +36,9 @@ class Box
         double gridSize{};
         double gridSpacing{};
         
-        // Default Initialized
-        int Nr;
-        std::vector<double> positions;
+        // Derived
+        int Nr{};
+        std::vector<double> positions{};
 
         // Member Functions
         void validateInput();

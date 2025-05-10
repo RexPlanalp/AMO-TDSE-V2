@@ -1,9 +1,8 @@
 #pragma once
 
-#include <string>
-#include "nlohmann/json.hpp"
-#include <optional>
+#include "Input.h"
 #include "Laser.h"
+
 
 using lm_pair = std::pair<int,int>;
 using lm_map = std::map<lm_pair,int>;
@@ -13,41 +12,21 @@ using block_map = std::map<int,lm_pair>;
 class Angular
 {
     public:
+        explicit Angular(const Input& input) 
+        : lmax{input.getJSON().at("Angular").at("lmax")}
+        , mmin{input.getJSON().at("Angular").at("mmin")}
+        , mmax{input.getJSON().at("Angular").at("mmax")}
+        {}
 
-        Angular() = delete;
-
-        explicit Angular(const nlohmann::json& input_file) 
-        : l_max{input_file.at("Angular").at("l_max")}
-        , m_min{input_file.at("Angular").at("m_min")}
-        , m_max{input_file.at("Angular").at("m_max")}
-        {validateInput();}
-
-        int LMax() const {return l_max;}
-        int MMin() const {return m_min;}
-        int MMax() const {return m_max;}
-        int N_lm() const {return n_lm;}
-
-        const lm_map& LMMap()  
-        {
-            if (!lm_to_block.has_value())
-            {
-                throw std::logic_error("lm_to_block has not been built yet.");
-            }
-            
-
-            return lm_to_block.value();
-        }
-
-        const block_map& BlockMap() const
-        {
-            if (!block_to_lm.has_value())
-            {
-                throw std::logic_error("block_to_lm has not been built yet.");
-            }
-            return block_to_lm.value();
-        }
+        int getLmax() const {return lmax;}
+        int getMmin() const {return mmin;}
+        int getMmax() const {return mmax;}
+        int getNlm() const {return nlm;}
+        const lm_map& getLMMap() const { return lm_to_block;}
+        const block_map& getBlockMap() const{return block_to_lm;}
 
         void buildMaps(const Laser& laser, const std::array<int,3>& initial_state);
+        void printConfiguration(int rank);
         void dumpTo(const std::string& directory,int rank);
 
         
@@ -58,17 +37,17 @@ class Angular
     private:
 
         // Member List Initialized
-        int l_max{};
-        int m_min{};
-        int m_max{};
-        int n_lm{};
+        int lmax{};
+        int mmin{};
+        int mmax{};
+        
 
-        // Default Initialized
-        std::optional<lm_map> lm_to_block{};
-        std::optional<block_map> block_to_lm{};
+        // Derived
+        int nlm{};
+        lm_map lm_to_block{};
+        block_map block_to_lm{};
 
         // Member Functions
-        void validateInput();
         void buildZ(int m_i);
         void buildXY(int l_i, int m_i);
         void buildXYZ();

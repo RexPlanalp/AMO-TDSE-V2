@@ -1,32 +1,35 @@
 #pragma once
 
-#include "nlohmann/json.hpp"
+#include "Input.h"
 #include "misc.h"
 
 class Laser
 {   
     public:
-        Laser() = delete;
-
-        explicit Laser(const nlohmann::json& input_file)
-        : N_cycles{input_file.at("Laser").at("N")}
-        , dt{input_file.at("Laser").at("time_spacing")}
-        , w{input_file.at("Laser").at("w")}
-        , I_si{input_file.at("Laser").at("I")}
-        , polarization{input_file.at("Laser").at("polarization").get<std::array<double,3>>()}
-        , poynting{input_file.at("Laser").at("poynting").get<std::array<double,3>>()}
-        , ell{input_file.at("Laser").at("ell")}
-        , cep_r{input_file.at("Laser").at("cep_r")}
+        explicit Laser(const Input& input)
+        : N_cycles{input.getJSON().at("Laser").at("N")}
+        , dt{input.getJSON().at("Laser").at("timeSpacing")}
+        , w{input.getJSON().at("Laser").at("w")}
+        , I{input.getJSON().at("Laser").at("I")}
+        , polarization{input.getJSON().at("Laser").at("polarization").get<std::array<double,3>>()}
+        , poynting{input.getJSON().at("Laser").at("poynting").get<std::array<double,3>>()}
+        , ell{input.getJSON().at("Laser").at("ell")}
+        , cep{input.getJSON().at("Laser").at("cepr")}
         {
-            validateInput();
+            I /= Constants::I_AU;
+            A_0 = std::sqrt(I) / getW();
 
-            I_au = I_si / 3.51E16;
-            A_0 = std::sqrt(I_au) / W();
+            t_max = getN() * 2 * M_PI / getW();
+            cep *= M_PI;
+            
+            Nt = static_cast<int>(std::round(getTmax() / getTimeSpacing())) + 1;
+            times.resize(Nt);
+            for (int idx = 0; idx < Nt; ++idx)
+            {
+                times[idx] = idx * getTimeSpacing();
+            }
 
-            t_max = N() * 2 * M_PI / W();
-            cep = cep_r * M_PI;
-
-            ellipticity = crossProduct(Polarization(),Poynting());
+            ellipticity = crossProduct(getPolarization(),getPoynting());
 
             normalize(polarization);
             normalize(poynting);
@@ -34,22 +37,22 @@ class Laser
             buildNonzeroComponents();
         }
 
-        double N() const {return N_cycles;} 
-        double W() const {return w;} 
-        double TimeSpacing() const {return dt;} 
-        double I() const {return I_au;} 
-        double A0() const {return A_0;} 
-        double TMAX() const {return t_max;}
-        double ELL() const {return ell;}
-        double CEP() const {return cep;}
-        double CEP_R() const {return cep_r;}
-        const std::array<double,3>& Polarization() const {return polarization;}
-        const std::array<double,3>& Poynting() const {return poynting;}
-        const std::array<double,3>& Ellipticity() const {return ellipticity;}
-        const std::array<int,3>& Components() const {return components;}
+        double getN() const {return N_cycles;} 
+        double getW() const {return w;} 
+        double getTimeSpacing() const {return dt;} 
+        double getI() const {return I;} 
+        double getA0() const {return A_0;} 
+        double getTmax() const {return t_max;}
+        double getEll() const {return ell;}
+        double getCEP() const {return cep;}
+        int getNt() const {return Nt;}
+        const std::array<double,3>& getPolarization() const {return polarization;}
+        const std::array<double,3>& getPoynting() const {return poynting;}
+        const std::array<double,3>& getEllipticity() const {return ellipticity;}
+        const std::array<int,3>& getComponents() const {return components;}
 
-        int Nt() const;
-        double Time(int i) const;
+        void printConfiguration(int rank);
+        double getTime(int i) const;
         void dumpTo(const std::string& directory,int rank);
 
 
@@ -61,19 +64,19 @@ class Laser
         double N_cycles{};
         double dt{};
         double w{};
-        double I_si{};
+        double I{};
         std::array<double,3> polarization{};
         std::array<double,3> poynting{};
         double ell{};
-        double cep_r{};
+        double cep{};
 
-        // Default Initialized
-        double A_0;
-        double I_au;
-        double t_max;
-        std::array<double,3> ellipticity;
-        std::array<int,3> components;
-        double cep;
+        // Derived
+        double A_0{};
+        double t_max{};
+        int Nt{};
+        std::array<double,3> ellipticity{};
+        std::array<int,3> components{};
+        std::vector<double> times{};
 
         // Member functions
         void buildNonzeroComponents();

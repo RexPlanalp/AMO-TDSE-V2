@@ -3,15 +3,18 @@
 #include "nlohmann/json.hpp"
 #include "misc.h"
 
-struct Input
+class Input
 {   
+    public:
+        Input(const std::string& inputPath) 
+        : params(loadJson(inputPath))
+        {}
 
-    Input(const std::string& inputPath) 
-    : params(loadJson(inputPath))
-    {validate();}
+
+        void validate() const {}
+        const nlohmann::json& getJSON() const {return params;}
 
 
-    void validate() const {}
-            
-    nlohmann::json params;
+    private:     
+        nlohmann::json params;
 };

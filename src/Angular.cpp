@@ -3,19 +3,6 @@
 #include <iostream>
 #include "Laser.h"
 
-void Angular::validateInput()
-{
-    if (LMax() <= 0)
-    {
-        throw std::invalid_argument("l_max size must be greater than zero. You entered: " + std::to_string(LMax()));
-    }
-    
-
-    if ((abs(MMin()) > LMax()) || (abs(MMax()) > LMax() ))
-    {
-        throw std::invalid_argument("m_min and m_max should be less than or equal in magnitude to l_max.");
-    }
-}
 
 void Angular::buildMaps(const Laser& laser,const std::array<int,3>& initial_state)
 {   
@@ -25,11 +12,11 @@ void Angular::buildMaps(const Laser& laser,const std::array<int,3>& initial_stat
     int l_i = initial_state[1];
     int m_i = initial_state[2];
 
-    if (laser.Components()[2] && !(laser.Components()[0] || laser.Components()[1]))
+    if (laser.getComponents()[2] && !(laser.getComponents()[0] || laser.getComponents()[1]))
     {
         buildZ(m_i);
     }
-    else if ((laser.Components()[0] || laser.Components()[1]) && !laser.Components()[2])
+    else if ((laser.getComponents()[0] || laser.getComponents()[1]) && !laser.getComponents()[2])
     {
         buildXY(l_i,m_i);
     }
@@ -38,19 +25,19 @@ void Angular::buildMaps(const Laser& laser,const std::array<int,3>& initial_stat
         buildXYZ();
     }
 
-    for (const auto& pair : lm_to_block.value())
+    for (const auto& pair : lm_to_block)
     {
-        block_to_lm.value()[pair.second] = pair.first;
+        block_to_lm[pair.second] = pair.first;
     }
 
-    n_lm = lm_to_block.value().size();
+    nlm = lm_to_block.size();
 }
 
 void Angular::buildZ(int m_i)
 {
-    for (int l = 0; l <= LMax(); ++l)
+    for (int l = 0; l <= getLmax(); ++l)
     {
-        lm_to_block.value()[lm_pair(l,m_i)] = l;
+        lm_to_block[lm_pair(l,m_i)] = l;
     }
 }
 
@@ -70,11 +57,11 @@ void Angular::buildXYZ()
 {
     int block_idx{};
 
-    for (int l = 0; l <= LMax(); ++l)
+    for (int l = 0; l <= getLmax(); ++l)
     {
         for (int m = -l; m <= l; ++m)
         {
-            lm_to_block.value()[lm_pair(l,m)] = block_idx;
+            lm_to_block[lm_pair(l,m)] = block_idx;
             block_idx++;
         }
     }
@@ -84,7 +71,7 @@ void Angular::buildEven()
 {
     int block_idx{};
 
-    for (int l = 0; l <= LMax(); ++l)
+    for (int l = 0; l <= getLmax(); ++l)
     {
         int temp_idx{};
 
@@ -92,7 +79,7 @@ void Angular::buildEven()
         {
             if (temp_idx % 2 == 0)
             {
-                lm_to_block.value()[lm_pair(l,m)] = block_idx;
+                lm_to_block[lm_pair(l,m)] = block_idx;
                 block_idx++;
             }
             temp_idx++;
@@ -104,7 +91,7 @@ void Angular::buildOdd()
 {
     int block_idx{};
 
-    for (int l = 1; l <= LMax(); ++l)
+    for (int l = 1; l <= getLmax(); ++l)
     {
         int temp_idx{};
 
@@ -112,13 +99,27 @@ void Angular::buildOdd()
         {
             if (temp_idx % 2 == 0)
             {
-                lm_to_block.value()[lm_pair(l,m)] = block_idx;
+                lm_to_block[lm_pair(l,m)] = block_idx;
                 block_idx++;
             }
             temp_idx++;
         }
     }
 }
+
+
+void Angular::printConfiguration(int rank)
+{
+    if (rank == 0)
+    {
+        std::cout << "Angular Configuration: " << "\n\n";
+        std::cout << "lmax: " << getLmax() << "\n\n";
+        std::cout << "mmax: " << getMmax() << "\n\n";
+        std::cout << "mmin: " << getMmin() << "\n\n";
+        std::cout << "nlm: "  << getNlm() << "\n\n";
+    }
+}
+
 
 void Angular::dumpTo(const std::string& directory, int rank)
 {   
@@ -133,7 +134,7 @@ void Angular::dumpTo(const std::string& directory, int rank)
             std::cerr << "Error opening file: " << filename << '\n';
         }
 
-        for (const auto& entry : LMMap()) 
+        for (const auto& entry : getLMMap()) 
         {
             outFile << entry.first.first << " " << entry.first.second << " " << entry.second << "\n";
         }

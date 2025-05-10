@@ -12,8 +12,8 @@ void Box::printConfiguration(int rank) const
     if (rank == 0)
     {
         std::cout << "Box Configuration: " << "\n\n";
-        std::cout << "rmax: " << getGridSize() << '\n';
-        std::cout << "dr: " << getGridSpacing() << '\n';
-        std::cout << "Nr: " << getNr() << '\n';
+        std::cout << "rmax: " << getGridSize() << "\n\n";
+        std::cout << "dr: " << getGridSpacing() << "\n\n";
+        std::cout << "Nr: " << getNr() << "\n\n";
     }
 }

@@ -6,6 +6,12 @@
 #include <nlohmann/json.hpp>
 #include <complex>
 
+
+namespace Constants
+{
+    constexpr double I_AU = 3.51E16;
+}
+
 inline nlohmann::json loadJson(const std::string& path)
 {
     auto abs = std::filesystem::absolute(path);
@@ -21,7 +27,7 @@ inline nlohmann::json loadJson(const std::string& path)
     return j;
 }
 
-inline void createDirectory(int rank, const std::string& directory)
+inline void createDirectory(const std::string& directory,int rank)
 {
     try 
     {
