@@ -1,28 +1,28 @@
 #pragma once 
 
-#include "nlohmann/json.hpp"
+
 #include "PetscWrappers/PetscEPS.h"
+#include "Input.h"
+#include "BSpline.h"
 #include "Atom.h"
 #include "Angular.h"
-#include "BSpline.h"
+
 class TISE
 {
     public:
-        TISE() = delete;
+        explicit TISE(const Input& input) 
+        : maxIter(input.getJSON().at("TISE").at("max_iter"))
+        , tolerance(input.getJSON().at("TISE").at("tolerance"))
+        , status{input.getJSON().at("TISE").at("status")}
+        , outputPath{input.getJSON().at("TISE").at("outputPath")}
+        , nmax(input.getJSON().at("TISE").at("nmax"))
+        {}
 
-        explicit TISE(const nlohmann::json& input_file) 
-        : maxIter(input_file.at("TISE").at("max_iter"))
-        , tolerance(input_file.at("TISE").at("tolerance"))
-        , on{input_file.at("TISE").at("on")}
-        , outputPath{input_file.at("TISE").at("output")}
-        , n_max(input_file.at("TISE").at("n_max"))
-        {validateInput();}
-
-        PetscInt MAXITER() const {return maxIter;}
-        PetscReal Tol() const {return tolerance;}
-        bool ON() const {return on;}
-        const std::string& OUT() const {return outputPath;}
-        PetscInt NMAX() const {return n_max;}
+        PetscInt getMaxIter() const {return maxIter;}
+        PetscReal getTol() const {return tolerance;}
+        bool getStatus() const {return status;}
+        const std::string& getOutputPath() const {return outputPath;}
+        PetscInt getNmax() const {return nmax;}
 
         void solve(const BSpline& bspline, const Atom& atom, const Angular& angular);
     
@@ -30,13 +30,11 @@ class TISE
         // Member List Initialized
         PetscInt maxIter{};
         PetscReal tolerance{};
-        bool on{};
+        bool status{};
         std::string outputPath{};
-        PetscInt n_max{};
+        PetscInt nmax{};
 
-        // Member Functions
-        void validateInput();
-
+       
         
     
     

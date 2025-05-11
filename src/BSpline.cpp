@@ -3,7 +3,7 @@
 
 #include "BSpline.h"
 #include "Box.h"
-
+#include "PetscWrappers/PetscMat.h"
 
 const std::unordered_map<int, std::pair<std::vector<double>, std::vector<double>>> BSpline::GaussLegendre::RootsAndWeights = 
 {
@@ -38,34 +38,6 @@ void BSpline::buildComplexKnots()
         complex_knots[idx] = ecs_x(knots[idx]);
     }
 }
-
-// void BSpline::buildLinearKnots(const Box& box)
-// {
-//     int N_knots   = getNbasis() + getOrder();
-//     int N_middle  = N_knots - 2 * getOrder();
-//     double step   = box.getGridSize() / (N_middle - 1);
-
-//     knots.resize(N_knots);
-//     int start_mid = order;
-//     int end_mid   = N_knots - order - 1;
-
-//     for (int idx = 0; idx < N_knots; ++idx) 
-//     {
-//         if (idx < start_mid) 
-//         {
-//             knots[idx] = 0.0;
-//         }
-//         else if (idx > end_mid) 
-//         {
-//             knots[idx] = box.getGridSize();
-//         }
-//         else 
-//         {
-//             int j = idx - start_mid;
-//             knots[idx] = j * step;
-//         }
-//     }
-// }
 
 void BSpline::buildLinearKnots(const Box& box)
 {   
@@ -311,26 +283,26 @@ std::complex<double> BSpline::B(int i, std::complex<double> x) const
     return N[0];
 }
 
-// Matrix BSpline::PopulateMatrix(std::function<std::complex<double>(int, int, std::complex<double>)> integrand,bool use_ecs) const
-// {   
-//     Matrix matrix{PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,NBSpline(),NBSpline(),2*Degree() + 1};
+Matrix BSpline::PopulateMatrix(BSpline::MatrixIntegrand integrand,bool use_ecs) const
+{   
+    Matrix matrix{PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,getNbasis(),getNbasis(),2*getDegree() + 1};
 
    
 
-//     for (int i = matrix.getStart(); i < matrix.getEnd(); i++) 
-//     {
-//         int col_start = std::max(0, i - order + 1);
-//         int col_end = std::min(NBSpline(), i + order);
+    for (int i = matrix.getStart(); i < matrix.getEnd(); i++) 
+    {
+        int col_start = std::max(0, i - getOrder() + 1);
+        int col_end = std::min(getNbasis(), i + getOrder());
 
-//         for (int j = col_start; j < col_end; j++) 
-//         {
-//             std::complex<double> result = integrateMatrixElement(i, j,integrand,use_ecs);
-//             MatSetValue(matrix.get(), i, j, result, INSERT_VALUES); 
-//         }
-//     }
-//     matrix.assemble();
-//     return matrix;
-// }
+        for (int j = col_start; j < col_end; j++) 
+        {
+            std::complex<double> result = integrateMatrixElement(i, j,integrand,use_ecs);
+            MatSetValue(matrix.get(), i, j, result, INSERT_VALUES); 
+        }
+    }
+    matrix.assemble();
+    return matrix;
+}
 
 
 

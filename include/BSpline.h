@@ -3,6 +3,7 @@
 #include "Input.h"
 
 #include "Box.h"
+#include "PetscWrappers/PetscMat.h"
 
 
 class BSpline
@@ -47,6 +48,14 @@ class BSpline
         void printConfiguration(int rank);
         void dumpTo(const Box& box, const std::string& directory, int rank);
         void buildKnots(const Box& box);
+
+        Matrix PopulateMatrix(MatrixIntegrand integrand,bool use_ecs) const;
+        std::complex<double> overlapIntegrand(int i, int j, std::complex<double> x) const {return B(i, x) * B(j, x);}
+        std::complex<double> kineticIntegrand(int i, int j, std::complex<double> x) const {return 0.5 * dB(i, x) * dB(j, x);}
+        std::complex<double> invrIntegrand(int i, int j, std::complex<double> x) const {return B(i, x) * B(j, x) / (x + 1E-25);}
+        std::complex<double> invr2Integrand(int i, int j, std::complex<double> x) const {return B(i, x) * B(j, x) / (x*x + 1E-25);}
+        std::complex<double> derIntegrand(int i, int j, std::complex<double> x) const {return B(i, x) * dB(j,x);}
+        std::complex<double> HIntegrand(int i, int j, std::complex<double> x) const {return - B(i, x) * B(j, x) / (x + 1E-25);}
         
 
         // std::complex<double> B(int degree, int i, std::complex<double> x) const;
@@ -76,18 +85,13 @@ class BSpline
         void buildComplexKnots();
         void buildR0();
 
-        std::complex<double> overlapIntegrand(int i, int j, std::complex<double> x) const {return B(i, x) * B(j, x);}
-        std::complex<double> kineticIntegrand(int i, int j, std::complex<double> x) const {return 0.5 * dB(i, x) * dB(j, x);}
-        std::complex<double> invrIntegrand(int i, int j, std::complex<double> x) const {return B(i, x) * B(j, x) / (x + 1E-25);}
-        std::complex<double> invr2Integrand(int i, int j, std::complex<double> x) const {return B(i, x) * B(j, x) / (x*x + 1E-25);}
-        std::complex<double> derIntegrand(int i, int j, std::complex<double> x) const {return B(i, x) * dB(j,x);}
+     
 
 
-
-        // std::complex<double> HIntegrand(int i, int j, std::complex<double> x) const {return B(i, x) * B(j, x) * Potentials::hydrogenPotential(x);}
+       
         
 
-        // Matrix PopulateMatrix(std::function<std::complex<double>(int, int, std::complex<double>)> integrand,bool use_ecs) const;
+        
 
 
         

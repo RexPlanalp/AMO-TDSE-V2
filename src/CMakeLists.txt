@@ -22,6 +22,7 @@ set(HEADERLIST
   "${PROJECT_SOURCE_DIR}/include/Laser.h"
   "${PROJECT_SOURCE_DIR}/include/Atom.h"
   "${PROJECT_SOURCE_DIR}/include/BSpline.h"
+  "${PROJECT_SOURCE_DIR}/include/TISE.h"
 )
 
 set(INCLUDEDIRS
@@ -36,7 +37,7 @@ set(SOURCELIST
     "${PROJECT_SOURCE_DIR}/src/Laser.cpp"
     "${PROJECT_SOURCE_DIR}/src/Atom.cpp"
     "${PROJECT_SOURCE_DIR}/src/BSpline.cpp"
-    #"${PROJECT_SOURCE_DIR}/src/TISE.cpp"
+    "${PROJECT_SOURCE_DIR}/src/TISE.cpp"
     
 
 )

@@ -7,9 +7,12 @@
 #include "Laser.h"
 #include "Atom.h"
 #include "BSpline.h"
+#include "TISE.h"
 
 
 #include <chrono>
+#include "PetscWrappers/PetscMat.h"
+#include "petsc.h"
 
 
 int main(int argc, char **argv)
@@ -49,28 +52,12 @@ int main(int argc, char **argv)
     BSpline bspline{input};
     bspline.buildKnots(box);
     bspline.printConfiguration(rank);
-    bspline.dumpTo(box,"misc",rank);
+    //bspline.dumpTo(box,"misc",rank);
 
+    TISE tise{input};
+    tise.solve(bspline,atom,angular);
     
 
     SlepcFinalize();
-
-    
-
-    
-
-
-
-    
-
-
-
-    
-   
-
-
-
-  
-
     return 0;
 }
