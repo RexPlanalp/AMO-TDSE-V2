@@ -55,21 +55,21 @@ class Matrix
         }
         
         // Move Assignment 
-        Matrix& operator=(Matrix&& other) noexcept
-        {
-            if (this != &other)
-            {
-                if (m)
-                {
-                    MatDestroy(&m);
-                }
-                m = other.m;
-                other.m = nullptr;
-                other.iStart = 0;
-                other.iEnd = 0;
-            }
-            return *this;
-        }
+        // Matrix& operator=(Matrix&& other) noexcept
+        // {
+        //     if (this != &other)
+        //     {
+        //         if (m)
+        //         {
+        //             MatDestroy(&m);
+        //         }
+        //         m = other.m;
+        //         other.m = nullptr;
+        //         other.iStart = 0;
+        //         other.iEnd = 0;
+        //     }
+        //     return *this;
+        // }
         friend void swap(Matrix& a, Matrix& b) noexcept
         {
             std::swap(a.m,b.m);

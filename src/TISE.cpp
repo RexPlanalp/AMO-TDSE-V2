@@ -20,7 +20,13 @@ void TISE::solve(const BSpline& bspline, const Atom& atom, const Angular& angula
 
     Matrix Invr2 = bspline.PopulateMatrix(&BSpline::invr2Integrand,false);
     
-    Matrix Pot = bspline.PopulateMatrix(&BSpline::HIntegrand,false);
+    Matrix Pot{};
+
+    if (atom.getSpecies() == "H")
+    {
+        Pot = bspline.PopulateMatrix(&BSpline::HIntegrand,false);
+    }
+     
     
 
     Matrix S = bspline.PopulateMatrix(&BSpline::overlapIntegrand,false);

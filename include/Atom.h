@@ -4,22 +4,12 @@
 #include <complex>
 #include <stdexcept>
 #include "Input.h"
+#include "Potentials.h"
 
 class Atom {
 public:
 
-    struct Potentials 
-    {
-        static std::complex<double> hydrogen(const std::complex<double>& x) 
-        {
-            return -std::complex<double>{1.0} / (x + std::complex<double>{1e-25});
-        }
-
-        static std::complex<double> hydrogenDeriv(const std::complex<double>& x) 
-        {
-            return  std::complex<double>{1.0} / (x * x + std::complex<double>{1e-25});
-        }
-    };
+    
 
 
 
@@ -36,6 +26,8 @@ public:
     std::complex<double> operator()(const std::complex<double>& x) const {return (*potential)(x);}
 
     std::complex<double> dpotential(const std::complex<double>& x) const {return (*derivative)(x);}
+
+    const std::string& getSpecies() const {return species;}
 
     void printConfiguration(int rank);
 

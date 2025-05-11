@@ -5,6 +5,7 @@
 #include "Box.h"
 #include "PetscWrappers/PetscMat.h"
 
+#include "Potentials.h"
 
 class BSpline
 {   
@@ -13,8 +14,6 @@ class BSpline
     {
         static const std::unordered_map<int, std::pair<std::vector<double>, std::vector<double>>> RootsAndWeights;
     };
-
-
 
     public:
         explicit BSpline(const Input& input)
@@ -55,7 +54,7 @@ class BSpline
         std::complex<double> invrIntegrand(int i, int j, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) const {return B(i, x,localKnots) * B(j, x,localKnots) / (x + 1E-25);}
         std::complex<double> invr2Integrand(int i, int j, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) const {return B(i, x,localKnots) * B(j, x,localKnots) / (x*x + 1E-25);}
         std::complex<double> derIntegrand(int i, int j, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) const {return B(i, x,localKnots) * dB(j,x,localKnots);}
-        std::complex<double> HIntegrand(int i, int j, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) const {return - B(i, x,localKnots) * B(j, x,localKnots) / (x + 1E-25);}
+        std::complex<double> HIntegrand(int i, int j, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) const {return  B(i, x,localKnots) * B(j, x,localKnots) * Potentials::hydrogen(x) ;}
     
 
     private:
@@ -79,17 +78,6 @@ class BSpline
         void buildLinearKnots(const Box& box);
         void buildComplexKnots();
         void buildR0();
-
-     
-
-
-       
-        
-
-        
-
-
-        
 };
 
 
