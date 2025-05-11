@@ -8,6 +8,10 @@
 
 void TISE::solve(const BSpline& bspline, const Atom& atom, const Angular& angular)
 {   
+    if (!getStatus())
+    {
+        return;
+    }
    
 
     Matrix K = bspline.PopulateMatrix(&BSpline::kineticIntegrand,false);

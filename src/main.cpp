@@ -55,7 +55,15 @@ int main(int argc, char **argv)
     //bspline.dumpTo(box,"misc",rank);
 
     TISE tise{input};
+
+    auto start = std::chrono::high_resolution_clock::now();
     tise.solve(bspline,atom,angular);
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> delta = end - start;
+    if (rank == 0)
+    {
+        std::cout << delta.count() << '\n';
+    }
     
 
     SlepcFinalize();

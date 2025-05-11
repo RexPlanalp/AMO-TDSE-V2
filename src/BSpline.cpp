@@ -39,33 +39,6 @@ void BSpline::buildComplexKnots()
     }
 }
 
-// void BSpline::buildLinearKnots(const Box& box)
-// {   
-//     int N_knots   = getNbasis() + getOrder();
-//     int N_middle  = N_knots - 2 * (getOrder() - 1);
-//     double step   = box.getGridSize() / (N_middle - 1);
-
-//     knots.resize(N_knots);
-//     int start_mid = order - 1;
-//     int end_mid   = N_knots - order;
-
-//     for (int idx = 0; idx < N_knots; ++idx) 
-//     {
-//         if (idx < start_mid) 
-//         {
-//             knots[idx] = 0.0;
-//         }
-//         else if (idx > end_mid) 
-//         {
-//             knots[idx] = box.getGridSize();
-//         }
-//         else 
-//         {
-//             int j = idx - start_mid;
-//             knots[idx] = j * step;
-//         }
-//     }
-// }
 
 
 void BSpline::buildLinearKnots(const Box& box)
@@ -95,7 +68,6 @@ void BSpline::buildLinearKnots(const Box& box)
     }
 
 }
-
 
 void BSpline::buildR0()
 {
