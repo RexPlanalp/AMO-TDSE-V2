@@ -39,35 +39,62 @@ void BSpline::buildComplexKnots()
     }
 }
 
+// void BSpline::buildLinearKnots(const Box& box)
+// {   
+//     int N_knots   = getNbasis() + getOrder();
+//     int N_middle  = N_knots - 2 * (getOrder() - 1);
+//     double step   = box.getGridSize() / (N_middle - 1);
+
+//     knots.resize(N_knots);
+//     int start_mid = order - 1;
+//     int end_mid   = N_knots - order;
+
+//     for (int idx = 0; idx < N_knots; ++idx) 
+//     {
+//         if (idx < start_mid) 
+//         {
+//             knots[idx] = 0.0;
+//         }
+//         else if (idx > end_mid) 
+//         {
+//             knots[idx] = box.getGridSize();
+//         }
+//         else 
+//         {
+//             int j = idx - start_mid;
+//             knots[idx] = j * step;
+//         }
+//     }
+// }
+
+
 void BSpline::buildLinearKnots(const Box& box)
-{   
+{
     int N_knots   = getNbasis() + getOrder();
-    int N_middle  = N_knots - 2 * (getOrder() - 1);
+    int leftMult  = getOrder() - 2;
+    int rightMult = getOrder() - 2;
+    int N_middle  = N_knots - leftMult - rightMult;   
     double step   = box.getGridSize() / (N_middle - 1);
 
-    knots.resize(N_knots);
-    int start_mid = order - 1;
-    int end_mid   = N_knots - order;
+    knots.clear();
+    knots.reserve(N_knots);
 
-    for (int idx = 0; idx < N_knots; ++idx) 
+    for (int i = 0; i < leftMult; ++i)
     {
-        if (idx < start_mid) 
-        {
-            knots[idx] = 0.0;
-        }
-        else if (idx > end_mid) 
-        {
-            knots[idx] = box.getGridSize();
-        }
-        else 
-        {
-            int j = idx - start_mid;
-            knots[idx] = j * step;
-        }
+        knots.push_back(0.0);
     }
+        
+    for (int j = 0; j < N_middle; ++j)
+    {
+        knots.push_back(j * step);
+    }
+        
+    for (int i = 0; i < rightMult; ++i)
+    {
+        knots.push_back(box.getGridSize());
+    }
+
 }
-
-
 
 
 void BSpline::buildR0()
