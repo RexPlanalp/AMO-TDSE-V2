@@ -8,7 +8,7 @@
 
 class BSpline
 {   
-    using MatrixIntegrand = std::complex<double> (BSpline::*)(int, int, std::complex<double>) const;
+    using MatrixIntegrand = std::complex<double> (BSpline::*)(int, int, std::complex<double>, const std::vector<std::complex<double>>&) const;
     struct GaussLegendre
     {
         static const std::unordered_map<int, std::pair<std::vector<double>, std::vector<double>>> RootsAndWeights;
@@ -37,11 +37,11 @@ class BSpline
         double getR0() const {return R0;}
         double getEta() const {return eta;}
         const std::string& getSpacing() const {return spacing;}
-        const std::vector<double> getKnots() const {return knots;}
+        const std::vector<std::complex<double>> getKnots() const {return knots;}
         const std::vector<std::complex<double>> getComplexKnots() const {return complex_knots;}
 
-        std::complex<double> B(int i, std::complex<double> x) const;
-        std::complex<double> dB(int i, std::complex<double> x) const;
+        std::complex<double> B(int i, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) const;
+        std::complex<double> dB(int i, std::complex<double> x,const std::vector<std::complex<double>>& localKnots) const;
 
         std::complex<double> integrateMatrixElement(int i, int j, MatrixIntegrand integrand,bool use_ecs) const;
 
@@ -50,18 +50,13 @@ class BSpline
         void buildKnots(const Box& box);
 
         Matrix PopulateMatrix(MatrixIntegrand integrand,bool use_ecs) const;
-        std::complex<double> overlapIntegrand(int i, int j, std::complex<double> x) const {return B(i, x) * B(j, x);}
-        std::complex<double> kineticIntegrand(int i, int j, std::complex<double> x) const {return 0.5 * dB(i, x) * dB(j, x);}
-        std::complex<double> invrIntegrand(int i, int j, std::complex<double> x) const {return B(i, x) * B(j, x) / (x + 1E-25);}
-        std::complex<double> invr2Integrand(int i, int j, std::complex<double> x) const {return B(i, x) * B(j, x) / (x*x + 1E-25);}
-        std::complex<double> derIntegrand(int i, int j, std::complex<double> x) const {return B(i, x) * dB(j,x);}
-        std::complex<double> HIntegrand(int i, int j, std::complex<double> x) const {return - B(i, x) * B(j, x) / (x + 1E-25);}
-        
-
-        // std::complex<double> B(int degree, int i, std::complex<double> x) const;
-        // std::complex<double> B(int i, std::complex<double> x) const {return B(degree, i, x);}
-        // std::complex<double> dB(int degree, int i, std::complex<double> x) const;
-        // std::complex<double> dB(int i, std::complex<double> x) const {return dB(degree, i ,x);}
+        std::complex<double> overlapIntegrand(int i, int j, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) const {return B(i, x,localKnots) * B(j, x,localKnots);}
+        std::complex<double> kineticIntegrand(int i, int j, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) const {return 0.5 * dB(i, x,localKnots) * dB(j, x,localKnots);}
+        std::complex<double> invrIntegrand(int i, int j, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) const {return B(i, x,localKnots) * B(j, x,localKnots) / (x + 1E-25);}
+        std::complex<double> invr2Integrand(int i, int j, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) const {return B(i, x,localKnots) * B(j, x,localKnots) / (x*x + 1E-25);}
+        std::complex<double> derIntegrand(int i, int j, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) const {return B(i, x,localKnots) * dB(j,x,localKnots);}
+        std::complex<double> HIntegrand(int i, int j, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) const {return - B(i, x,localKnots) * B(j, x,localKnots) / (x + 1E-25);}
+    
 
     private:
         // Member List Initialized
@@ -73,7 +68,7 @@ class BSpline
 
         // Derived
         int degree{};
-        std::vector<double> knots{};
+        std::vector<std::complex<double>> knots{};
         std::vector<std::complex<double>> complex_knots{};
         std::vector<double> roots{};
         std::vector<double> weights{};
