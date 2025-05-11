@@ -29,6 +29,8 @@ find_package(GSL REQUIRED)
 
 find_package(nlohmann_json REQUIRED)
 
+find_package(HDF5 REQUIRED)
+
 
 
 

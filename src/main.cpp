@@ -30,6 +30,7 @@ int main(int argc, char **argv)
     std::array<int,3> initial_state{1,0,0};
     createDirectory("misc",rank);
     createDirectory("images",rank);
+    createDirectory("TISE",rank);
 
     Input input{inputPath};
     input.validate();

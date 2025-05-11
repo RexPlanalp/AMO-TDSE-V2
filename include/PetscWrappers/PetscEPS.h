@@ -8,8 +8,6 @@ class EPSSolver
 {
   public:
 
-    EPSSolver() : eps{nullptr} {}
-
     EPSSolver(MPI_Comm comm, PetscInt maxIter, PetscReal tolerance)
     : maxIter{maxIter}, tolerance{tolerance}
     {
@@ -36,7 +34,7 @@ class EPSSolver
     EPSSolver(EPSSolver&&)                 = delete;
     EPSSolver& operator=(EPSSolver&&)      = delete;
 
-    PetscInt NCONV() const {return nconv;}
+    PetscInt getNconv() const {return nconv;}
 
 
     void reset()

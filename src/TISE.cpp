@@ -1,6 +1,8 @@
 #include "TISE.h"
 #include "BSpline.h"
 #include "PetscWrappers/PetscEPS.h"
+#include "PetscWrappers/PetscHDF5.h"
+#include "PetscWrappers/PetscOperators.h"
 #include "Angular.h"
 #include "Atom.h"
 
@@ -27,43 +29,57 @@ void TISE::solve(const BSpline& bspline, const Atom& atom, const Angular& angula
 
     
     
-
+    PetscHDF5 viewer{PETSC_COMM_WORLD, getOutputPath(), FILE_MODE_WRITE};
     EPSSolver epssolver{PETSC_COMM_WORLD,getMaxIter(),getTol()};
+
+    std::string eigenvalueGroup = "eigenvalues";
+    std::string eigenvectorGroup = "eigenvectors";
    
 
-    for (int l{0}; l < angular.getLmax(); ++l)
+    for (int l = 0; l < angular.getLmax(); ++l)
     {
         if (l > 0)
         {
             K.AXPY(l, Invr2,SAME_NONZERO_PATTERN);
         }
 
-        int pairs = getNmax() - l;
-        if (pairs <=0)
+        int reqPairs = getNmax() - l;
+        if (reqPairs <=0)
         {
             continue;
         }   
 
-        
-
+        PetscPrintf(PETSC_COMM_WORLD,"Solving for l = %d \n\n",l); 
         epssolver.reset();
         epssolver.setOperators(K,S);
-        epssolver.setDimensions(pairs);
+        epssolver.setDimensions(reqPairs);
         epssolver.solve();
 
       
-
-        for (int idx{0}; idx < epssolver.NCONV(); ++idx)
+        for (int convPairs = 0; convPairs < epssolver.getNconv(); ++convPairs)
         {
-            PetscScalar eigenvalue = epssolver.getEigenvalue(idx);
-            PetscPrintf(
-                PETSC_COMM_WORLD,
-                "Eigenvalue [%d] = %g + %g i\n",
-                (int)idx,
-                PetscRealPart(eigenvalue),
-                PetscImaginaryPart(eigenvalue)
-              );
+            auto eigenvalue = epssolver.getEigenvalue(convPairs);
+            auto eigenvector = epssolver.getEigenvector(convPairs,S);
+
+            normalize(eigenvector,S);
+
+            if (PetscRealPart(eigenvalue) > 0)
+            {
+                continue;
+            }
+
+            std::string eigenvectorName = std::string("psi_") + std::to_string(convPairs + l + 1) + std::string("_") + std::to_string(l);
+            std::string eigenvalueName = std::string("E_") + std::to_string(convPairs + l + 1) + std::string("_") + std::to_string(l);
+
+            viewer.saveValue(eigenvalueGroup, eigenvalueName, eigenvalue);
+            viewer.saveVector(eigenvectorGroup,eigenvectorName, eigenvector);
+
+
+            auto normVal = norm(eigenvector,S);
+            PetscPrintf(PETSC_COMM_WORLD,"Eigenvector %d -> Norm(%.4f , %.4f) -> Eigenvalue(%.4f , %.4f)  \n",convPairs+1,normVal.real(),normVal.imag(),eigenvalue.real(),eigenvalue.imag()); 
         }
+        PetscPrintf(PETSC_COMM_WORLD,"\n");
+        
     }
 
 

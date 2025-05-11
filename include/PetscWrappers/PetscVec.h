@@ -1,6 +1,9 @@
 #pragma once
 #include "petscvec.h"
 
+
+
+
 class Vector
 {
   public:
@@ -86,6 +89,26 @@ class Vector
 
     PetscInt getStart() const { return iStart;}
     PetscInt getEnd() const { return iEnd;}
+
+    
+
+    void setValue(PetscInt idx, PetscScalar value)
+    {
+      VecSetValue(get(), idx, value, INSERT_VALUES);
+    }
+
+    void assemble()
+    {
+      VecAssemblyBegin(get());
+      VecAssemblyEnd(get());
+    }
+
+
+    Vector& operator*=(PetscScalar alpha) 
+    {
+      VecScale(v, alpha);
+      return *this;
+    }
 
 
   private:

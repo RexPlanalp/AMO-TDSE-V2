@@ -1,6 +1,7 @@
 #pragma once
 #include "petscmat.h"
 
+
 class Matrix 
 {
     public:
@@ -94,8 +95,15 @@ class Matrix
     PetscInt getEnd() { return iEnd;}
 
 
+    
+
+
+
+
     private:
         Mat m;
         PetscInt iStart{};
         PetscInt iEnd{};
 };
+
+
