@@ -45,6 +45,8 @@ set(SOURCELIST
     "${PROJECT_SOURCE_DIR}/src/BSpline.cpp"
     "${PROJECT_SOURCE_DIR}/src/TISE.cpp"
     "${PROJECT_SOURCE_DIR}/src/TDSE.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Observables.cpp"
+    
     
 
 )

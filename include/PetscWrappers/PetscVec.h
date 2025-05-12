@@ -60,22 +60,7 @@ class Vector
       other.iEnd= 0;
     }
 
-    // // Move Assignment
-    // Vector& operator=(Vector&& other) noexcept
-    // {
-    //   if (this != &other)
-    //   {
-    //     if (v) 
-    //     {
-    //       VecDestroy(&v);
-    //     }
-    //     v = other.v;
-    //     other.v = nullptr;
-    //     other.iStart = 0;
-    //     other.iEnd = 0;
-    //   }
-    //   return *this;
-    // }
+  
 
     friend void swap(Vector& a, Vector& b) noexcept
     {

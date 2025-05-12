@@ -18,6 +18,11 @@ inline PetscScalar innerProduct(const Vector& u, const Vector& v)
   return temp;
 }
 
+inline PetscScalar innerProduct(const Vector& u, const Matrix& m, const Vector& v)
+{
+  return innerProduct(u, m* v);
+}
+
 
 
 inline PetscScalar norm(const Vector& vector, const Matrix& matrix)

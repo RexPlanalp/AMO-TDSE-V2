@@ -9,6 +9,7 @@
 #include "BSpline.h"
 #include "TISE.h"
 #include "TDSE.h"
+#include "Observables.h"
 
 
 #include <chrono>
@@ -80,6 +81,9 @@ int main(int argc, char **argv)
     {
         std::cout << delta.count() << "\n\n";
     }
+
+    Block block{input};
+    block.computeDistribution(rank,bspline,tdse,angular);
 
 
 

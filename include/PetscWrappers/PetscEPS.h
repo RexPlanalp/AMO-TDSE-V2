@@ -73,6 +73,9 @@ class EPSSolver
 
     }
 
+    const EPS& get() const {return eps;}
+    EPS& get() {return eps;}
+
     
 
 

@@ -1,26 +1,26 @@
-// #pragma once
+#pragma once
 
-// #include "Input.h"
-// #include "PetscWrappers/PetscVec.h"
-// #include "PetscWrappers/PetscHDF5.h"
-// #include "TISE.h"
-// #include "BSpline.h"
+#include "Input.h"
+#include "PetscWrappers/PetscVec.h"
+#include "PetscWrappers/PetscHDF5.h"
+#include "PetscWrappers/PetscIS.h"
+#include "PetscWrappers/PetscOperators.h"
+#include "TISE.h"
+#include "BSpline.h"
+#include "TDSE.h"
+#include "Angular.h"
 
-// class Block
-// {   
-//     public:
-//         Block(const Input& input)
-//         : projOutBound{input.getJSON().at("Block").at("projOutBound")}
-//         {}
+class Block
+{   
+    public:
+        Block(const Input& input)
+        : projOutBound{input.getJSON().at("Block").at("projOutBound")}
+        {}
 
-//         void computeDistribution(const BSpline& bspline const TDSE& tdse)
-//         {
-//             auto S = bspline.PopulateMatrix(PETSC_COMM_WORLD,&BSpline::overlapIntegrand, false);
-
-//             PetscHDF5 viewer{PETSC_COMM_WORLD,}
-//         }
+        void computeDistribution(int rank,const BSpline& bspline, const TDSE& tdse, const Angular& angular);
+       
 
 
-//     private:
-//         bool projOutBound;
-// };
+    private:
+        bool projOutBound;
+};

@@ -45,7 +45,8 @@ class KSPSolver
             KSPSolve(ksp, rhs.get(),rhs.get());
         }
 
-        KSP get() const {return ksp;}
+        const KSP& get() const {return ksp;}
+        KSP& get() {return ksp;}
        
 
     private:

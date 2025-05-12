@@ -52,6 +52,9 @@ class PetscHDF5
             return temp;
         }
 
+        const PetscViewer& get() const {return viewer;}
+        PetscViewer& get() {return viewer;}
+
     private:
         PetscViewer viewer{nullptr};
         MPI_Comm internalComm{nullptr};
