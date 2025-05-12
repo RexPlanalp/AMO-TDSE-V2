@@ -17,7 +17,7 @@ class TDSE
         , initialNLM{input.getJSON().at("TDSE").at("initialNLM").get<std::array<int,3>>()}
         , tolerance{input.getJSON().at("TDSE").at("tolerance")}
         , maxIter{input.getJSON().at("TDSE").at("maxIter")}
-        , krylovDim{input.getJSON().at("TDSE").at("krylovDim")}
+        , restart{input.getJSON().at("TDSE").at("restart")}
         {}
 
         bool getStatus() const {return status;}
@@ -25,7 +25,7 @@ class TDSE
         const std::array<int,3>& getInitialNLM() const {return initialNLM;}
         PetscReal getTol() const {return tolerance;}
         PetscInt getMaxIter() const {return maxIter;}
-        PetscInt getKrylovDim() const {return krylovDim;}
+        PetscInt getRestart() const {return restart;}
 
         void solve(const TISE& tise,const BSpline& bspline, const Angular& angular, const Atom& atom, const Laser& laser);
 
@@ -33,6 +33,7 @@ class TDSE
 
         Vector loadInitialState(const TISE& tise,const BSpline& bspline, const Angular& angular);
         std::pair<Matrix,Matrix> constructAtomicInteraction(const BSpline& bspline, const Angular& angular,const Atom& atom, const Laser& laser);
+        Matrix constructAtomicS(const BSpline& bspline, const Angular& angular);
 
     private:
         Matrix kroneckerProduct(const Matrix& A, const Matrix& B, PetscInt nnz_A, PetscInt nnz_B);
@@ -42,5 +43,5 @@ class TDSE
         std::array<int,3> initialNLM{};
         PetscReal tolerance{};
         PetscInt maxIter{};
-        PetscInt krylovDim{};
+        PetscInt restart{};
 };

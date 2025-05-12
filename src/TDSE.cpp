@@ -2,6 +2,7 @@
 #include "PetscWrappers/PetscHDF5.h"
 #include "PetscWrappers/PetscMat.h"
 #include "PetscWrappers/PetscOperators.h"
+#include "PetscWrappers/PetscKSP.h"
 
 Matrix TDSE::kroneckerProduct(const Matrix& A, const Matrix& B,PetscInt nnz_A, PetscInt nnz_B) 
 {
@@ -109,7 +110,7 @@ void TDSE::printConfiguration(int rank)
         std::cout << "status: " << getStatus() << "\n\n";
         std::cout << "maxIter: " << getMaxIter() << "\n\n";
         std::cout << "outputPath: " << getOutputPath() << "\n\n";
-        std::cout << "Krylov Dimensionality: " << getKrylovDim() << "\n\n";
+        std::cout << "Restart: " << getRestart() << "\n\n";
         std::cout << "Initial nlm: " << "n = " << getInitialNLM()[0]  << " l = " << getInitialNLM()[1]  << " m = " << getInitialNLM()[2] << "\n\n";
 
     }
@@ -207,14 +208,47 @@ std::pair<Matrix,Matrix> TDSE::constructAtomicInteraction(const BSpline& bspline
     return std::make_pair(firstTermLeft,firstTermRight);
 }
 
+Matrix TDSE::constructAtomicS(const BSpline& bspline, const Angular& angular)
+{
+    Matrix I{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,angular.getNlm(),angular.getNlm(), 1};
+    for (int blockIdx = 0; blockIdx < angular.getNlm(); ++blockIdx)
+    {
+        I.setValue(blockIdx, blockIdx, 1.0);
+    }
+    I.assemble();
+
+    auto S = bspline.PopulateMatrix(PETSC_COMM_SELF,&BSpline::overlapIntegrand, true);
+    
+    return kroneckerProduct(I,S,1,2*bspline.getDegree() + 1);
+}
+
+
 void TDSE::solve(const TISE& tise,const BSpline& bspline, const Angular& angular, const Atom& atom, const Laser& laser)
 {
     auto initialState = loadInitialState(tise,bspline,angular);
+
+    auto atomicS = constructAtomicS(bspline,angular);
 
     Matrix interactionLeft{};
     Matrix interactionRight{};
 
     std::tie(interactionLeft,interactionRight) = constructAtomicInteraction(bspline,angular,atom,laser);
+
+    KSPSolver ksp(PETSC_COMM_WORLD,getMaxIter(),getTol(),getRestart());
+    ksp.setPreconditioner(angular.getNlm());
+
+    for (int timeIdx = 0; timeIdx < laser.getNt(); ++timeIdx)
+    {
+        auto normVal = norm(initialState,atomicS);
+        PetscPrintf(PETSC_COMM_WORLD,"Norm(%.4f , %.4f)\n",normVal.real(),normVal.imag()); 
+
+        ksp.setOperators(interactionLeft);
+
+        initialState = interactionRight * initialState;
+
+        ksp.solve(initialState);
+
+    }
 
     
 }

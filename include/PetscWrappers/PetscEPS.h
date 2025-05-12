@@ -9,7 +9,8 @@ class EPSSolver
   public:
 
     EPSSolver(MPI_Comm comm, PetscInt maxIter, PetscReal tolerance)
-    : maxIter{maxIter}, tolerance{tolerance}
+    : maxIter{maxIter}
+    , tolerance{tolerance}
     {
       EPSCreate(comm, &eps);
       EPSSetProblemType(eps,EPS_GNHEP);
@@ -29,10 +30,6 @@ class EPSSolver
       }
     }
 
-    EPSSolver(const EPSSolver&)            = delete;
-    EPSSolver& operator=(const EPSSolver&) = delete;
-    EPSSolver(EPSSolver&&)                 = delete;
-    EPSSolver& operator=(EPSSolver&&)      = delete;
 
     PetscInt getNconv() const {return nconv;}
 
