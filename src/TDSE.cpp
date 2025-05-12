@@ -146,16 +146,23 @@ Vector TDSE::loadInitialState(const TISE& tise,const BSpline& bspline, const Ang
             initialState.setValue(globalIdx, tiseOutputArray[localIdx]);
         }
     }
+    initialState.assemble();
 
     VecRestoreArrayRead(tiseOutput.get(), &tiseOutputArray);
 
     return initialState;
 }
 
+// Matrix TDSE::constructAtomicInteraction(const BSpline& bspline, const Angular& angular)
+// {
+//     Matrix I{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,angular.getNlm(),angular.getNlm(), 1};
+//     for (int blockIdx = 0; blockIdx < angular.getNlm(); ++blockIdx)
+//     {
+
+//     }
+// }
 
 void TDSE::solve(const TISE& tise,const BSpline& bspline, const Angular& angular)
 {
     auto initialState = loadInitialState(tise,bspline,angular);
-
-    
 }

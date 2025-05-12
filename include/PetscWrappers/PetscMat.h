@@ -94,6 +94,11 @@ class Matrix
     PetscInt getStart() { return iStart;}
     PetscInt getEnd() { return iEnd;}
 
+    void setValue(PetscInt rowIdx, PetscInt colIdx,  PetscScalar value)
+    {
+      MatSetValue(get(), rowIdx, colIdx, value, INSERT_VALUES);
+    }
+
 
     
 

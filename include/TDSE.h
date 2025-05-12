@@ -30,7 +30,9 @@ class TDSE
         void solve(const TISE& tise,const BSpline& bspline, const Angular& angular);
 
         void printConfiguration(int rank);
+
         Vector loadInitialState(const TISE& tise,const BSpline& bspline, const Angular& angular);
+        Matrix constructAtomicInteraction(const BSpline& bspline, const Angular& angular);
 
     private:
         Matrix kroneckerProduct(const Matrix& A, const Matrix& B, PetscInt nnz_A, PetscInt nnz_B);

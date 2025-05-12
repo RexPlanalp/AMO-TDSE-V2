@@ -296,7 +296,7 @@ Matrix BSpline::PopulateMatrix(MPI_Comm comm, BSpline::MatrixIntegrand integrand
         for (int j = col_start; j < col_end; j++) 
         {
             std::complex<double> result = integrateMatrixElement(i, j,integrand,use_ecs);
-            MatSetValue(matrix.get(), i, j, result, INSERT_VALUES); 
+            matrix.setValue(i,j,result);
         }
     }
     matrix.assemble();
