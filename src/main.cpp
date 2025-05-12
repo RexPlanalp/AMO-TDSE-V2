@@ -66,12 +66,21 @@ int main(int argc, char **argv)
     std::chrono::duration<double> delta = end - start;
     if (rank == 0)
     {
-        std::cout << delta.count() << '\n';
+        std::cout << delta.count() << "\n\n";
     }
 
     TDSE tdse{input};
     tdse.printConfiguration(rank);
+
+    start = std::chrono::high_resolution_clock::now();
     tdse.solve(tise,bspline,angular,atom,laser);
+    end = std::chrono::high_resolution_clock::now();
+    delta = end - start;
+    if (rank == 0)
+    {
+        std::cout << delta.count() << "\n\n";
+    }
+
 
 
     

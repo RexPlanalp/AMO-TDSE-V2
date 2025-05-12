@@ -33,6 +33,9 @@ class TDSE
 
         Vector loadInitialState(const TISE& tise,const BSpline& bspline, const Angular& angular);
         std::pair<Matrix,Matrix> constructAtomicInteraction(const BSpline& bspline, const Angular& angular,const Atom& atom, const Laser& laser);
+        
+        Matrix constructZInteraction(const BSpline& bspline, const Angular& angular);
+
         Matrix constructAtomicS(const BSpline& bspline, const Angular& angular);
 
     private:

@@ -54,6 +54,7 @@ class Laser
         void printConfiguration(int rank);
         double getTime(int i) const;
         void dumpTo(const std::string& directory,int rank);
+        double A(double t, int idx) const;
 
 
 
@@ -80,8 +81,7 @@ class Laser
 
         // Member functions
         void buildNonzeroComponents();
-        double sin2_envelope(double t);
-        double A(double t, int idx);
+        double sin2_envelope(double t) const;
         void validateInput();
 
 };

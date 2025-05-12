@@ -9,14 +9,14 @@ void Laser::buildNonzeroComponents()
     }
 }
 
-double Laser::sin2_envelope(double t)
+double Laser::sin2_envelope(double t) const
 {
     double argument = (getW() * t) / (2 * getN());
     double value = getA0() * std::sin(argument) * std::sin(argument);
     return value;
 }
 
-double Laser::A(double t, int idx)
+double Laser::A(double t, int idx) const
 {
     double prefactor = sin2_envelope(t) / std::sqrt(1 + getEll()*getEll());
     double term1 = getPolarization()[idx] * std::sin(getW()*t + getCEP() - getN()*M_PI);

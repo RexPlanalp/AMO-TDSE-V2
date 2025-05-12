@@ -208,6 +208,70 @@ std::pair<Matrix,Matrix> TDSE::constructAtomicInteraction(const BSpline& bspline
     return std::make_pair(firstTermLeft,firstTermRight);
 }
 
+Matrix TDSE::constructZInteraction(const BSpline& bspline, const Angular& angular)
+{
+    auto Invr = bspline.PopulateMatrix(PETSC_COMM_SELF, &BSpline::invrIntegrand, true);
+    auto Der = bspline.PopulateMatrix(PETSC_COMM_SELF, &BSpline::derIntegrand, true);
+
+    Matrix Hlm_z_1{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,angular.getNlm(),angular.getNlm(),2};
+    for (int blockRow = 0; blockRow < angular.getNlm(); ++blockRow)
+    {
+        int l{};
+        int m{};
+        std::tie(l,m) = angular.getBlockMap().at(blockRow);
+
+        for (int blockCol = 0; blockCol < angular.getNlm(); ++blockCol)
+        {
+            int lprime{};
+            int mprime{};
+            std::tie(lprime,mprime) = angular.getBlockMap().at(blockCol);
+
+
+            if ((l == lprime + 1) && (m == mprime))
+            {
+                Hlm_z_1.setValue(blockRow,blockCol, -PETSC_i * Angular::Coupling::g(l,m));
+            }
+            if ((l == lprime - 1) && (m == mprime))
+            {
+                Hlm_z_1.setValue(blockRow,blockCol, -PETSC_i * Angular::Coupling::f(l,m));
+            }
+        }
+    }
+    Hlm_z_1.assemble();
+
+    Matrix Hlm_z_2{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,angular.getNlm(),angular.getNlm(),2};
+    for (int blockRow = 0; blockRow < angular.getNlm(); ++blockRow)
+    {
+        int l{};
+        int m{};
+        std::tie(l,m) = angular.getBlockMap().at(blockRow);
+
+        for (int blockCol = 0; blockCol < angular.getNlm(); ++blockCol)
+        {
+            int lprime{};
+            int mprime{};
+            std::tie(lprime,mprime) = angular.getBlockMap().at(blockCol);
+
+
+            if ((l == lprime + 1) && (m == mprime))
+            {
+                Hlm_z_2.setValue(blockRow,blockCol, -PETSC_i * Angular::Coupling::g(l,m) * (-l));
+            }
+            if ((l == lprime - 1) && (m == mprime))
+            {
+                Hlm_z_2.setValue(blockRow,blockCol, -PETSC_i * Angular::Coupling::f(l,m) * (l+1));
+            }
+        }
+    }
+    Hlm_z_2.assemble();
+
+    auto ZInteraction = kroneckerProduct(Hlm_z_1, Der, 2, 2*bspline.getDegree() + 1);
+    ZInteraction.AXPY(1.0,kroneckerProduct(Hlm_z_2, Invr, 2, 2*bspline.getDegree() + 1),SAME_NONZERO_PATTERN);
+
+    return ZInteraction;
+}
+
+
 Matrix TDSE::constructAtomicS(const BSpline& bspline, const Angular& angular)
 {
     Matrix I{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,angular.getNlm(),angular.getNlm(), 1};
@@ -232,15 +296,33 @@ void TDSE::solve(const TISE& tise,const BSpline& bspline, const Angular& angular
     Matrix interactionLeft{};
     Matrix interactionRight{};
 
+
+
     std::tie(interactionLeft,interactionRight) = constructAtomicInteraction(bspline,angular,atom,laser);
+
+    Matrix ZInteraction{};
+    if (laser.getComponents()[2])
+    {
+        ZInteraction = constructZInteraction(bspline,angular);
+    }
 
     KSPSolver ksp(PETSC_COMM_WORLD,getMaxIter(),getTol(),getRestart());
     ksp.setPreconditioner(angular.getNlm());
 
     for (int timeIdx = 0; timeIdx < laser.getNt(); ++timeIdx)
     {
+
+        double tNow = timeIdx * laser.getTimeSpacing();
+        double tPrev = (timeIdx - 1) * laser.getTimeSpacing();
+
+        if (timeIdx > 0)
+        {
+            interactionLeft.AXPY( ( laser.A(tNow,2) - laser.A(tPrev,2)) * PETSC_i * laser.getTimeSpacing() / 2.0, ZInteraction,DIFFERENT_NONZERO_PATTERN);
+            interactionRight.AXPY( - (laser.A(tNow,2) - laser.A(tPrev,2)) * PETSC_i * laser.getTimeSpacing() / 2.0, ZInteraction,DIFFERENT_NONZERO_PATTERN);
+        }
+
         auto normVal = norm(initialState,atomicS);
-        PetscPrintf(PETSC_COMM_WORLD,"Norm(%.4f , %.4f)\n",normVal.real(),normVal.imag()); 
+        PetscPrintf(PETSC_COMM_WORLD,"Norm(%.15f , %.15f) at iteraction %d \n",normVal.real(),normVal.imag(),timeIdx); 
 
         ksp.setOperators(interactionLeft);
 
