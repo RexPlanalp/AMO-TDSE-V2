@@ -83,7 +83,7 @@ int main(int argc, char **argv)
     }
 
     Block block{input};
-    block.computeDistribution(rank,bspline,tdse,angular);
+    block.computeDistribution(rank,bspline,tdse,tise,angular);
 
 
 

@@ -101,6 +101,13 @@ class Vector
     }
 
 
+    void AXPY(PetscScalar alpha, const Vector& other)
+    {
+        VecAXPY(get(), alpha , other.get());
+    }
+    
+
+
   private:
     Vec v;
     PetscInt iStart{};
