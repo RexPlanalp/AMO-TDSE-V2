@@ -48,7 +48,7 @@ class BSpline
         void dumpTo(const Box& box, const std::string& directory, int rank);
         void buildKnots(const Box& box);
 
-        Matrix PopulateMatrix(MatrixIntegrand integrand,bool use_ecs) const;
+        Matrix PopulateMatrix(MPI_Comm comm,MatrixIntegrand integrand,bool use_ecs) const;
         std::complex<double> overlapIntegrand(int i, int j, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) const {return B(i, x,localKnots) * B(j, x,localKnots);}
         std::complex<double> kineticIntegrand(int i, int j, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) const {return 0.5 * dB(i, x,localKnots) * dB(j, x,localKnots);}
         std::complex<double> invrIntegrand(int i, int j, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) const {return B(i, x,localKnots) * B(j, x,localKnots) / (x + 1E-25);}

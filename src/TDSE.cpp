@@ -1,5 +1,7 @@
 #include "TDSE.h"
-
+#include "PetscWrappers/PetscHDF5.h"
+#include "PetscWrappers/PetscMat.h"
+#include "PetscWrappers/PetscOperators.h"
 
 Matrix KroneckerProduct(const Matrix& A, const Matrix& B,PetscInt nnz_A, PetscInt nnz_B) 
 {
@@ -99,7 +101,6 @@ Matrix KroneckerProduct(const Matrix& A, const Matrix& B,PetscInt nnz_A, PetscIn
     return C;
 }
 
-
 void TDSE::printConfiguration(int rank)
 {
     if (rank == 0)
@@ -109,7 +110,58 @@ void TDSE::printConfiguration(int rank)
         std::cout << "maxIter: " << getMaxIter() << "\n\n";
         std::cout << "outputPath: " << getOutputPath() << "\n\n";
         std::cout << "Krylov Dimensionality: " << getKrylovDim() << "\n\n";
-        std::cout << "Initial State: " << "n = " << getInitialState()[0]  << " l = " << getInitialState()[1]  << " m = " << getInitialState()[2] << "\n\n";
+        std::cout << "Initial nlm: " << "n = " << getInitialNLM()[0]  << " l = " << getInitialNLM()[1]  << " m = " << getInitialNLM()[2] << "\n\n";
 
     }
+}
+
+
+Vector TDSE::loadInitialState(const TISE& tise,const BSpline& bspline, const Angular& angular)
+{   
+    // Create a zero initialized vector to hold the initialte state
+    auto initialState = Vector{PETSC_COMM_WORLD,PETSC_DETERMINE,bspline.getNbasis() * angular.getNlm()};
+    initialState.setConstant(0.0);
+
+    // Define group name and vector name to read vector from hdf5
+    std::string eigenvectorGroup = "eigenvectors";
+    std::string vectorName = std::string("psi_") + std::to_string(getInitialNLM()[0]) + std::string("_")  + std::to_string(getInitialNLM()[1]);
+
+    // Create hdf5 viewer for reading from file
+    // Read in the vector 
+    PetscHDF5 viewer{PETSC_COMM_SELF, tise.getOutputPath(), FILE_MODE_READ};
+    auto tiseOutput = viewer.loadVector(eigenvectorGroup ,vectorName,bspline.getNbasis());
+
+    auto S = bspline.PopulateMatrix(PETSC_COMM_SELF,&BSpline::overlapIntegrand, false);
+
+    auto normVal = norm(tiseOutput,S);
+
+    std::cout << normVal;
+
+    // Extract tiseOutput to easily readable array
+    const PetscScalar* tiseOutputArray;
+    VecGetArrayRead(tiseOutput.get(), &tiseOutputArray);
+
+    int blockIdx = angular.getLMMap().at(std::make_pair(getInitialNLM()[1],getInitialNLM()[2]));
+
+    for (int localIdx = 0; localIdx < bspline.getNbasis(); ++localIdx)
+    {
+        int globalIdx = blockIdx * bspline.getNbasis() + localIdx;
+
+        if (globalIdx >= initialState.getStart() && globalIdx < initialState.getEnd())
+        {
+            initialState.setValue(globalIdx, tiseOutputArray[localIdx]);
+        }
+    }
+
+    VecRestoreArrayRead(tiseOutput.get(), &tiseOutputArray);
+
+    return initialState;
+}
+
+
+void TDSE::solve(const TISE& tise,const BSpline& bspline, const Angular& angular)
+{
+    auto initialState = loadInitialState(tise,bspline,angular);
+
+    
 }

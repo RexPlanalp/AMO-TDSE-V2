@@ -103,6 +103,11 @@ class Vector
       VecAssemblyEnd(get());
     }
 
+    void setConstant(PetscScalar value)
+    {
+      VecSet(get(),value);
+    }
+
 
     Vector& operator*=(PetscScalar alpha) 
     {

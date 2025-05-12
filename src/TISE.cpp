@@ -16,20 +16,20 @@ void TISE::solve(const BSpline& bspline, const Atom& atom, const Angular& angula
     }
    
 
-    Matrix K = bspline.PopulateMatrix(&BSpline::kineticIntegrand,false);
+    Matrix K = bspline.PopulateMatrix(PETSC_COMM_WORLD,&BSpline::kineticIntegrand,false);
 
-    Matrix Invr2 = bspline.PopulateMatrix(&BSpline::invr2Integrand,false);
+    Matrix Invr2 = bspline.PopulateMatrix(PETSC_COMM_WORLD,&BSpline::invr2Integrand,false);
     
     Matrix Pot{};
 
     if (atom.getSpecies() == "H")
     {
-        Pot = bspline.PopulateMatrix(&BSpline::HIntegrand,false);
+        Pot = bspline.PopulateMatrix(PETSC_COMM_WORLD,&BSpline::HIntegrand,false);
     }
      
     
 
-    Matrix S = bspline.PopulateMatrix(&BSpline::overlapIntegrand,false);
+    Matrix S = bspline.PopulateMatrix(PETSC_COMM_WORLD,&BSpline::overlapIntegrand,false);
 
     K.AXPY(1.0, Pot, SAME_NONZERO_PATTERN);
 

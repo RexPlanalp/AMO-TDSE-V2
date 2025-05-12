@@ -29,6 +29,18 @@ class PetscHDF5
             saveVector(groupName,valueName,temp);
         }
 
+        Vector loadVector(const std::string& groupName, const std::string& vectorName, PetscInt size)
+        {
+            auto temp = Vector{PETSC_COMM_SELF,PETSC_DECIDE,size};
+            auto totalName = groupName + "/" + vectorName;
+            
+            PetscObjectSetName(PetscObject(temp.get()), totalName.c_str());
+
+            VecLoad(temp.get(), viewer);
+
+            return temp;
+        }
+
     private:
         PetscViewer viewer{nullptr};
         std::string fileName{};

@@ -282,9 +282,9 @@ std::complex<double> BSpline::B(int i, std::complex<double> x, const std::vector
     return N[0];
 }
 
-Matrix BSpline::PopulateMatrix(BSpline::MatrixIntegrand integrand,bool use_ecs) const
+Matrix BSpline::PopulateMatrix(MPI_Comm comm, BSpline::MatrixIntegrand integrand,bool use_ecs) const
 {   
-    Matrix matrix{PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,getNbasis(),getNbasis(),2*getDegree() + 1};
+    Matrix matrix{comm,PETSC_DECIDE,PETSC_DECIDE,getNbasis(),getNbasis(),2*getDegree() + 1};
 
    
 
