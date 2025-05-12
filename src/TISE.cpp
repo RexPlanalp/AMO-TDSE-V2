@@ -88,10 +88,17 @@ void TISE::solve(const BSpline& bspline, const Atom& atom, const Angular& angula
         
     }
 
+}
 
 
-
-
-
-   
+void TISE::printConfiguration(int rank)
+{
+    if (rank == 0)
+    {
+        std::cout << "TISE Configuration: " << "\n\n";
+        std::cout << "status: " << getStatus() << "\n\n";
+        std::cout << "maxIter: " << getMaxIter() << "\n\n";
+        std::cout << "outputPath: " << getOutputPath() << "\n\n";
+        std::cout << "nmax: " << getNmax() << "\n\n";
+    }
 }

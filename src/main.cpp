@@ -8,6 +8,7 @@
 #include "Atom.h"
 #include "BSpline.h"
 #include "TISE.h"
+#include "TDSE.h"
 
 
 #include <chrono>
@@ -31,6 +32,7 @@ int main(int argc, char **argv)
     createDirectory("misc",rank);
     createDirectory("images",rank);
     createDirectory("TISE",rank);
+    createDirectory("TDSE",rank);
 
     Input input{inputPath};
     input.validate();
@@ -56,6 +58,7 @@ int main(int argc, char **argv)
     //bspline.dumpTo(box,"misc",rank);
 
     TISE tise{input};
+    tise.printConfiguration(rank);
 
     auto start = std::chrono::high_resolution_clock::now();
     tise.solve(bspline,atom,angular);
@@ -65,6 +68,11 @@ int main(int argc, char **argv)
     {
         std::cout << delta.count() << '\n';
     }
+
+    TDSE tdse{input};
+    tdse.printConfiguration(rank);
+
+
     
 
     SlepcFinalize();

@@ -25,6 +25,7 @@ class TISE
         PetscInt getNmax() const {return nmax;}
 
         void solve(const BSpline& bspline, const Atom& atom, const Angular& angular);
+        void printConfiguration(int rank);
     
     private:
         // Member List Initialized
