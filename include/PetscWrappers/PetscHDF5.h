@@ -7,8 +7,19 @@ class PetscHDF5
         
 
         PetscHDF5(MPI_Comm comm, const std::string& fileName, PetscFileMode fileMode) 
+        : internalComm(comm)
+        , fileName{fileName}
+
         {
             PetscViewerHDF5Open(comm,fileName.c_str(),fileMode,&viewer);
+        }
+
+        ~PetscHDF5()
+        {
+            if (viewer)
+            {
+                PetscViewerDestroy(&viewer);
+            }
         }
 
         void saveVector(const std::string& groupName, const std::string& vectorName, Vector& vector)
@@ -22,7 +33,7 @@ class PetscHDF5
 
         void saveValue(const std::string& groupName, const std::string& valueName, PetscScalar value)
         {
-            auto temp = Vector{PETSC_COMM_WORLD, PETSC_DETERMINE, 1};
+            auto temp = Vector{internalComm, PETSC_DETERMINE, 1};
             temp.setValue(0,value);
             temp.assemble();
 
@@ -31,7 +42,7 @@ class PetscHDF5
 
         Vector loadVector(const std::string& groupName, const std::string& vectorName, PetscInt size)
         {
-            auto temp = Vector{PETSC_COMM_SELF,PETSC_DECIDE,size};
+            auto temp = Vector{internalComm,PETSC_DECIDE,size};
             auto totalName = groupName + "/" + vectorName;
             
             PetscObjectSetName(PetscObject(temp.get()), totalName.c_str());
@@ -43,6 +54,7 @@ class PetscHDF5
 
     private:
         PetscViewer viewer{nullptr};
+        MPI_Comm internalComm{nullptr};
         std::string fileName{};
    
 

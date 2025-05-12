@@ -131,24 +131,18 @@ Vector TDSE::loadInitialState(const TISE& tise,const BSpline& bspline, const Ang
     PetscHDF5 viewer{PETSC_COMM_SELF, tise.getOutputPath(), FILE_MODE_READ};
     auto tiseOutput = viewer.loadVector(eigenvectorGroup ,vectorName,bspline.getNbasis());
 
-    auto S = bspline.PopulateMatrix(PETSC_COMM_SELF,&BSpline::overlapIntegrand, false);
-
-    auto normVal = norm(tiseOutput,S);
-
-    std::cout << normVal;
 
     // Extract tiseOutput to easily readable array
     const PetscScalar* tiseOutputArray;
     VecGetArrayRead(tiseOutput.get(), &tiseOutputArray);
 
     int blockIdx = angular.getLMMap().at(std::make_pair(getInitialNLM()[1],getInitialNLM()[2]));
-
     for (int localIdx = 0; localIdx < bspline.getNbasis(); ++localIdx)
     {
         int globalIdx = blockIdx * bspline.getNbasis() + localIdx;
 
         if (globalIdx >= initialState.getStart() && globalIdx < initialState.getEnd())
-        {
+        {   
             initialState.setValue(globalIdx, tiseOutputArray[localIdx]);
         }
     }
