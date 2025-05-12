@@ -71,7 +71,7 @@ int main(int argc, char **argv)
 
     TDSE tdse{input};
     tdse.printConfiguration(rank);
-    tdse.solve(tise,bspline,angular);
+    tdse.solve(tise,bspline,angular,atom,laser);
 
 
     

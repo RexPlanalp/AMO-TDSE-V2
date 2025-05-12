@@ -27,12 +27,12 @@ class TDSE
         PetscInt getMaxIter() const {return maxIter;}
         PetscInt getKrylovDim() const {return krylovDim;}
 
-        void solve(const TISE& tise,const BSpline& bspline, const Angular& angular);
+        void solve(const TISE& tise,const BSpline& bspline, const Angular& angular, const Atom& atom, const Laser& laser);
 
         void printConfiguration(int rank);
 
         Vector loadInitialState(const TISE& tise,const BSpline& bspline, const Angular& angular);
-        Matrix constructAtomicInteraction(const BSpline& bspline, const Angular& angular);
+        std::pair<Matrix,Matrix> constructAtomicInteraction(const BSpline& bspline, const Angular& angular,const Atom& atom, const Laser& laser);
 
     private:
         Matrix kroneckerProduct(const Matrix& A, const Matrix& B, PetscInt nnz_A, PetscInt nnz_B);

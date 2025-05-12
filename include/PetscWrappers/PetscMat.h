@@ -99,6 +99,12 @@ class Matrix
       MatSetValue(get(), rowIdx, colIdx, value, INSERT_VALUES);
     }
 
+    Matrix& operator*=(PetscScalar alpha) 
+    {
+      MatScale(m, alpha);
+      return *this;
+    }
+
 
     
 
