@@ -309,6 +309,9 @@ void TDSE::solve(const TISE& tise,const BSpline& bspline, const Angular& angular
     KSPSolver ksp(PETSC_COMM_WORLD,getMaxIter(),getTol(),getRestart());
     ksp.setPreconditioner(angular.getNlm());
 
+    auto normVal = norm(initialState,atomicS);
+    PetscPrintf(PETSC_COMM_WORLD,"Initial Norm: (%.15f , %.15f) \n",normVal.real(),normVal.imag()); 
+
     for (int timeIdx = 0; timeIdx < laser.getNt(); ++timeIdx)
     {
 
@@ -321,16 +324,21 @@ void TDSE::solve(const TISE& tise,const BSpline& bspline, const Angular& angular
             interactionRight.AXPY( - (laser.A(tNow,2) - laser.A(tPrev,2)) * PETSC_i * laser.getTimeSpacing() / 2.0, ZInteraction,DIFFERENT_NONZERO_PATTERN);
         }
 
-        auto normVal = norm(initialState,atomicS);
-        PetscPrintf(PETSC_COMM_WORLD,"Norm(%.15f , %.15f) at iteraction %d \n",normVal.real(),normVal.imag(),timeIdx); 
-
         ksp.setOperators(interactionLeft);
 
         initialState = interactionRight * initialState;
 
         ksp.solve(initialState);
-
     }
+
+    normVal = norm(initialState,atomicS);
+    PetscPrintf(PETSC_COMM_WORLD,"Final Norm: (%.15f , %.15f) \n",normVal.real(),normVal.imag()); 
+
+    std::string outputGroup = "";
+    std::string outputName = "psiFinal";
+
+    PetscHDF5 viewer(PETSC_COMM_WORLD,getOutputPath(), FILE_MODE_WRITE);
+    viewer.saveVector(outputGroup,outputName,initialState);
 
     
 }

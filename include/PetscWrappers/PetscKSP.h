@@ -44,6 +44,8 @@ class KSPSolver
         {
             KSPSolve(ksp, rhs.get(),rhs.get());
         }
+
+        KSP get() const {return ksp;}
        
 
     private:
