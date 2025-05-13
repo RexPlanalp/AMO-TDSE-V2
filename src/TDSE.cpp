@@ -410,7 +410,7 @@ Matrix TDSE::constructAtomicS(const BSpline& bspline, const Angular& angular)
 
 void TDSE::solve(const TISE& tise,const BSpline& bspline, const Angular& angular, const Atom& atom, const Laser& laser)
 {
-    auto start = MPI_Wtime();
+    auto start_setup = MPI_Wtime();
 
 
     if (!getStatus())
@@ -444,17 +444,16 @@ void TDSE::solve(const TISE& tise,const BSpline& bspline, const Angular& angular
 
 
     KSPSolver ksp(PETSC_COMM_WORLD,getMaxIter(),getTol(),getRestart());
-    //ksp.setPreconditioner(angular.getNlm());
 
     auto normVal = norm(initialState,atomicS);
     PetscPrintf(PETSC_COMM_WORLD,"Initial Norm: (%.15f , %.15f) \n",normVal.real(),normVal.imag()); 
 
     PetscScalar alpha = PETSC_i * laser.getTimeSpacing() / 2.0;
 
-    auto end = MPI_Wtime();
-    PetscPrintf(PETSC_COMM_WORLD,"Time to setup TDSE: %f \n", end-start);
+    auto end_setup = MPI_Wtime();
+    PetscPrintf(PETSC_COMM_WORLD,"Time to setup TDSE: %f \n", end_setup-start_setup);
 
-
+    auto start_solve = MPI_Wtime();
     for (int timeIdx = 0; timeIdx < laser.getNt(); ++timeIdx)
     {
 
@@ -497,6 +496,10 @@ void TDSE::solve(const TISE& tise,const BSpline& bspline, const Angular& angular
 
         // PetscPrintf(PETSC_COMM_WORLD,"Solved time step: %d in %f seconds and %d iterations of GMRES \n", timeIdx, end-start,its);
     }
+
+    
+    auto end_solve = MPI_Wtime();
+    PetscPrintf(PETSC_COMM_WORLD,"Time to solve TDSE: %f \n", end_solve-start_solve);
 
     normVal = norm(initialState,atomicS);
     PetscPrintf(PETSC_COMM_WORLD,"Final Norm: (%.15f , %.15f) \n",normVal.real(),normVal.imag()); 
