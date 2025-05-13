@@ -40,7 +40,7 @@ class EPSSolver
 
     void setDimensions(PetscInt pairs)
     {
-      EPSSetDimensions(eps,pairs, PETSC_DEFAULT ,PETSC_DEFAULT);
+      EPSSetDimensions(eps,pairs, PETSC_DEFAULT,PETSC_DEFAULT);
     }
 
     void solve()
