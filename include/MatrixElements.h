@@ -4,6 +4,7 @@
 #include "BSplines.h"
 #include "PetscWrappers/PetscMat.h"
 #include "Angular.h"
+#include "Basis.h"
 
 enum class AngularMatrixType
 {
@@ -21,8 +22,8 @@ enum class RadialMatrixType
     Invr,
     Invr2,
     K,
-    Pot,
-    Der
+    Der,
+    H
 };
 
 namespace AngularElements
@@ -227,5 +228,63 @@ namespace AngularMatrix
             }
         matrix.assemble();
         }
+    }
+}
+
+namespace RadialMatrix
+{
+    
+    void populateRadialMatrix(RadialMatrixType Type,Matrix& matrix,const Basis& basis,bool use_ecs) 
+    {   
+        MatrixIntegrand integrand{};
+
+        switch(Type)
+        {
+            case RadialMatrixType::S:
+                {
+                    integrand = &RadialElements::overlapIntegrand;
+                }
+            break;
+            case RadialMatrixType::Invr2:
+                {
+                    integrand = &RadialElements::invr2Integrand;
+                }
+            break;
+            case RadialMatrixType::Invr:
+                {
+                    integrand = &RadialElements::invrIntegrand;
+                }
+            break;
+            case RadialMatrixType::Der:
+                {
+                    integrand = &RadialElements::derIntegrand;
+                }
+            break;
+            case RadialMatrixType::K:
+                {
+                    integrand = &RadialElements::kineticIntegrand;
+                }
+            break;
+            case RadialMatrixType::H:
+                {
+                    integrand = &RadialElements::HIntegrand;
+                }
+            break;
+
+        }
+
+
+        for (int i = matrix.getStart(); i < matrix.getEnd(); i++) 
+        {
+            int col_start = std::max(0, i - basis.getOrder() + 1);
+            int col_end = std::min(basis.getNbasis(), i + basis.getOrder());
+
+            for (int j = col_start; j < col_end; j++) 
+            {
+                std::complex<double> result = basis.integrateMatrixElement(i, j,integrand,use_ecs);
+                matrix.setValue(i,j,result);
+            }
+        }
+        matrix.assemble();
     }
 }

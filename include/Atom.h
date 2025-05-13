@@ -5,14 +5,10 @@
 #include <stdexcept>
 #include "Input.h"
 #include "Potentials.h"
+#include "MatrixElements.h"
 
 class Atom {
 public:
-
-    
-
-
-
     explicit Atom(const Input& input)
       : species{input.getJSON().at("Atom").at("potential")}
     {
@@ -20,6 +16,7 @@ public:
         {
             potential  = &Potentials::hydrogen;
             derivative = &Potentials::hydrogenDeriv;
+            potentialType = RadialMatrixType::H;
         }
     }
 
@@ -29,10 +26,13 @@ public:
 
     const std::string& getSpecies() const {return species;}
 
+    RadialMatrixType getType() const {return potentialType;}
+
     void printConfiguration(int rank);
 
 private:
     std::complex<double> (*potential)(const std::complex<double>&);
     std::complex<double> (*derivative)(const std::complex<double>&);
     std::string    species;
+    RadialMatrixType potentialType;
 };

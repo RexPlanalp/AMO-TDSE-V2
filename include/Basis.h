@@ -7,9 +7,12 @@
 
 #include "Potentials.h"
 
+using MatrixIntegrand = std::complex<double> (*)(int, int,int, std::complex<double>, const std::vector<std::complex<double>>&);
+
 class Basis
 {   
-    using MatrixIntegrand = std::complex<double> (Basis::*)(int, int, std::complex<double>, const std::vector<std::complex<double>>&) const;
+    
+    
     struct GaussLegendre
     {
         static const std::unordered_map<int, std::pair<std::vector<double>, std::vector<double>>> RootsAndWeights;
@@ -39,13 +42,13 @@ class Basis
         const std::vector<std::complex<double>> getKnots() const {return knots;}
         const std::vector<std::complex<double>> getComplexKnots() const {return complex_knots;}
         
-        std::complex<double> integrateMatrixElement(int i, int j, MatrixIntegrand integrand,bool use_ecs) const;
+        std::complex<double> Basis::integrateMatrixElement(int i, int j,MatrixIntegrand integrand,bool use_ecs) const;
 
         void printConfiguration(int rank);
         void dumpTo(const Box& box, const std::string& directory, int rank);
         void buildKnots(const Box& box);
 
-        Matrix PopulateMatrix(MPI_Comm comm,MatrixIntegrand integrand,bool use_ecs) const;
+
         
     
 

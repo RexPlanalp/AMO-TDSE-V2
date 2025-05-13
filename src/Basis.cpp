@@ -40,8 +40,6 @@ void Basis::buildComplexKnots()
     }
 }
 
-
-
 void Basis::buildLinearKnots(const Box& box)
 {
     int N_knots   = getNbasis() + getOrder();
@@ -87,7 +85,7 @@ void Basis::buildR0()
     R0 = knot_val;
 }
 
-std::complex<double> Basis::integrateMatrixElement(int i, int j, Basis::MatrixIntegrand integrand,bool use_ecs) const
+std::complex<double> Basis::integrateMatrixElement(int i, int j,Basis::MatrixIntegrand integrand,bool use_ecs) const
 {
     std::complex<double> total{0.0,0.0};
 
@@ -118,14 +116,14 @@ std::complex<double> Basis::integrateMatrixElement(int i, int j, Basis::MatrixIn
             {
                 std::complex<double> x = ecs_x(x_val);
                 std::complex<double> weight = ecs_w(x_val, weight_val) * half_b_minus_a;
-                std::complex<double> integrand_val = (this->*integrand)(i, j, x,complex_knots);
+                std::complex<double> integrand_val = (*integrand)(i, j, x,complex_knots);
                 total += weight * integrand_val;
             }
             else
             {
                 std::complex<double> x = x_val;
                 std::complex<double> weight = weight_val* half_b_minus_a;
-                std::complex<double> integrand_val = (this->*integrand)(i, j, x,knots);
+                std::complex<double> integrand_val = (*integrand)(i, j, x,knots);
                 total += weight * integrand_val;
             }
         }
@@ -203,26 +201,6 @@ void Basis::dumpTo(const Box& box, const std::string& directory, int rank)
     }
 }
 
-Matrix Basis::PopulateMatrix(MPI_Comm comm, Basis::MatrixIntegrand integrand,bool use_ecs) const
-{   
-    Matrix matrix{comm,PETSC_DECIDE,PETSC_DECIDE,getNbasis(),getNbasis(),2*getDegree() + 1};
-
-   
-
-    for (int i = matrix.getStart(); i < matrix.getEnd(); i++) 
-    {
-        int col_start = std::max(0, i - getOrder() + 1);
-        int col_end = std::min(getNbasis(), i + getOrder());
-
-        for (int j = col_start; j < col_end; j++) 
-        {
-            std::complex<double> result = integrateMatrixElement(i, j,integrand,use_ecs);
-            matrix.setValue(i,j,result);
-        }
-    }
-    matrix.assemble();
-    return matrix;
-}
 
 
 
