@@ -460,14 +460,25 @@ void TDSE::solve(const TISE& tise,const BSpline& bspline, const Angular& angular
         double tNow = timeIdx * laser.getTimeSpacing() + laser.getTimeSpacing() / 2.0;
         double tPrev = (timeIdx - 1) * laser.getTimeSpacing() + laser.getTimeSpacing() / 2.0;
 
+        MatStructure pattern;
+        if (timeIdx > 1)
+        {
+            pattern = SUBSET_NONZERO_PATTERN;
+        }
+        else
+        {
+            pattern = DIFFERENT_NONZERO_PATTERN;
+        }
+
+
         if (timeIdx > 0)
         {   
             if (laser.getComponents()[2])
             {
                 auto deltaAz = (laser.A(tNow,2) - laser.A(tPrev,2));
 
-                interactionLeft.AXPY( deltaAz * alpha, ZInteraction,DIFFERENT_NONZERO_PATTERN );
-                interactionRight.AXPY( -deltaAz * alpha, ZInteraction,DIFFERENT_NONZERO_PATTERN );
+                interactionLeft.AXPY( deltaAz * alpha, ZInteraction,pattern);
+                interactionRight.AXPY( -deltaAz * alpha, ZInteraction,pattern);
             }
             if ((laser.getComponents()[0]) || (laser.getComponents()[1]))
             {
@@ -475,11 +486,11 @@ void TDSE::solve(const TISE& tise,const BSpline& bspline, const Angular& angular
                 auto deltaAtildeStar = ((laser.A(tNow,0) - PETSC_i * laser.A(tNow,1)) - (laser.A(tPrev,0) - PETSC_i * laser.A(tPrev,1)));
 
 
-                interactionLeft.AXPY(alpha * deltaAtildeStar,Hxy_1,DIFFERENT_NONZERO_PATTERN);
-                interactionRight.AXPY(-alpha * deltaAtildeStar,Hxy_1,DIFFERENT_NONZERO_PATTERN);
+                interactionLeft.AXPY(alpha * deltaAtildeStar,Hxy_1,pattern);
+                interactionRight.AXPY(-alpha * deltaAtildeStar,Hxy_1,pattern);
 
-                interactionLeft.AXPY(alpha*deltaAtilde,Hxy_2,DIFFERENT_NONZERO_PATTERN);
-                interactionRight.AXPY(-alpha*deltaAtilde,Hxy_2,DIFFERENT_NONZERO_PATTERN);
+                interactionLeft.AXPY(alpha*deltaAtilde,Hxy_2,pattern);
+                interactionRight.AXPY(-alpha*deltaAtilde,Hxy_2,pattern);
             }
         }
 
