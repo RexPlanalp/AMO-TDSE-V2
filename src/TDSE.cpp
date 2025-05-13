@@ -3,6 +3,7 @@
 #include "PetscWrappers/PetscMat.h"
 #include "PetscWrappers/PetscOperators.h"
 #include "PetscWrappers/PetscKSP.h"
+#include "MatrixElements.h"
 
 Matrix TDSE::kroneckerProduct(const Matrix& A, const Matrix& B,PetscInt nnz_A, PetscInt nnz_B) 
 {
@@ -229,11 +230,11 @@ Matrix TDSE::constructZInteraction(const Basis& Basis, const Angular& angular)
 
             if ((l == lprime + 1) && (m == mprime))
             {
-                Hlm_z_1.setValue(blockRow,blockCol, -PETSC_i * Angular::Coupling::g(l,m));
+                Hlm_z_1.setValue(blockRow,blockCol, -PETSC_i * AngularElements::g(l,m));
             }
             if ((l == lprime - 1) && (m == mprime))
             {
-                Hlm_z_1.setValue(blockRow,blockCol, -PETSC_i * Angular::Coupling::f(l,m));
+                Hlm_z_1.setValue(blockRow,blockCol, -PETSC_i * AngularElements::f(l,m));
             }
         }
     }
@@ -255,11 +256,11 @@ Matrix TDSE::constructZInteraction(const Basis& Basis, const Angular& angular)
 
             if ((l == lprime + 1) && (m == mprime))
             {
-                Hlm_z_2.setValue(blockRow,blockCol, -PETSC_i * Angular::Coupling::g(l,m) * (-l));
+                Hlm_z_2.setValue(blockRow,blockCol, -PETSC_i * AngularElements::g(l,m) * (-l));
             }
             if ((l == lprime - 1) && (m == mprime))
             {
-                Hlm_z_2.setValue(blockRow,blockCol, -PETSC_i * Angular::Coupling::f(l,m) * (l+1));
+                Hlm_z_2.setValue(blockRow,blockCol, -PETSC_i * AngularElements::f(l,m) * (l+1));
             }
         }
     }
@@ -295,11 +296,11 @@ std::pair<Matrix,Matrix> TDSE::constructXYInteraction(const Basis& Basis, const 
 
             if ((l == lprime + 1) && (m == mprime + 1))
             {
-                Hlm_xy_1.setValue(blockRow,blockCol, PETSC_i * Angular::Coupling::a(l,m) / 2.0);
+                Hlm_xy_1.setValue(blockRow,blockCol, PETSC_i * AngularElements::a(l,m) / 2.0);
             }
             if ((l == lprime - 1) && (m == mprime + 1))
             {
-                Hlm_xy_1.setValue(blockRow,blockCol, PETSC_i * Angular::Coupling::b(l,m) / 2.0);
+                Hlm_xy_1.setValue(blockRow,blockCol, PETSC_i * AngularElements::b(l,m) / 2.0);
             }
         }
     }
@@ -321,11 +322,11 @@ std::pair<Matrix,Matrix> TDSE::constructXYInteraction(const Basis& Basis, const 
 
             if ((l == lprime + 1) && (m == mprime + 1))
             {
-                Hlm_xy_2.setValue(blockRow,blockCol, PETSC_i * Angular::Coupling::c(l,m) / 2.0);
+                Hlm_xy_2.setValue(blockRow,blockCol, PETSC_i * AngularElements::c(l,m) / 2.0);
             }
             if ((l == lprime - 1) && (m == mprime + 1))
             {
-                Hlm_xy_2.setValue(blockRow,blockCol, -PETSC_i * Angular::Coupling::d(l,m) / 2.0);
+                Hlm_xy_2.setValue(blockRow,blockCol, -PETSC_i * AngularElements::d(l,m) / 2.0);
             }
         }
     }
@@ -351,11 +352,11 @@ std::pair<Matrix,Matrix> TDSE::constructXYInteraction(const Basis& Basis, const 
 
             if ((l == lprime + 1) && (m == mprime - 1))
             {
-                Hlm_xy_3.setValue(blockRow,blockCol, PETSC_i * Angular::Coupling::atilde(l,m) / 2.0);
+                Hlm_xy_3.setValue(blockRow,blockCol, PETSC_i * AngularElements::atilde(l,m) / 2.0);
             }
             if ((l == lprime - 1) && (m == mprime - 1))
             {
-                Hlm_xy_3.setValue(blockRow,blockCol, PETSC_i * Angular::Coupling::btilde(l,m) / 2.0);
+                Hlm_xy_3.setValue(blockRow,blockCol, PETSC_i * AngularElements::btilde(l,m) / 2.0);
             }
         }
     }
@@ -377,11 +378,11 @@ std::pair<Matrix,Matrix> TDSE::constructXYInteraction(const Basis& Basis, const 
 
             if ((l == lprime + 1) && (m == mprime - 1))
             {
-                Hlm_xy_4.setValue(blockRow,blockCol, -PETSC_i * Angular::Coupling::ctilde(l,m) / 2.0);
+                Hlm_xy_4.setValue(blockRow,blockCol, -PETSC_i * AngularElements::ctilde(l,m) / 2.0);
             }
             if ((l == lprime - 1) && (m == mprime - 1))
             {
-                Hlm_xy_4.setValue(blockRow,blockCol, PETSC_i * Angular::Coupling::dtilde(l,m) / 2.0);
+                Hlm_xy_4.setValue(blockRow,blockCol, PETSC_i * AngularElements::dtilde(l,m) / 2.0);
             }
         }
     }
