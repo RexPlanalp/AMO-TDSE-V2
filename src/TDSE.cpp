@@ -271,6 +271,127 @@ Matrix TDSE::constructZInteraction(const BSpline& bspline, const Angular& angula
     return ZInteraction;
 }
 
+std::pair<Matrix,Matrix> TDSE::constructXYInteraction(const BSpline& bspline, const Angular& angular)
+{
+    auto Invr = bspline.PopulateMatrix(PETSC_COMM_SELF, &BSpline::invrIntegrand, true);
+    auto Der = bspline.PopulateMatrix(PETSC_COMM_SELF, &BSpline::derIntegrand, true);
+
+
+
+    // Compute Hxy_1
+    Matrix Hlm_xy_1{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,angular.getNlm(),angular.getNlm(),2};
+    for (int blockRow = 0; blockRow < angular.getNlm(); ++blockRow)
+    {
+        int l{};
+        int m{};
+        std::tie(l,m) = angular.getBlockMap().at(blockRow);
+
+        for (int blockCol = 0; blockCol < angular.getNlm(); ++blockCol)
+        {
+            int lprime{};
+            int mprime{};
+            std::tie(lprime,mprime) = angular.getBlockMap().at(blockCol);
+
+
+            if ((l == lprime + 1) && (m == mprime + 1))
+            {
+                Hlm_xy_1.setValue(blockRow,blockCol, PETSC_i * Angular::Coupling::a(l,m) / 2.0);
+            }
+            if ((l == lprime - 1) && (m == mprime + 1))
+            {
+                Hlm_xy_1.setValue(blockRow,blockCol, PETSC_i * Angular::Coupling::b(l,m) / 2.0);
+            }
+        }
+    }
+    Hlm_xy_1.assemble();
+
+    Matrix Hlm_xy_2{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,angular.getNlm(),angular.getNlm(),2};
+    for (int blockRow = 0; blockRow < angular.getNlm(); ++blockRow)
+    {
+        int l{};
+        int m{};
+        std::tie(l,m) = angular.getBlockMap().at(blockRow);
+
+        for (int blockCol = 0; blockCol < angular.getNlm(); ++blockCol)
+        {
+            int lprime{};
+            int mprime{};
+            std::tie(lprime,mprime) = angular.getBlockMap().at(blockCol);
+
+
+            if ((l == lprime + 1) && (m == mprime + 1))
+            {
+                Hlm_xy_2.setValue(blockRow,blockCol, PETSC_i * Angular::Coupling::c(l,m) / 2.0);
+            }
+            if ((l == lprime - 1) && (m == mprime + 1))
+            {
+                Hlm_xy_2.setValue(blockRow,blockCol, -PETSC_i * Angular::Coupling::d(l,m) / 2.0);
+            }
+        }
+    }
+    Hlm_xy_2.assemble();
+
+    auto Hxy_1 = kroneckerProduct(Hlm_xy_1,Invr,2,2*bspline.getDegree() + 1);
+    Hxy_1.AXPY(1.0,kroneckerProduct(Hlm_xy_2,Der,2, 2*bspline.getDegree() + 1),SAME_NONZERO_PATTERN);
+
+    // Construct Hxy_2
+    Matrix Hlm_xy_3{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,angular.getNlm(),angular.getNlm(),2};
+    for (int blockRow = 0; blockRow < angular.getNlm(); ++blockRow)
+    {
+        int l{};
+        int m{};
+        std::tie(l,m) = angular.getBlockMap().at(blockRow);
+
+        for (int blockCol = 0; blockCol < angular.getNlm(); ++blockCol)
+        {
+            int lprime{};
+            int mprime{};
+            std::tie(lprime,mprime) = angular.getBlockMap().at(blockCol);
+
+
+            if ((l == lprime + 1) && (m == mprime - 1))
+            {
+                Hlm_xy_3.setValue(blockRow,blockCol, PETSC_i * Angular::Coupling::atilde(l,m) / 2.0);
+            }
+            if ((l == lprime - 1) && (m == mprime - 1))
+            {
+                Hlm_xy_3.setValue(blockRow,blockCol, PETSC_i * Angular::Coupling::btilde(l,m) / 2.0);
+            }
+        }
+    }
+    Hlm_xy_3.assemble();
+
+    Matrix Hlm_xy_4{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,angular.getNlm(),angular.getNlm(),2};
+    for (int blockRow = 0; blockRow < angular.getNlm(); ++blockRow)
+    {
+        int l{};
+        int m{};
+        std::tie(l,m) = angular.getBlockMap().at(blockRow);
+
+        for (int blockCol = 0; blockCol < angular.getNlm(); ++blockCol)
+        {
+            int lprime{};
+            int mprime{};
+            std::tie(lprime,mprime) = angular.getBlockMap().at(blockCol);
+
+
+            if ((l == lprime + 1) && (m == mprime - 1))
+            {
+                Hlm_xy_4.setValue(blockRow,blockCol, -PETSC_i * Angular::Coupling::ctilde(l,m) / 2.0);
+            }
+            if ((l == lprime - 1) && (m == mprime - 1))
+            {
+                Hlm_xy_4.setValue(blockRow,blockCol, PETSC_i * Angular::Coupling::dtilde(l,m) / 2.0);
+            }
+        }
+    }
+    Hlm_xy_4.assemble();
+
+    auto Hxy_2 = kroneckerProduct(Hlm_xy_3,Invr,2,2*bspline.getDegree() + 1);
+    Hxy_2.AXPY(1.0,kroneckerProduct(Hlm_xy_4,Der,2,2*bspline.getDegree()+1),SAME_NONZERO_PATTERN);
+
+    return std::make_pair(Hxy_1,Hxy_2);
+}
 
 Matrix TDSE::constructAtomicS(const BSpline& bspline, const Angular& angular)
 {
@@ -306,22 +427,48 @@ void TDSE::solve(const TISE& tise,const BSpline& bspline, const Angular& angular
         ZInteraction = constructZInteraction(bspline,angular);
     }
 
+    Matrix Hxy_1{};
+    Matrix Hxy_2{};
+    if ((laser.getComponents()[0]) || (laser.getComponents()[1]))
+    {
+        std::tie(Hxy_1,Hxy_2) = constructXYInteraction(bspline,angular);
+    }
+
+
     KSPSolver ksp(PETSC_COMM_WORLD,getMaxIter(),getTol(),getRestart());
     ksp.setPreconditioner(angular.getNlm());
 
     auto normVal = norm(initialState,atomicS);
     PetscPrintf(PETSC_COMM_WORLD,"Initial Norm: (%.15f , %.15f) \n",normVal.real(),normVal.imag()); 
 
+    PetscScalar alpha = PETSC_i * laser.getTimeSpacing() / 2.0;
     for (int timeIdx = 0; timeIdx < laser.getNt(); ++timeIdx)
     {
 
-        double tNow = timeIdx * laser.getTimeSpacing();
-        double tPrev = (timeIdx - 1) * laser.getTimeSpacing();
+        double tNow = timeIdx * laser.getTimeSpacing() + laser.getTimeSpacing() / 2.0;
+        double tPrev = (timeIdx - 1) * laser.getTimeSpacing() + laser.getTimeSpacing() / 2.0;
 
         if (timeIdx > 0)
-        {
-            interactionLeft.AXPY( ( laser.A(tNow,2) - laser.A(tPrev,2)) * PETSC_i * laser.getTimeSpacing() / 2.0, ZInteraction,DIFFERENT_NONZERO_PATTERN);
-            interactionRight.AXPY( - (laser.A(tNow,2) - laser.A(tPrev,2)) * PETSC_i * laser.getTimeSpacing() / 2.0, ZInteraction,DIFFERENT_NONZERO_PATTERN);
+        {   
+            if (laser.getComponents()[2])
+            {
+                auto deltaAz = (laser.A(tNow,2) - laser.A(tPrev,2));
+
+                interactionLeft.AXPY( deltaAz * alpha, ZInteraction,DIFFERENT_NONZERO_PATTERN );
+                interactionRight.AXPY( -deltaAz * alpha, ZInteraction,DIFFERENT_NONZERO_PATTERN );
+            }
+            if ((laser.getComponents()[0]) || (laser.getComponents()[1]))
+            {
+                auto deltaAtilde = ((laser.A(tNow,0) + PETSC_i * laser.A(tNow,1)) - (laser.A(tPrev,0) + PETSC_i * laser.A(tPrev,1)));
+                auto deltaAtildeStar = ((laser.A(tNow,0) - PETSC_i * laser.A(tNow,1)) - (laser.A(tPrev,0) - PETSC_i * laser.A(tPrev,1)));
+
+
+                interactionLeft.AXPY(alpha * deltaAtildeStar,Hxy_1,DIFFERENT_NONZERO_PATTERN);
+                interactionRight.AXPY(-alpha * deltaAtildeStar,Hxy_1,DIFFERENT_NONZERO_PATTERN);
+
+                interactionLeft.AXPY(alpha*deltaAtilde,Hxy_2,DIFFERENT_NONZERO_PATTERN);
+                interactionRight.AXPY(-alpha*deltaAtilde,Hxy_2,DIFFERENT_NONZERO_PATTERN);
+            }
         }
 
         ksp.setOperators(interactionLeft);
