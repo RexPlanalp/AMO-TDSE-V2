@@ -7,7 +7,8 @@ void Block::computeDistribution(int rank,const Basis& Basis, const TDSE& tdse,co
         return;
     }
 
-    auto S = Basis.PopulateMatrix(PETSC_COMM_SELF,&Basis::overlapIntegrand, false);
+    auto S = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,Basis.getNbasis(),Basis.getNbasis(),2*Basis.getDegree() + 1};
+    RadialMatrix::populateRadialMatrix(RadialMatrixType::S,S,Basis,false);
 
     PetscHDF5 viewer{PETSC_COMM_SELF,tdse.getOutputPath(),FILE_MODE_READ};
     std::string groupName = "";

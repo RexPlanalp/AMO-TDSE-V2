@@ -234,7 +234,7 @@ namespace AngularMatrix
 namespace RadialMatrix
 {
     
-    void populateRadialMatrix(RadialMatrixType Type,Matrix& matrix,const Basis& basis,bool use_ecs) 
+    inline void populateRadialMatrix(RadialMatrixType Type,Matrix& matrix,const Basis& basis,bool use_ecs) 
     {   
         MatrixIntegrand integrand{};
 

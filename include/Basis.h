@@ -42,7 +42,7 @@ class Basis
         const std::vector<std::complex<double>> getKnots() const {return knots;}
         const std::vector<std::complex<double>> getComplexKnots() const {return complex_knots;}
         
-        std::complex<double> Basis::integrateMatrixElement(int i, int j,MatrixIntegrand integrand,bool use_ecs) const;
+        std::complex<double> integrateMatrixElement(int i, int j,MatrixIntegrand integrand,bool use_ecs) const;
 
         void printConfiguration(int rank);
         void dumpTo(const Box& box, const std::string& directory, int rank);

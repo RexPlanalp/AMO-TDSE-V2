@@ -5,7 +5,7 @@
 #include "PetscWrappers/PetscOperators.h"
 #include "Angular.h"
 #include "Atom.h"
-
+#include "MatrixElements.h"
 #include "common.h"
 
 void TISE::solve(const Basis& Basis, const Atom& atom, const Angular& angular)
@@ -23,20 +23,17 @@ void TISE::solve(const Basis& Basis, const Atom& atom, const Angular& angular)
     PetscHDF5 viewer{PETSC_COMM_WORLD, getOutputPath(), FILE_MODE_WRITE};
     
     // Create Kinetic Matrix
-    Matrix K = Basis.PopulateMatrix(PETSC_COMM_WORLD,&Basis::kineticIntegrand,false);
+    auto K = Matrix{PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,Basis.getNbasis(),Basis.getNbasis(),2*Basis.getDegree() + 1};
+    RadialMatrix::populateRadialMatrix(RadialMatrixType::K,K,Basis,false);
 
-    // Create Inverse r squared matrix
-    Matrix Invr2 = Basis.PopulateMatrix(PETSC_COMM_WORLD,&Basis::invr2Integrand,false);
+    auto Invr2 = Matrix{PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,Basis.getNbasis(),Basis.getNbasis(),2*Basis.getDegree() + 1};
+    RadialMatrix::populateRadialMatrix(RadialMatrixType::Invr2,Invr2,Basis,false);
     
-    // Create 
-    Matrix Pot{};
+    auto Pot = Matrix{PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,Basis.getNbasis(),Basis.getNbasis(),2*Basis.getDegree() + 1};
+    RadialMatrix::populateRadialMatrix(atom.getType(),Pot,Basis,false);
 
-    if (atom.getSpecies() == "H")
-    {
-        Pot = Basis.PopulateMatrix(PETSC_COMM_WORLD,&Basis::HIntegrand,false);
-    }
-     
-    Matrix S = Basis.PopulateMatrix(PETSC_COMM_WORLD,&Basis::overlapIntegrand,false);
+    auto S = Matrix{PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,Basis.getNbasis(),Basis.getNbasis(),2*Basis.getDegree() + 1};
+    RadialMatrix::populateRadialMatrix(RadialMatrixType::S,S,Basis,false);
 
     K.AXPY(1.0, Pot, SAME_NONZERO_PATTERN);
 

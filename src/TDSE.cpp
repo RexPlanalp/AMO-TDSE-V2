@@ -165,15 +165,18 @@ std::pair<Matrix,Matrix> TDSE::constructAtomicInteraction(const Basis& Basis, co
     }
     I.assemble();
 
-    auto totalLeft = Basis.PopulateMatrix(PETSC_COMM_SELF,&Basis::overlapIntegrand, true);
-    auto totalRight = Basis.PopulateMatrix(PETSC_COMM_SELF,&Basis::overlapIntegrand, true);
+ 
+    auto totalLeft = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,Basis.getNbasis(),Basis.getNbasis(),2*Basis.getDegree() + 1};
+    RadialMatrix::populateRadialMatrix(RadialMatrixType::S,totalLeft,Basis,true);
+   
+    auto totalRight = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,Basis.getNbasis(),Basis.getNbasis(),2*Basis.getDegree() + 1};
+    RadialMatrix::populateRadialMatrix(RadialMatrixType::S,totalRight,Basis,true);
 
-    auto K = Basis.PopulateMatrix(PETSC_COMM_SELF,&Basis::kineticIntegrand, true);
-    Matrix Pot{};
-    if (atom.getSpecies() == "H")
-    {
-        Pot = Basis.PopulateMatrix(PETSC_COMM_SELF,&Basis::HIntegrand, true);
-    }
+    auto K = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,Basis.getNbasis(),Basis.getNbasis(),2*Basis.getDegree() + 1};
+    RadialMatrix::populateRadialMatrix(RadialMatrixType::K,K,Basis,true);
+    
+    auto Pot = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,Basis.getNbasis(),Basis.getNbasis(),2*Basis.getDegree() + 1};
+    RadialMatrix::populateRadialMatrix(atom.getType(),Pot,Basis,true);
 
     totalLeft.AXPY(PETSC_i * laser.getTimeSpacing() / 2.0, K, SAME_NONZERO_PATTERN);
     totalLeft.AXPY(PETSC_i * laser.getTimeSpacing() / 2.0, Pot, SAME_NONZERO_PATTERN);
@@ -195,8 +198,11 @@ std::pair<Matrix,Matrix> TDSE::constructAtomicInteraction(const Basis& Basis, co
     }
     modifiedI.assemble();
 
-    auto centrifugalLeft = Basis.PopulateMatrix(PETSC_COMM_SELF,&Basis::invr2Integrand, true);
-    auto centrifugalRight = Basis.PopulateMatrix(PETSC_COMM_SELF,&Basis::invr2Integrand, true);
+    auto centrifugalLeft = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,Basis.getNbasis(),Basis.getNbasis(),2*Basis.getDegree() + 1};
+    RadialMatrix::populateRadialMatrix(RadialMatrixType::Invr2,centrifugalLeft,Basis,true);
+    
+    auto centrifugalRight = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,Basis.getNbasis(),Basis.getNbasis(),2*Basis.getDegree() + 1};
+    RadialMatrix::populateRadialMatrix(RadialMatrixType::Invr2,centrifugalRight,Basis,true);
 
     centrifugalLeft *= PETSC_i * laser.getTimeSpacing() / 2.0;
     centrifugalRight *= -PETSC_i * laser.getTimeSpacing() / 2.0;
@@ -212,8 +218,12 @@ std::pair<Matrix,Matrix> TDSE::constructAtomicInteraction(const Basis& Basis, co
 
 Matrix TDSE::constructZInteraction(const Basis& Basis, const Angular& angular)
 {
-    auto Invr = Basis.PopulateMatrix(PETSC_COMM_SELF, &Basis::invrIntegrand, true);
-    auto Der = Basis.PopulateMatrix(PETSC_COMM_SELF, &Basis::derIntegrand, true);
+    auto Der = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,Basis.getNbasis(),Basis.getNbasis(),2*Basis.getDegree() + 1};
+    RadialMatrix::populateRadialMatrix(RadialMatrixType::Der,Der,Basis,true);
+
+
+    auto Invr = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,Basis.getNbasis(),Basis.getNbasis(),2*Basis.getDegree() + 1};
+    RadialMatrix::populateRadialMatrix(RadialMatrixType::Invr,Invr,Basis,true);
 
     Matrix Hlm_z_1{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,angular.getNlm(),angular.getNlm(),2};
     AngularMatrix::populateAngularMatrix(AngularMatrixType::Z_INT_1,Hlm_z_1,angular);
@@ -229,8 +239,11 @@ Matrix TDSE::constructZInteraction(const Basis& Basis, const Angular& angular)
 
 std::pair<Matrix,Matrix> TDSE::constructXYInteraction(const Basis& Basis, const Angular& angular)
 {
-    auto Invr = Basis.PopulateMatrix(PETSC_COMM_SELF, &Basis::invrIntegrand, true);
-    auto Der = Basis.PopulateMatrix(PETSC_COMM_SELF, &Basis::derIntegrand, true);
+    auto Der = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,Basis.getNbasis(),Basis.getNbasis(),2*Basis.getDegree() + 1};
+    RadialMatrix::populateRadialMatrix(RadialMatrixType::Der,Der,Basis,true);
+
+    auto Invr = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,Basis.getNbasis(),Basis.getNbasis(),2*Basis.getDegree() + 1};
+    RadialMatrix::populateRadialMatrix(RadialMatrixType::Invr,Invr,Basis,true);
 
     // Compute Hxy_1
     Matrix Hlm_xy_1{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,angular.getNlm(),angular.getNlm(),2};
@@ -264,7 +277,8 @@ Matrix TDSE::constructAtomicS(const Basis& Basis, const Angular& angular)
     }
     I.assemble();
 
-    auto S = Basis.PopulateMatrix(PETSC_COMM_SELF,&Basis::overlapIntegrand, true);
+    auto S = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,Basis.getNbasis(),Basis.getNbasis(),2*Basis.getDegree() + 1};
+    RadialMatrix::populateRadialMatrix(RadialMatrixType::S,S,Basis,true);
     
     return kroneckerProduct(I,S,1,2*Basis.getDegree() + 1);
 }

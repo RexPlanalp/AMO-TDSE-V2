@@ -85,7 +85,7 @@ void Basis::buildR0()
     R0 = knot_val;
 }
 
-std::complex<double> Basis::integrateMatrixElement(int i, int j,Basis::MatrixIntegrand integrand,bool use_ecs) const
+std::complex<double> Basis::integrateMatrixElement(int i, int j,MatrixIntegrand integrand,bool use_ecs) const
 {
     std::complex<double> total{0.0,0.0};
 
@@ -116,14 +116,14 @@ std::complex<double> Basis::integrateMatrixElement(int i, int j,Basis::MatrixInt
             {
                 std::complex<double> x = ecs_x(x_val);
                 std::complex<double> weight = ecs_w(x_val, weight_val) * half_b_minus_a;
-                std::complex<double> integrand_val = (*integrand)(i, j, x,complex_knots);
+                std::complex<double> integrand_val = (*integrand)(i, j,getDegree(), x,complex_knots);
                 total += weight * integrand_val;
             }
             else
             {
                 std::complex<double> x = x_val;
                 std::complex<double> weight = weight_val* half_b_minus_a;
-                std::complex<double> integrand_val = (*integrand)(i, j, x,knots);
+                std::complex<double> integrand_val = (*integrand)(i, j,getDegree(), x,knots);
                 total += weight * integrand_val;
             }
         }

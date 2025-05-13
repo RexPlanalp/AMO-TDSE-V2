@@ -4,7 +4,7 @@
 
 namespace BSplines
 {
-    std::complex<double> dB(int i,int degree, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) 
+    inline std::complex<double> dB(int i,int degree, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) 
     {
         const int p = degree;
         if (p == 0)
@@ -58,7 +58,7 @@ namespace BSplines
         return term1 - term2;
     }
 
-    std::complex<double> B(int i, int degree, std::complex<double> x, const std::vector<std::complex<double>>& localKnots)
+    inline std::complex<double> B(int i, int degree, std::complex<double> x, const std::vector<std::complex<double>>& localKnots)
     {
         std::vector<std::complex<double>> N(degree + 1);
 
