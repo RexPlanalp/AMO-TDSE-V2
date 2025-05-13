@@ -117,10 +117,10 @@ void TDSE::printConfiguration(int rank)
 }
 
 
-Vector TDSE::loadInitialState(const TISE& tise,const BSpline& bspline, const Angular& angular)
+Vector TDSE::loadInitialState(const TISE& tise,const Basis& Basis, const Angular& angular)
 {   
     // Create a zero initialized vector to hold the initialte state
-    auto initialState = Vector{PETSC_COMM_WORLD,PETSC_DETERMINE,bspline.getNbasis() * angular.getNlm()};
+    auto initialState = Vector{PETSC_COMM_WORLD,PETSC_DETERMINE,Basis.getNbasis() * angular.getNlm()};
     initialState.setConstant(0.0);
 
     // Define group name and vector name to read vector from hdf5
@@ -130,7 +130,7 @@ Vector TDSE::loadInitialState(const TISE& tise,const BSpline& bspline, const Ang
     // Create hdf5 viewer for reading from file
     // Read in the vector 
     PetscHDF5 viewer{PETSC_COMM_SELF, tise.getOutputPath(), FILE_MODE_READ};
-    auto tiseOutput = viewer.loadVector(eigenvectorGroup ,vectorName,bspline.getNbasis());
+    auto tiseOutput = viewer.loadVector(eigenvectorGroup ,vectorName,Basis.getNbasis());
 
 
     // Extract tiseOutput to easily readable array
@@ -138,9 +138,9 @@ Vector TDSE::loadInitialState(const TISE& tise,const BSpline& bspline, const Ang
     VecGetArrayRead(tiseOutput.get(), &tiseOutputArray);
 
     int blockIdx = angular.getLMMap().at(std::make_pair(getInitialNLM()[1],getInitialNLM()[2]));
-    for (int localIdx = 0; localIdx < bspline.getNbasis(); ++localIdx)
+    for (int localIdx = 0; localIdx < Basis.getNbasis(); ++localIdx)
     {
-        int globalIdx = blockIdx * bspline.getNbasis() + localIdx;
+        int globalIdx = blockIdx * Basis.getNbasis() + localIdx;
 
         if (globalIdx >= initialState.getStart() && globalIdx < initialState.getEnd())
         {   
@@ -154,7 +154,7 @@ Vector TDSE::loadInitialState(const TISE& tise,const BSpline& bspline, const Ang
     return initialState;
 }
 
-std::pair<Matrix,Matrix> TDSE::constructAtomicInteraction(const BSpline& bspline, const Angular& angular, const Atom& atom, const Laser& laser)
+std::pair<Matrix,Matrix> TDSE::constructAtomicInteraction(const Basis& Basis, const Angular& angular, const Atom& atom, const Laser& laser)
 {
     Matrix I{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,angular.getNlm(),angular.getNlm(), 1};
     for (int blockIdx = 0; blockIdx < angular.getNlm(); ++blockIdx)
@@ -163,14 +163,14 @@ std::pair<Matrix,Matrix> TDSE::constructAtomicInteraction(const BSpline& bspline
     }
     I.assemble();
 
-    auto totalLeft = bspline.PopulateMatrix(PETSC_COMM_SELF,&BSpline::overlapIntegrand, true);
-    auto totalRight = bspline.PopulateMatrix(PETSC_COMM_SELF,&BSpline::overlapIntegrand, true);
+    auto totalLeft = Basis.PopulateMatrix(PETSC_COMM_SELF,&Basis::overlapIntegrand, true);
+    auto totalRight = Basis.PopulateMatrix(PETSC_COMM_SELF,&Basis::overlapIntegrand, true);
 
-    auto K = bspline.PopulateMatrix(PETSC_COMM_SELF,&BSpline::kineticIntegrand, true);
+    auto K = Basis.PopulateMatrix(PETSC_COMM_SELF,&Basis::kineticIntegrand, true);
     Matrix Pot{};
     if (atom.getSpecies() == "H")
     {
-        Pot = bspline.PopulateMatrix(PETSC_COMM_SELF,&BSpline::HIntegrand, true);
+        Pot = Basis.PopulateMatrix(PETSC_COMM_SELF,&Basis::HIntegrand, true);
     }
 
     totalLeft.AXPY(PETSC_i * laser.getTimeSpacing() / 2.0, K, SAME_NONZERO_PATTERN);
@@ -180,8 +180,8 @@ std::pair<Matrix,Matrix> TDSE::constructAtomicInteraction(const BSpline& bspline
     totalRight.AXPY(-PETSC_i * laser.getTimeSpacing() / 2.0, Pot, SAME_NONZERO_PATTERN);
 
 
-    auto firstTermLeft = kroneckerProduct(I,totalLeft,1.0,2*bspline.getDegree() + 1);
-    auto firstTermRight = kroneckerProduct(I,totalRight,1.0,2*bspline.getDegree() + 1);
+    auto firstTermLeft = kroneckerProduct(I,totalLeft,1.0,2*Basis.getDegree() + 1);
+    auto firstTermRight = kroneckerProduct(I,totalRight,1.0,2*Basis.getDegree() + 1);
 
     Matrix modifiedI{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,angular.getNlm(),angular.getNlm(), 1};
     for (int blockIdx = 0; blockIdx < angular.getNlm(); ++blockIdx)
@@ -193,14 +193,14 @@ std::pair<Matrix,Matrix> TDSE::constructAtomicInteraction(const BSpline& bspline
     }
     modifiedI.assemble();
 
-    auto centrifugalLeft = bspline.PopulateMatrix(PETSC_COMM_SELF,&BSpline::invr2Integrand, true);
-    auto centrifugalRight = bspline.PopulateMatrix(PETSC_COMM_SELF,&BSpline::invr2Integrand, true);
+    auto centrifugalLeft = Basis.PopulateMatrix(PETSC_COMM_SELF,&Basis::invr2Integrand, true);
+    auto centrifugalRight = Basis.PopulateMatrix(PETSC_COMM_SELF,&Basis::invr2Integrand, true);
 
     centrifugalLeft *= PETSC_i * laser.getTimeSpacing() / 2.0;
     centrifugalRight *= -PETSC_i * laser.getTimeSpacing() / 2.0;
 
-    auto secondTermLeft = kroneckerProduct(modifiedI, centrifugalLeft, 1.0,2*bspline.getDegree() + 1);
-    auto secondTermRight = kroneckerProduct(modifiedI, centrifugalRight, 1.0,2*bspline.getDegree() + 1);
+    auto secondTermLeft = kroneckerProduct(modifiedI, centrifugalLeft, 1.0,2*Basis.getDegree() + 1);
+    auto secondTermRight = kroneckerProduct(modifiedI, centrifugalRight, 1.0,2*Basis.getDegree() + 1);
 
     firstTermLeft.AXPY(1.0, secondTermLeft, SAME_NONZERO_PATTERN);
     firstTermRight.AXPY(1.0, secondTermRight, SAME_NONZERO_PATTERN);
@@ -208,10 +208,10 @@ std::pair<Matrix,Matrix> TDSE::constructAtomicInteraction(const BSpline& bspline
     return std::make_pair(firstTermLeft,firstTermRight);
 }
 
-Matrix TDSE::constructZInteraction(const BSpline& bspline, const Angular& angular)
+Matrix TDSE::constructZInteraction(const Basis& Basis, const Angular& angular)
 {
-    auto Invr = bspline.PopulateMatrix(PETSC_COMM_SELF, &BSpline::invrIntegrand, true);
-    auto Der = bspline.PopulateMatrix(PETSC_COMM_SELF, &BSpline::derIntegrand, true);
+    auto Invr = Basis.PopulateMatrix(PETSC_COMM_SELF, &Basis::invrIntegrand, true);
+    auto Der = Basis.PopulateMatrix(PETSC_COMM_SELF, &Basis::derIntegrand, true);
 
     Matrix Hlm_z_1{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,angular.getNlm(),angular.getNlm(),2};
     for (int blockRow = 0; blockRow < angular.getNlm(); ++blockRow)
@@ -265,16 +265,16 @@ Matrix TDSE::constructZInteraction(const BSpline& bspline, const Angular& angula
     }
     Hlm_z_2.assemble();
 
-    auto ZInteraction = kroneckerProduct(Hlm_z_1, Der, 2, 2*bspline.getDegree() + 1);
-    ZInteraction.AXPY(1.0,kroneckerProduct(Hlm_z_2, Invr, 2, 2*bspline.getDegree() + 1),SAME_NONZERO_PATTERN);
+    auto ZInteraction = kroneckerProduct(Hlm_z_1, Der, 2, 2*Basis.getDegree() + 1);
+    ZInteraction.AXPY(1.0,kroneckerProduct(Hlm_z_2, Invr, 2, 2*Basis.getDegree() + 1),SAME_NONZERO_PATTERN);
 
     return ZInteraction;
 }
 
-std::pair<Matrix,Matrix> TDSE::constructXYInteraction(const BSpline& bspline, const Angular& angular)
+std::pair<Matrix,Matrix> TDSE::constructXYInteraction(const Basis& Basis, const Angular& angular)
 {
-    auto Invr = bspline.PopulateMatrix(PETSC_COMM_SELF, &BSpline::invrIntegrand, true);
-    auto Der = bspline.PopulateMatrix(PETSC_COMM_SELF, &BSpline::derIntegrand, true);
+    auto Invr = Basis.PopulateMatrix(PETSC_COMM_SELF, &Basis::invrIntegrand, true);
+    auto Der = Basis.PopulateMatrix(PETSC_COMM_SELF, &Basis::derIntegrand, true);
 
 
 
@@ -331,8 +331,8 @@ std::pair<Matrix,Matrix> TDSE::constructXYInteraction(const BSpline& bspline, co
     }
     Hlm_xy_2.assemble();
 
-    auto Hxy_1 = kroneckerProduct(Hlm_xy_1,Invr,2,2*bspline.getDegree() + 1);
-    Hxy_1.AXPY(1.0,kroneckerProduct(Hlm_xy_2,Der,2, 2*bspline.getDegree() + 1),SAME_NONZERO_PATTERN);
+    auto Hxy_1 = kroneckerProduct(Hlm_xy_1,Invr,2,2*Basis.getDegree() + 1);
+    Hxy_1.AXPY(1.0,kroneckerProduct(Hlm_xy_2,Der,2, 2*Basis.getDegree() + 1),SAME_NONZERO_PATTERN);
 
     // Construct Hxy_2
     Matrix Hlm_xy_3{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,angular.getNlm(),angular.getNlm(),2};
@@ -387,13 +387,13 @@ std::pair<Matrix,Matrix> TDSE::constructXYInteraction(const BSpline& bspline, co
     }
     Hlm_xy_4.assemble();
 
-    auto Hxy_2 = kroneckerProduct(Hlm_xy_3,Invr,2,2*bspline.getDegree() + 1);
-    Hxy_2.AXPY(1.0,kroneckerProduct(Hlm_xy_4,Der,2,2*bspline.getDegree()+1),SAME_NONZERO_PATTERN);
+    auto Hxy_2 = kroneckerProduct(Hlm_xy_3,Invr,2,2*Basis.getDegree() + 1);
+    Hxy_2.AXPY(1.0,kroneckerProduct(Hlm_xy_4,Der,2,2*Basis.getDegree()+1),SAME_NONZERO_PATTERN);
 
     return std::make_pair(Hxy_1,Hxy_2);
 }
 
-Matrix TDSE::constructAtomicS(const BSpline& bspline, const Angular& angular)
+Matrix TDSE::constructAtomicS(const Basis& Basis, const Angular& angular)
 {
     Matrix I{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,angular.getNlm(),angular.getNlm(), 1};
     for (int blockIdx = 0; blockIdx < angular.getNlm(); ++blockIdx)
@@ -402,13 +402,13 @@ Matrix TDSE::constructAtomicS(const BSpline& bspline, const Angular& angular)
     }
     I.assemble();
 
-    auto S = bspline.PopulateMatrix(PETSC_COMM_SELF,&BSpline::overlapIntegrand, true);
+    auto S = Basis.PopulateMatrix(PETSC_COMM_SELF,&Basis::overlapIntegrand, true);
     
-    return kroneckerProduct(I,S,1,2*bspline.getDegree() + 1);
+    return kroneckerProduct(I,S,1,2*Basis.getDegree() + 1);
 }
 
 
-void TDSE::solve(const TISE& tise,const BSpline& bspline, const Angular& angular, const Atom& atom, const Laser& laser)
+void TDSE::solve(const TISE& tise,const Basis& Basis, const Angular& angular, const Atom& atom, const Laser& laser)
 {
     if (!getStatus())
     {
@@ -418,28 +418,28 @@ void TDSE::solve(const TISE& tise,const BSpline& bspline, const Angular& angular
     // Prepate Matrices/Input state for solver
     auto start_setup = MPI_Wtime();
 
-    auto initialState = loadInitialState(tise,bspline,angular);
+    auto initialState = loadInitialState(tise,Basis,angular);
 
-    auto atomicS = constructAtomicS(bspline,angular);
+    auto atomicS = constructAtomicS(Basis,angular);
 
     auto normVal = norm(initialState,atomicS);
     PetscPrintf(PETSC_COMM_WORLD,"Initial Norm: (%.15f , %.15f) \n",normVal.real(),normVal.imag()); 
 
     Matrix interactionLeft{};
     Matrix interactionRight{};
-    std::tie(interactionLeft,interactionRight) = constructAtomicInteraction(bspline,angular,atom,laser);
+    std::tie(interactionLeft,interactionRight) = constructAtomicInteraction(Basis,angular,atom,laser);
 
     Matrix ZInteraction{};
     if (laser.getComponents()[2])
     {
-        ZInteraction = constructZInteraction(bspline,angular);
+        ZInteraction = constructZInteraction(Basis,angular);
     }
 
     Matrix Hxy_1{};
     Matrix Hxy_2{};
     if ((laser.getComponents()[0]) || (laser.getComponents()[1]))
     {
-        std::tie(Hxy_1,Hxy_2) = constructXYInteraction(bspline,angular);
+        std::tie(Hxy_1,Hxy_2) = constructXYInteraction(Basis,angular);
     }
 
     PetscScalar alpha = PETSC_i * laser.getTimeSpacing() / 2.0;

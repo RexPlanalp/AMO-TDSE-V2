@@ -7,21 +7,21 @@
 
 #include "Potentials.h"
 
-class BSpline
+class Basis
 {   
-    using MatrixIntegrand = std::complex<double> (BSpline::*)(int, int, std::complex<double>, const std::vector<std::complex<double>>&) const;
+    using MatrixIntegrand = std::complex<double> (Basis::*)(int, int, std::complex<double>, const std::vector<std::complex<double>>&) const;
     struct GaussLegendre
     {
         static const std::unordered_map<int, std::pair<std::vector<double>, std::vector<double>>> RootsAndWeights;
     };
 
     public:
-        explicit BSpline(const Input& input)
-        : nbasis{input.getJSON().at("BSpline").at("nbasis")}
-        , order{input.getJSON().at("BSpline").at("order")}
-        , R0{input.getJSON().at("BSpline").at("R0r")}
-        , eta{input.getJSON().at("BSpline").at("etar")}
-        , spacing{input.getJSON().at("BSpline").at("spacing")}
+        explicit Basis(const Input& input)
+        : nbasis{input.getJSON().at("Basis").at("nbasis")}
+        , order{input.getJSON().at("Basis").at("order")}
+        , R0{input.getJSON().at("Basis").at("R0r")}
+        , eta{input.getJSON().at("Basis").at("etar")}
+        , spacing{input.getJSON().at("Basis").at("spacing")}
         {
             degree = order - 1;
             roots = GaussLegendre::RootsAndWeights.at(order).first;

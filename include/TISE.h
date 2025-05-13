@@ -3,7 +3,7 @@
 
 #include "PetscWrappers/PetscEPS.h"
 #include "Input.h"
-#include "BSpline.h"
+#include "Basis.h"
 #include "Atom.h"
 #include "Angular.h"
 
@@ -24,7 +24,7 @@ class TISE
         const std::string& getOutputPath() const {return outputPath;}
         PetscInt getNmax() const {return nmax;}
 
-        void solve(const BSpline& bspline, const Atom& atom, const Angular& angular);
+        void solve(const Basis& Basis, const Atom& atom, const Angular& angular);
         void printConfiguration(int rank);
     
     private:

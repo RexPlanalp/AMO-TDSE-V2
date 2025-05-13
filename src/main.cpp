@@ -6,7 +6,7 @@
 #include "Angular.h"
 #include "Laser.h"
 #include "Atom.h"
-#include "BSpline.h"
+#include "Basis.h"
 #include "TISE.h"
 #include "TDSE.h"
 #include "Observables.h"
@@ -53,16 +53,16 @@ int main(int argc, char **argv)
     Atom atom{input};
     atom.printConfiguration(rank);
 
-    BSpline bspline{input};
-    bspline.buildKnots(box);
-    bspline.printConfiguration(rank);
-    //bspline.dumpTo(box,"misc",rank);
+    Basis Basis{input};
+    Basis.buildKnots(box);
+    Basis.printConfiguration(rank);
+    //Basis.dumpTo(box,"misc",rank);
 
     TISE tise{input};
     tise.printConfiguration(rank);
 
     auto start = std::chrono::high_resolution_clock::now();
-    tise.solve(bspline,atom,angular);
+    tise.solve(Basis,atom,angular);
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> delta = end - start;
     if (rank == 0)
@@ -74,7 +74,7 @@ int main(int argc, char **argv)
     tdse.printConfiguration(rank);
 
     start = std::chrono::high_resolution_clock::now();
-    tdse.solve(tise,bspline,angular,atom,laser);
+    tdse.solve(tise,Basis,angular,atom,laser);
     end = std::chrono::high_resolution_clock::now();
     delta = end - start;
     if (rank == 0)
@@ -83,7 +83,7 @@ int main(int argc, char **argv)
     }
 
     Block block{input};
-    block.computeDistribution(rank,bspline,tdse,tise,angular);
+    block.computeDistribution(rank,Basis,tdse,tise,angular);
 
 
 

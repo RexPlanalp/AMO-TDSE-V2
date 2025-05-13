@@ -6,7 +6,7 @@
 
 #include "Box.h"
 #include "Angular.h"
-#include "BSpline.h"
+#include "Basis.h"
 #include "Laser.h"
 #include "Atom.h"
 #include "misc.h"
@@ -21,7 +21,7 @@ class Simulation
         : comm{comm}, size{size}, rank{rank}
         , box{inputPar}
         , angular{inputPar}
-        , bspline{inputPar,box}
+        , Basis{inputPar,box}
         , atom{inputPar}
         , laser{inputPar}
         , tise{inputPar}
@@ -34,14 +34,14 @@ class Simulation
             std::array<int,3> initial_state= inputPar.at("TDSE").at("initial_state").get<std::array<int,3>>();
             angular.buildMaps(laser,initial_state);
 
-            bspline.dumpTo(box,"misc",rank);
+            Basis.dumpTo(box,"misc",rank);
             angular.dumpTo("misc",rank);
             laser.dumpTo("misc",rank);
         }
 
         void solveTISE()
         {
-            tise.solve(bspline,atom, angular);
+            tise.solve(Basis,atom, angular);
         }
     
        
@@ -56,7 +56,7 @@ class Simulation
         // Default InitializedBox box;
         Box box;
         Angular angular;
-        BSpline bspline;
+        Basis Basis;
         Atom atom;
         Laser laser;
         TISE tise;

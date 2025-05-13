@@ -4,7 +4,7 @@
 #include "petsc.h"
 #include "PetscWrappers/PetscVec.h"
 #include "TISE.h"
-#include "BSpline.h"
+#include "Basis.h"
 #include "Angular.h"
 
 #include "PetscWrappers/PetscMat.h"
@@ -27,17 +27,17 @@ class TDSE
         PetscInt getMaxIter() const {return maxIter;}
         PetscInt getRestart() const {return restart;}
 
-        void solve(const TISE& tise,const BSpline& bspline, const Angular& angular, const Atom& atom, const Laser& laser);
+        void solve(const TISE& tise,const Basis& Basis, const Angular& angular, const Atom& atom, const Laser& laser);
 
         void printConfiguration(int rank);
 
-        Vector loadInitialState(const TISE& tise,const BSpline& bspline, const Angular& angular);
-        std::pair<Matrix,Matrix> constructAtomicInteraction(const BSpline& bspline, const Angular& angular,const Atom& atom, const Laser& laser);
+        Vector loadInitialState(const TISE& tise,const Basis& Basis, const Angular& angular);
+        std::pair<Matrix,Matrix> constructAtomicInteraction(const Basis& Basis, const Angular& angular,const Atom& atom, const Laser& laser);
         
-        Matrix constructZInteraction(const BSpline& bspline, const Angular& angular);
-        std::pair<Matrix,Matrix> constructXYInteraction(const BSpline& bspline, const Angular& angular);
+        Matrix constructZInteraction(const Basis& Basis, const Angular& angular);
+        std::pair<Matrix,Matrix> constructXYInteraction(const Basis& Basis, const Angular& angular);
 
-        Matrix constructAtomicS(const BSpline& bspline, const Angular& angular);
+        Matrix constructAtomicS(const Basis& Basis, const Angular& angular);
 
     private:
         Matrix kroneckerProduct(const Matrix& A, const Matrix& B, PetscInt nnz_A, PetscInt nnz_B);

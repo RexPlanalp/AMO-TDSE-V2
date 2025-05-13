@@ -6,7 +6,7 @@
 #include "PetscWrappers/PetscIS.h"
 #include "PetscWrappers/PetscOperators.h"
 #include "TISE.h"
-#include "BSpline.h"
+#include "Basis.h"
 #include "TDSE.h"
 #include "Angular.h"
 #include "PetscWrappers/PetscIS.h"
@@ -18,9 +18,9 @@ class Block
         : projOutBound{input.getJSON().at("Block").at("projOutBound")}
         {}
 
-        void computeDistribution(int rank,const BSpline& bspline, const TDSE& tdse,const TISE& tise, const Angular& angular);
+        void computeDistribution(int rank,const Basis& Basis, const TDSE& tdse,const TISE& tise, const Angular& angular);
 
-        void projectOutBoundStates(Vector& finalState,const Matrix& S,const TISE& tise, const Angular& angular,const BSpline& bspline);
+        void projectOutBoundStates(Vector& finalState,const Matrix& S,const TISE& tise, const Angular& angular,const Basis& Basis);
        
         bool getProjOut() const {return projOutBound;}
 

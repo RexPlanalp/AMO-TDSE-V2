@@ -1,11 +1,11 @@
 
 #include "common.h"
 
-#include "BSpline.h"
+#include "Basis.h"
 #include "Box.h"
 #include "PetscWrappers/PetscMat.h"
 
-const std::unordered_map<int, std::pair<std::vector<double>, std::vector<double>>> BSpline::GaussLegendre::RootsAndWeights = 
+const std::unordered_map<int, std::pair<std::vector<double>, std::vector<double>>> Basis::GaussLegendre::RootsAndWeights = 
 {
     {2, {{-0.57735027, 0.57735027}, {1, 1}}},
     {3, {{-0.77459667, 0.0, 0.77459667}, {0.55555556, 0.88888889, 0.55555556}}},
@@ -16,7 +16,7 @@ const std::unordered_map<int, std::pair<std::vector<double>, std::vector<double>
     {8, {{-0.96028986, -0.79666648, -0.52553241, -0.18343464, 0.18343464, 0.52553241, 0.79666648, 0.96028986}, {0.10122854, 0.22238103, 0.31370665, 0.36268378, 0.36268378, 0.31370665, 0.22238103, 0.10122854}}}
 };
 
-void BSpline::buildKnots(const Box& box)
+void Basis::buildKnots(const Box& box)
 {
     if (spacing == "linear")
     {
@@ -27,7 +27,7 @@ void BSpline::buildKnots(const Box& box)
     buildComplexKnots();
 }
 
-void BSpline::buildComplexKnots()
+void Basis::buildComplexKnots()
 {
     int N_knots = getNbasis() + getOrder();
 
@@ -41,7 +41,7 @@ void BSpline::buildComplexKnots()
 
 
 
-void BSpline::buildLinearKnots(const Box& box)
+void Basis::buildLinearKnots(const Box& box)
 {
     int N_knots   = getNbasis() + getOrder();
     int leftMult  = getOrder() - 2;
@@ -69,7 +69,7 @@ void BSpline::buildLinearKnots(const Box& box)
 
 }
 
-void BSpline::buildR0()
+void Basis::buildR0()
 {
     double target   = R0 * std::real(knots.back());
     double min_val  = std::abs(knots[0] - target);
@@ -86,7 +86,7 @@ void BSpline::buildR0()
     R0 = knot_val;
 }
 
-std::complex<double> BSpline::integrateMatrixElement(int i, int j, BSpline::MatrixIntegrand integrand,bool use_ecs) const
+std::complex<double> Basis::integrateMatrixElement(int i, int j, Basis::MatrixIntegrand integrand,bool use_ecs) const
 {
     std::complex<double> total{0.0,0.0};
 
@@ -133,11 +133,11 @@ std::complex<double> BSpline::integrateMatrixElement(int i, int j, BSpline::Matr
     return total;
 }
 
-void BSpline::printConfiguration(int rank)
+void Basis::printConfiguration(int rank)
 {
     if (rank == 0)
     {
-        std::cout << "BSpline Configuration: " << "\n\n";
+        std::cout << "Basis Configuration: " << "\n\n";
         std::cout << "nbasis: " << getNbasis() <<  "\n\n";
         std::cout << "order: " << getOrder() <<  "\n\n";
         std::cout << "degree: " << getDegree() <<  "\n\n";
@@ -145,11 +145,11 @@ void BSpline::printConfiguration(int rank)
     }
 }
 
-void BSpline::dumpTo(const Box& box, const std::string& directory, int rank)
+void Basis::dumpTo(const Box& box, const std::string& directory, int rank)
 {
     if (rank == 0) 
     {
-        std::string filename = directory + "/bsplines.txt";
+        std::string filename = directory + "/Basiss.txt";
 
         std::ofstream outFile(filename);
 
@@ -168,7 +168,7 @@ void BSpline::dumpTo(const Box& box, const std::string& directory, int rank)
         }
         outFile.close();
 
-        std::string filename2 = directory + "/dbsplines.txt";
+        std::string filename2 = directory + "/dBasiss.txt";
 
         std::ofstream outFile2(filename2);
 
@@ -187,7 +187,7 @@ void BSpline::dumpTo(const Box& box, const std::string& directory, int rank)
         }
         outFile2.close();
 
-        std::string filename3 = directory + "/bspline_metadata.txt";
+        std::string filename3 = directory + "/Basis_metadata.txt";
 
         std::ofstream outFile3(filename3);
 
@@ -202,7 +202,7 @@ void BSpline::dumpTo(const Box& box, const std::string& directory, int rank)
     }
 }
 
-std::complex<double> BSpline::dB(int i, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) const
+std::complex<double> Basis::dB(int i, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) const
 {
     const int p = degree;
     if (p == 0)
@@ -250,7 +250,7 @@ std::complex<double> BSpline::dB(int i, std::complex<double> x, const std::vecto
     return term1 - term2;
 }
 
-std::complex<double> BSpline::B(int i, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) const
+std::complex<double> Basis::B(int i, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) const
 {
     std::vector<std::complex<double>> N(degree + 1);
 
@@ -282,7 +282,7 @@ std::complex<double> BSpline::B(int i, std::complex<double> x, const std::vector
     return N[0];
 }
 
-Matrix BSpline::PopulateMatrix(MPI_Comm comm, BSpline::MatrixIntegrand integrand,bool use_ecs) const
+Matrix Basis::PopulateMatrix(MPI_Comm comm, Basis::MatrixIntegrand integrand,bool use_ecs) const
 {   
     Matrix matrix{comm,PETSC_DECIDE,PETSC_DECIDE,getNbasis(),getNbasis(),2*getDegree() + 1};
 

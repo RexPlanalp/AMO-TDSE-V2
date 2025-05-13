@@ -1,5 +1,5 @@
 #include "TISE.h"
-#include "BSpline.h"
+#include "Basis.h"
 #include "PetscWrappers/PetscEPS.h"
 #include "PetscWrappers/PetscHDF5.h"
 #include "PetscWrappers/PetscOperators.h"
@@ -8,7 +8,7 @@
 
 #include "common.h"
 
-void TISE::solve(const BSpline& bspline, const Atom& atom, const Angular& angular)
+void TISE::solve(const Basis& Basis, const Atom& atom, const Angular& angular)
 {   
     // If we are not running the TISE, exit
     if (!getStatus())
@@ -23,20 +23,20 @@ void TISE::solve(const BSpline& bspline, const Atom& atom, const Angular& angula
     PetscHDF5 viewer{PETSC_COMM_WORLD, getOutputPath(), FILE_MODE_WRITE};
     
     // Create Kinetic Matrix
-    Matrix K = bspline.PopulateMatrix(PETSC_COMM_WORLD,&BSpline::kineticIntegrand,false);
+    Matrix K = Basis.PopulateMatrix(PETSC_COMM_WORLD,&Basis::kineticIntegrand,false);
 
     // Create Inverse r squared matrix
-    Matrix Invr2 = bspline.PopulateMatrix(PETSC_COMM_WORLD,&BSpline::invr2Integrand,false);
+    Matrix Invr2 = Basis.PopulateMatrix(PETSC_COMM_WORLD,&Basis::invr2Integrand,false);
     
     // Create 
     Matrix Pot{};
 
     if (atom.getSpecies() == "H")
     {
-        Pot = bspline.PopulateMatrix(PETSC_COMM_WORLD,&BSpline::HIntegrand,false);
+        Pot = Basis.PopulateMatrix(PETSC_COMM_WORLD,&Basis::HIntegrand,false);
     }
      
-    Matrix S = bspline.PopulateMatrix(PETSC_COMM_WORLD,&BSpline::overlapIntegrand,false);
+    Matrix S = Basis.PopulateMatrix(PETSC_COMM_WORLD,&Basis::overlapIntegrand,false);
 
     K.AXPY(1.0, Pot, SAME_NONZERO_PATTERN);
 
