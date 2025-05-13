@@ -18,6 +18,7 @@ class EPSSolver
       EPSSetType(eps,EPSKRYLOVSCHUR);
       EPSSetTolerances(eps,tolerance,maxIter);
       EPSSetFromOptions(eps);
+      EPSSetUp(eps);
     }
 
 
@@ -33,12 +34,6 @@ class EPSSolver
 
     PetscInt getNconv() const {return nconv;}
 
-
-    void reset()
-    {
-        EPSReset(eps);
-    }
-
     void setOperators(const Matrix& H, const Matrix& S)
     {
         EPSSetOperators(eps,H.get(),S.get());
@@ -46,7 +41,7 @@ class EPSSolver
 
     void setDimensions(PetscInt pairs)
     {
-      EPSSetDimensions(eps,pairs, PETSC_DETERMINE ,PETSC_DETERMINE);
+      EPSSetDimensions(eps,pairs, PETSC_DEFAULT ,PETSC_DEFAULT);
     }
 
     void solve()
@@ -58,7 +53,7 @@ class EPSSolver
     PetscScalar getEigenvalue(PetscInt i)
     {
       PetscScalar eigenvalue{};
-      EPSGetEigenvalue(eps, i, &eigenvalue, NULL);
+      EPSGetEigenvalue(eps, i, &eigenvalue, nullptr);
       return eigenvalue;
     }
 

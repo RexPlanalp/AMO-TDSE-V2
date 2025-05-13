@@ -410,6 +410,12 @@ Matrix TDSE::constructAtomicS(const BSpline& bspline, const Angular& angular)
 
 void TDSE::solve(const TISE& tise,const BSpline& bspline, const Angular& angular, const Atom& atom, const Laser& laser)
 {
+
+    if (!getStatus())
+    {
+        return;
+    }
+
     auto initialState = loadInitialState(tise,bspline,angular);
 
     auto atomicS = constructAtomicS(bspline,angular);
@@ -436,7 +442,7 @@ void TDSE::solve(const TISE& tise,const BSpline& bspline, const Angular& angular
 
 
     KSPSolver ksp(PETSC_COMM_WORLD,getMaxIter(),getTol(),getRestart());
-    ksp.setPreconditioner(angular.getNlm());
+    //ksp.setPreconditioner(angular.getNlm());
 
     auto normVal = norm(initialState,atomicS);
     PetscPrintf(PETSC_COMM_WORLD,"Initial Norm: (%.15f , %.15f) \n",normVal.real(),normVal.imag()); 
@@ -475,7 +481,14 @@ void TDSE::solve(const TISE& tise,const BSpline& bspline, const Angular& angular
 
         initialState = interactionRight * initialState;
 
+        auto start = MPI_Wtime();
         ksp.solve(initialState);
+        auto end = MPI_Wtime();
+
+        PetscInt its;
+        KSPGetIterationNumber(ksp.get(), &its);
+
+        PetscPrintf(PETSC_COMM_WORLD,"Solved time step: %d in %f seconds and %d iterations of GMRES \n", timeIdx, end-start,its);
     }
 
     normVal = norm(initialState,atomicS);

@@ -56,10 +56,13 @@ void TISE::solve(const BSpline& bspline, const Atom& atom, const Angular& angula
         }   
 
         PetscPrintf(PETSC_COMM_WORLD,"Solving for l = %d \n\n",l); 
-        epssolver.reset();
         epssolver.setOperators(K,S);
         epssolver.setDimensions(reqPairs);
+
+        auto start = MPI_Wtime();
         epssolver.solve();
+        auto end = MPI_Wtime();
+        PetscPrintf(PETSC_COMM_WORLD,"Solved eigenvalue problem in:  %f seconds \n", end-  start);
 
       
         for (int convPairs = 0; convPairs < epssolver.getNconv(); ++convPairs)
