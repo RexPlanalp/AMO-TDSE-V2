@@ -10,16 +10,25 @@
 
 void TISE::solve(const BSpline& bspline, const Atom& atom, const Angular& angular)
 {   
+    // If we are not running the TISE, exit
     if (!getStatus())
     {
         return;
     }
-   
 
+    // Start measuring at the very beginning
+    auto total_start = MPI_Wtime();
+
+    // Create HDF5 File to store output
+    PetscHDF5 viewer{PETSC_COMM_WORLD, getOutputPath(), FILE_MODE_WRITE};
+    
+    // Create Kinetic Matrix
     Matrix K = bspline.PopulateMatrix(PETSC_COMM_WORLD,&BSpline::kineticIntegrand,false);
 
+    // Create Inverse r squared matrix
     Matrix Invr2 = bspline.PopulateMatrix(PETSC_COMM_WORLD,&BSpline::invr2Integrand,false);
     
+    // Create 
     Matrix Pot{};
 
     if (atom.getSpecies() == "H")
@@ -27,48 +36,33 @@ void TISE::solve(const BSpline& bspline, const Atom& atom, const Angular& angula
         Pot = bspline.PopulateMatrix(PETSC_COMM_WORLD,&BSpline::HIntegrand,false);
     }
      
-    
-
     Matrix S = bspline.PopulateMatrix(PETSC_COMM_WORLD,&BSpline::overlapIntegrand,false);
 
     K.AXPY(1.0, Pot, SAME_NONZERO_PATTERN);
 
-    
-    
-    PetscHDF5 viewer{PETSC_COMM_WORLD, getOutputPath(), FILE_MODE_WRITE};
     EPSSolver epssolver{PETSC_COMM_WORLD,getMaxIter(),getTol()};
     epssolver.setOperators(K,S);
-    std::string eigenvalueGroup = "eigenvalues";
-    std::string eigenvectorGroup = "eigenvectors";
-   
 
-    for (int l = 0; l < angular.getLmax(); ++l)
+    auto eigenvector = Vector{};
+    S.setupVector(eigenvector);
+    
+    for (int l = 0; (l < angular.getLmax()) && (l < getNmax()); ++l)
     {
         if (l > 0)
         {
             K.AXPY(l, Invr2,SAME_NONZERO_PATTERN);
         }
+        
+        PetscPrintf(PETSC_COMM_WORLD,"Solving for l = %d \n",l); 
 
         int reqPairs = getNmax() - l;
-        if (reqPairs <=0)
-        {
-            continue;
-        }   
-
-        PetscPrintf(PETSC_COMM_WORLD,"Solving for l = %d \n\n",l); 
-        //epssolver.setOperators(K,S);
         epssolver.setDimensions(reqPairs);
-
-        auto start = MPI_Wtime();
         epssolver.solve();
-        auto end = MPI_Wtime();
-        PetscPrintf(PETSC_COMM_WORLD,"Solved eigenvalue problem in:  %f seconds \n", end-  start);
 
-      
-        for (int convPairs = 0; convPairs < epssolver.getNconv(); ++convPairs)
+        for (int convPair = 0; convPair < epssolver.getNconv(); ++convPair)
         {
-            auto eigenvalue = epssolver.getEigenvalue(convPairs);
-            auto eigenvector = epssolver.getEigenvector(convPairs,S);
+            auto eigenvalue = epssolver.getEigenvalue(convPair);
+            epssolver.getEigenvector(convPair,eigenvector);
 
             normalize(eigenvector,S);
 
@@ -77,18 +71,17 @@ void TISE::solve(const BSpline& bspline, const Atom& atom, const Angular& angula
                 continue;
             }
 
-            std::string eigenvectorName = std::string("psi_") + std::to_string(convPairs + l + 1) + std::string("_") + std::to_string(l);
-            std::string eigenvalueName = std::string("E_") + std::to_string(convPairs + l + 1) + std::string("_") + std::to_string(l);
+            std::string eigenvectorName = std::string("psi_") + std::to_string(convPair + l + 1) + std::string("_") + std::to_string(l);
+            std::string eigenvalueName = std::string("E_") + std::to_string(convPair + l + 1) + std::string("_") + std::to_string(l);
 
             viewer.saveValue(eigenvalueGroup, eigenvalueName, eigenvalue);
             viewer.saveVector(eigenvectorGroup,eigenvectorName, eigenvector);
 
-
             auto normVal = norm(eigenvector,S);
-            PetscPrintf(PETSC_COMM_WORLD,"Eigenvector %d -> Norm(%.4f , %.4f) -> Eigenvalue(%.4f , %.4f)  \n",convPairs+1,normVal.real(),normVal.imag(),eigenvalue.real(),eigenvalue.imag()); 
+            PetscPrintf(PETSC_COMM_WORLD,"Eigenvector %d -> Norm(%.4f , %.4f) -> Eigenvalue(%.4f , %.4f)  \n",convPair+1,normVal.real(),normVal.imag(),eigenvalue.real(),eigenvalue.imag()); 
         }
-        PetscPrintf(PETSC_COMM_WORLD,"\n");
-        
+        auto total_end = MPI_Wtime();
+        PetscPrintf(PETSC_COMM_WORLD,"Solved eigenvalue problem in:  %f seconds \n\n", total_end -  total_start);
     }
 
 }

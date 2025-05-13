@@ -35,6 +35,9 @@ class TISE
         std::string outputPath{};
         PetscInt nmax{};
 
+        std::string eigenvalueGroup = "eigenvalues";
+        std::string eigenvectorGroup = "eigenvectors";
+
        
         
     

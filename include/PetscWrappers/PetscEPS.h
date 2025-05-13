@@ -57,14 +57,9 @@ class EPSSolver
     }
 
 
-    Vector getEigenvector(PetscInt i, const Matrix& S)
+    void getEigenvector(PetscInt i, Vector& eigenvector)
     {
-      Vector eigenvector{};
-      S.setupVector(eigenvector);
       EPSGetEigenvector(eps, i ,eigenvector.get(),nullptr);
-
-      return eigenvector;
-
     }
 
     const EPS& get() const {return eps;}
