@@ -410,23 +410,23 @@ Matrix TDSE::constructAtomicS(const BSpline& bspline, const Angular& angular)
 
 void TDSE::solve(const TISE& tise,const BSpline& bspline, const Angular& angular, const Atom& atom, const Laser& laser)
 {
-    auto start_setup = MPI_Wtime();
-
-
     if (!getStatus())
     {
         return;
     }
 
+    // Prepate Matrices/Input state for solver
+    auto start_setup = MPI_Wtime();
+
     auto initialState = loadInitialState(tise,bspline,angular);
 
     auto atomicS = constructAtomicS(bspline,angular);
 
+    auto normVal = norm(initialState,atomicS);
+    PetscPrintf(PETSC_COMM_WORLD,"Initial Norm: (%.15f , %.15f) \n",normVal.real(),normVal.imag()); 
+
     Matrix interactionLeft{};
     Matrix interactionRight{};
-
-
-
     std::tie(interactionLeft,interactionRight) = constructAtomicInteraction(bspline,angular,atom,laser);
 
     Matrix ZInteraction{};
@@ -442,21 +442,15 @@ void TDSE::solve(const TISE& tise,const BSpline& bspline, const Angular& angular
         std::tie(Hxy_1,Hxy_2) = constructXYInteraction(bspline,angular);
     }
 
+    PetscScalar alpha = PETSC_i * laser.getTimeSpacing() / 2.0;
+
     auto end_setup = MPI_Wtime();
     PetscPrintf(PETSC_COMM_WORLD,"Time to setup TDSE: %f \n", end_setup-start_setup);
 
-    auto normVal = norm(initialState,atomicS);
-    PetscPrintf(PETSC_COMM_WORLD,"Initial Norm: (%.15f , %.15f) \n",normVal.real(),normVal.imag()); 
 
-
-
-
-
-
+    // Solve TDSE
     KSPSolver ksp(PETSC_COMM_WORLD,getMaxIter(),getTol(),getRestart());
     ksp.setOperators(interactionLeft);
-
-    PetscScalar alpha = PETSC_i * laser.getTimeSpacing() / 2.0;
 
     auto rhs = Vector{};
     interactionRight.setupVector(rhs);
@@ -464,48 +458,55 @@ void TDSE::solve(const TISE& tise,const BSpline& bspline, const Angular& angular
     auto start_solve = MPI_Wtime();
     for (int timeIdx = 0; timeIdx < laser.getNt(); ++timeIdx)
     {
-
         double tNow = timeIdx * laser.getTimeSpacing() + laser.getTimeSpacing() / 2.0;
-        double tPrev = (timeIdx - 1) * laser.getTimeSpacing() + laser.getTimeSpacing() / 2.0;
-
-        MatStructure pattern;
-        if (timeIdx > 1)
+        
+        if (timeIdx == 0)
         {
-            pattern = SUBSET_NONZERO_PATTERN;
+            if (laser.getComponents()[2])
+            {
+                auto Az = laser.A(tNow,2);;
+
+                interactionLeft.AXPY(Az * alpha, ZInteraction,DIFFERENT_NONZERO_PATTERN);
+                interactionRight.AXPY(-Az * alpha, ZInteraction,DIFFERENT_NONZERO_PATTERN);
+            }
+            if ((laser.getComponents()[0]) || (laser.getComponents()[1]))
+            {
+                auto deltaAtilde = (laser.A(tNow,0) + PETSC_i * laser.A(tNow,1));
+                auto deltaAtildeStar = (laser.A(tNow,0) - PETSC_i * laser.A(tNow,1));;
+
+                interactionLeft.AXPY(alpha * deltaAtildeStar,Hxy_1,DIFFERENT_NONZERO_PATTERN);
+                interactionRight.AXPY(-alpha * deltaAtildeStar,Hxy_1,DIFFERENT_NONZERO_PATTERN);
+
+                interactionLeft.AXPY(alpha*deltaAtilde,Hxy_2,DIFFERENT_NONZERO_PATTERN);
+                interactionRight.AXPY(-alpha*deltaAtilde,Hxy_2,DIFFERENT_NONZERO_PATTERN);
+            }
         }
         else
-        {
-            pattern = DIFFERENT_NONZERO_PATTERN;
-        }
-
-
-        if (timeIdx > 0)
         {   
+            double tPrev = (timeIdx - 1) * laser.getTimeSpacing() + laser.getTimeSpacing() / 2.0;
+
             if (laser.getComponents()[2])
             {
                 auto deltaAz = (laser.A(tNow,2) - laser.A(tPrev,2));
 
-                interactionLeft.AXPY( deltaAz * alpha, ZInteraction,pattern);
-                interactionRight.AXPY( -deltaAz * alpha, ZInteraction,pattern);
+                interactionLeft.AXPY( deltaAz * alpha, ZInteraction,SUBSET_NONZERO_PATTERN);
+                interactionRight.AXPY( -deltaAz * alpha, ZInteraction,SUBSET_NONZERO_PATTERN);
             }
             if ((laser.getComponents()[0]) || (laser.getComponents()[1]))
             {
                 auto deltaAtilde = ((laser.A(tNow,0) + PETSC_i * laser.A(tNow,1)) - (laser.A(tPrev,0) + PETSC_i * laser.A(tPrev,1)));
                 auto deltaAtildeStar = ((laser.A(tNow,0) - PETSC_i * laser.A(tNow,1)) - (laser.A(tPrev,0) - PETSC_i * laser.A(tPrev,1)));
 
+                interactionLeft.AXPY(alpha * deltaAtildeStar,Hxy_1,SUBSET_NONZERO_PATTERN);
+                interactionRight.AXPY(-alpha * deltaAtildeStar,Hxy_1,SUBSET_NONZERO_PATTERN);
 
-                interactionLeft.AXPY(alpha * deltaAtildeStar,Hxy_1,pattern);
-                interactionRight.AXPY(-alpha * deltaAtildeStar,Hxy_1,pattern);
-
-                interactionLeft.AXPY(alpha*deltaAtilde,Hxy_2,pattern);
-                interactionRight.AXPY(-alpha*deltaAtilde,Hxy_2,pattern);
+                interactionLeft.AXPY(alpha*deltaAtilde,Hxy_2,SUBSET_NONZERO_PATTERN);
+                interactionRight.AXPY(-alpha*deltaAtilde,Hxy_2,SUBSET_NONZERO_PATTERN);
             }
         }
 
- 
 
         interactionRight.matMult(initialState,rhs);
-
         ksp.solve(rhs,initialState);
         
     }
