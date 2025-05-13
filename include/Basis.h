@@ -38,10 +38,7 @@ class Basis
         const std::string& getSpacing() const {return spacing;}
         const std::vector<std::complex<double>> getKnots() const {return knots;}
         const std::vector<std::complex<double>> getComplexKnots() const {return complex_knots;}
-
-        std::complex<double> B(int i, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) const;
-        std::complex<double> dB(int i, std::complex<double> x,const std::vector<std::complex<double>>& localKnots) const;
-
+        
         std::complex<double> integrateMatrixElement(int i, int j, MatrixIntegrand integrand,bool use_ecs) const;
 
         void printConfiguration(int rank);
@@ -49,12 +46,7 @@ class Basis
         void buildKnots(const Box& box);
 
         Matrix PopulateMatrix(MPI_Comm comm,MatrixIntegrand integrand,bool use_ecs) const;
-        std::complex<double> overlapIntegrand(int i, int j, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) const {return B(i, x,localKnots) * B(j, x,localKnots);}
-        std::complex<double> kineticIntegrand(int i, int j, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) const {return 0.5 * dB(i, x,localKnots) * dB(j, x,localKnots);}
-        std::complex<double> invrIntegrand(int i, int j, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) const {return B(i, x,localKnots) * B(j, x,localKnots) / (x + 1E-25);}
-        std::complex<double> invr2Integrand(int i, int j, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) const {return B(i, x,localKnots) * B(j, x,localKnots) / (x*x + 1E-25);}
-        std::complex<double> derIntegrand(int i, int j, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) const {return B(i, x,localKnots) * dB(j,x,localKnots);}
-        std::complex<double> HIntegrand(int i, int j, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) const {return  B(i, x,localKnots) * B(j, x,localKnots) * Potentials::hydrogen(x) ;}
+        
     
 
     private:

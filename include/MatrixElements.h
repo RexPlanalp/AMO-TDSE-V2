@@ -1,6 +1,29 @@
 #pragma once
 
 #include "common.h"
+#include "BSplines.h"
+#include "PetscWrappers/PetscMat.h"
+#include "Angular.h"
+
+enum class AngularMatrixType
+{
+    Z_INT_1,
+    Z_INT_2,
+    XY_INT_1,
+    XY_INT_2,
+    XY_INT_3,
+    XY_INT_4
+};
+
+enum class RadialMatrixType
+{
+    S,
+    Invr,
+    Invr2,
+    K,
+    Pot,
+    Der
+};
 
 namespace AngularElements
 {
@@ -109,5 +132,100 @@ namespace AngularElements
         double numerator = (l+m+1)*(l-m+1);
         double denominator = (2*l+1)*(2*l+3);
         return std::sqrt(numerator/denominator);
+    }
+}
+
+namespace RadialElements
+{
+    inline std::complex<double> overlapIntegrand(int i, int j, int degree, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) {return BSplines::B(i,degree, x,localKnots) * BSplines::B(j,degree, x,localKnots);}
+    inline std::complex<double> kineticIntegrand(int i, int j,int degree, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) {return 0.5 * BSplines::dB(i,degree, x,localKnots) * BSplines::dB(j,degree, x,localKnots);}
+    inline std::complex<double> invrIntegrand(int i, int j,int degree, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) {return BSplines::B(i,degree, x,localKnots) * BSplines::B(j,degree, x,localKnots) / (x + 1E-25);}
+    inline std::complex<double> invr2Integrand(int i, int j,int degree, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) {return BSplines::B(i,degree, x,localKnots) * BSplines::B(j,degree, x,localKnots) / (x*x + 1E-25);}
+    inline std::complex<double> derIntegrand(int i, int j,int degree, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) {return BSplines::B(i,degree, x,localKnots) * BSplines::dB(j,degree,x,localKnots);}
+    inline std::complex<double> HIntegrand(int i, int j,int degree, std::complex<double> x, const std::vector<std::complex<double>>& localKnots) {return  BSplines::B(i,degree, x,localKnots) * BSplines::B(j,degree, x,localKnots) * Potentials::hydrogen(x) ;}
+}
+
+namespace AngularMatrix
+{
+    inline void populateAngularMatrix(AngularMatrixType Type, Matrix& matrix, const Angular& angular)
+    { 
+        for (int blockRow = 0; blockRow < angular.getNlm(); ++blockRow)
+        {
+            int l{};
+            int m{};
+            std::tie(l,m) = angular.getBlockMap().at(blockRow);
+
+            for (int blockCol = 0; blockCol < angular.getNlm(); ++blockCol)
+            {
+                int lprime{};
+                int mprime{};
+                std::tie(lprime,mprime) = angular.getBlockMap().at(blockCol);
+
+                switch(Type)
+                {
+                    case AngularMatrixType::Z_INT_1:
+                        if ((l == lprime + 1) && (m == mprime))
+                        {
+                            matrix.setValue(blockRow,blockCol,-PETSC_i * AngularElements::g(l,m));
+                        }
+                        else if ((l == lprime - 1)&&(m == mprime))
+                        {   
+                            matrix.setValue(blockRow,blockCol, -PETSC_i * AngularElements::f(l,m));
+                        }
+                    break;
+                    case AngularMatrixType::Z_INT_2:
+                        if ((l == lprime + 1) && (m == mprime))
+                        {   
+                            matrix.setValue(blockRow,blockCol, -PETSC_i * AngularElements::g(l,m) * (-l));
+                        }
+                        else if ((l == lprime - 1)&&(m == mprime))
+                        {   
+                            matrix.setValue(blockRow,blockCol, -PETSC_i * AngularElements::f(l,m) * (l+1));
+                        }
+                    break;
+                    case AngularMatrixType::XY_INT_1:
+                        if ((l == lprime + 1) && (m == mprime + 1))
+                        {
+                            matrix.setValue(blockRow,blockCol, PETSC_i * AngularElements::a(l,m)/2);
+                        }
+                        else if ((l == lprime - 1)&&(m == mprime+1))
+                        {   
+                            matrix.setValue(blockRow,blockCol, PETSC_i * AngularElements::b(l,m)/2);
+                        }
+                    break;
+                    case AngularMatrixType::XY_INT_2:
+                        if ((l == lprime + 1) && (m == mprime + 1))
+                        {
+                            matrix.setValue(blockRow,blockCol, PETSC_i * AngularElements::c(l,m)/2);
+                        }
+                        else if ((l == lprime - 1)&&(m == mprime + 1))
+                        {
+                            matrix.setValue(blockRow,blockCol, -PETSC_i * AngularElements::d(l,m)/2);
+                        }
+                    break;
+                    case AngularMatrixType::XY_INT_3:
+                        if ((l == lprime + 1) && (m == mprime - 1))
+                        {
+                            matrix.setValue(blockRow,blockCol, PETSC_i * AngularElements::atilde(l,m)/2);
+                        }
+                        else if ((l == lprime - 1)&&(m == mprime - 1))
+                        {
+                            matrix.setValue(blockRow,blockCol, PETSC_i * AngularElements::btilde(l,m)/2);
+                        }
+                    break;
+                    case AngularMatrixType::XY_INT_4:
+                        if ((l == lprime + 1) && (m == mprime - 1))
+                        {
+                            matrix.setValue(blockRow,blockCol, -PETSC_i * AngularElements::ctilde(l,m)/2);
+                        }
+                        else if ((l == lprime - 1)&&(m == mprime - 1))
+                        {
+                            matrix.setValue(blockRow,blockCol, PETSC_i * AngularElements::dtilde(l,m)/2);
+                        }
+                    break;
+                }
+            }
+        matrix.assemble();
+        }
     }
 }
