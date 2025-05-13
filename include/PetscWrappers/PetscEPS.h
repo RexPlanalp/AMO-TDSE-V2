@@ -60,8 +60,8 @@ class EPSSolver
     Vector getEigenvector(PetscInt i, const Matrix& S)
     {
       Vector eigenvector{};
-      MatCreateVecs(S.get(), &eigenvector.get(),NULL);
-      EPSGetEigenvector(eps, i ,eigenvector.get(),NULL);
+      S.setupVector(eigenvector);
+      EPSGetEigenvector(eps, i ,eigenvector.get(),nullptr);
 
       return eigenvector;
 

@@ -459,7 +459,7 @@ void TDSE::solve(const TISE& tise,const BSpline& bspline, const Angular& angular
     PetscScalar alpha = PETSC_i * laser.getTimeSpacing() / 2.0;
 
     auto rhs = Vector{};
-    MatCreateVecs(interactionRight.get(),&rhs.get(),nullptr);
+    interactionRight.setupVector(rhs);
 
     auto start_solve = MPI_Wtime();
     for (int timeIdx = 0; timeIdx < laser.getNt(); ++timeIdx)

@@ -94,10 +94,10 @@ class Matrix
         MatMult(get(),input.get(),output.get());
     }
 
-    // void setupVector(Vector& vector)
-    // {
-    //     MatCreateVecs(get(),&vector.get(),nullptr);
-    // }
+    void setupVector(Vector& vector) const
+    {
+        MatCreateVecs(get(),&vector.get(),nullptr);
+    }
 
 
     

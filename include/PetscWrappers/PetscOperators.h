@@ -20,7 +20,7 @@ inline PetscScalar innerProduct(const Vector& u, const Matrix& m, const Vector& 
 {
 
   auto temp = Vector{};
-  MatCreateVecs(m.get(),&temp.get(),nullptr);
+  m.setupVector(temp);
 
   m.matMult(v,temp);
 
