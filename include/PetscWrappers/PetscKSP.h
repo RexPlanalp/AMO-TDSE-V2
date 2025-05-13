@@ -40,9 +40,9 @@ class KSPSolver
             PCBJacobiSetTotalBlocks(pc, Nblocks, nullptr);
         }
 
-        void solve(Vector& rhs)
+        void solve(const Vector& rhs, Vector& output)
         {
-            KSPSolve(ksp, rhs.get(),rhs.get());
+            KSPSolve(ksp, rhs.get(),output.get());
         }
 
         const KSP& get() const {return ksp;}

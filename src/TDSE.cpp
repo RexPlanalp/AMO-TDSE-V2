@@ -442,16 +442,24 @@ void TDSE::solve(const TISE& tise,const BSpline& bspline, const Angular& angular
         std::tie(Hxy_1,Hxy_2) = constructXYInteraction(bspline,angular);
     }
 
-
-    KSPSolver ksp(PETSC_COMM_WORLD,getMaxIter(),getTol(),getRestart());
+    auto end_setup = MPI_Wtime();
+    PetscPrintf(PETSC_COMM_WORLD,"Time to setup TDSE: %f \n", end_setup-start_setup);
 
     auto normVal = norm(initialState,atomicS);
     PetscPrintf(PETSC_COMM_WORLD,"Initial Norm: (%.15f , %.15f) \n",normVal.real(),normVal.imag()); 
 
+
+
+
+
+
+    KSPSolver ksp(PETSC_COMM_WORLD,getMaxIter(),getTol(),getRestart());
+    ksp.setOperators(interactionLeft);
+
     PetscScalar alpha = PETSC_i * laser.getTimeSpacing() / 2.0;
 
-    auto end_setup = MPI_Wtime();
-    PetscPrintf(PETSC_COMM_WORLD,"Time to setup TDSE: %f \n", end_setup-start_setup);
+    auto rhs = Vector{};
+    MatCreateVecs(interactionRight.get(),&rhs.get(),nullptr);
 
     auto start_solve = MPI_Wtime();
     for (int timeIdx = 0; timeIdx < laser.getNt(); ++timeIdx)
@@ -494,18 +502,12 @@ void TDSE::solve(const TISE& tise,const BSpline& bspline, const Angular& angular
             }
         }
 
-        ksp.setOperators(interactionLeft);
+ 
 
-        initialState = interactionRight * initialState;
+        interactionRight.matMult(initialState,rhs);
 
-        // auto start = MPI_Wtime();
-        ksp.solve(initialState);
-        // auto end = MPI_Wtime();
-
-        // PetscInt its;
-        // KSPGetIterationNumber(ksp.get(), &its);
-
-        // PetscPrintf(PETSC_COMM_WORLD,"Solved time step: %d in %f seconds and %d iterations of GMRES \n", timeIdx, end-start,its);
+        ksp.solve(rhs,initialState);
+        
     }
 
     

@@ -1,6 +1,6 @@
 #pragma once
 #include "petscmat.h"
-
+#include "PetscWrappers/PetscVec.h"
 
 class Matrix 
 {
@@ -54,22 +54,6 @@ class Matrix
             other.iEnd = 0;
         }
         
-        // Move Assignment 
-        // Matrix& operator=(Matrix&& other) noexcept
-        // {
-        //     if (this != &other)
-        //     {
-        //         if (m)
-        //         {
-        //             MatDestroy(&m);
-        //         }
-        //         m = other.m;
-        //         other.m = nullptr;
-        //         other.iStart = 0;
-        //         other.iEnd = 0;
-        //     }
-        //     return *this;
-        // }
         friend void swap(Matrix& a, Matrix& b) noexcept
         {
             std::swap(a.m,b.m);
@@ -104,6 +88,16 @@ class Matrix
       MatScale(m, alpha);
       return *this;
     }
+
+    void matMult(const Vector& input, Vector& output) const
+    {
+        MatMult(get(),input.get(),output.get());
+    }
+
+    // void setupVector(Vector& vector)
+    // {
+    //     MatCreateVecs(get(),&vector.get(),nullptr);
+    // }
 
 
     

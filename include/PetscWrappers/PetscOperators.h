@@ -2,14 +2,12 @@
 #include "PetscWrappers/PetscVec.h"
 #include "PetscWrappers/PetscMat.h"
 
-inline Vector operator*(const Matrix& matrix, const Vector& vector)
-{
-    Vector temp{};
-    MatCreateVecs(matrix.get(), &temp.get(),nullptr);
-    MatMult(matrix.get(), vector.get(), temp.get());
-    return temp;
-}
 
+
+inline void matMult(const Matrix& m, const Vector& input, Vector& output)
+{
+  MatMult(m.get(),input.get(),output.get());
+}
 
 inline PetscScalar innerProduct(const Vector& u, const Vector& v)
 {
@@ -20,15 +18,21 @@ inline PetscScalar innerProduct(const Vector& u, const Vector& v)
 
 inline PetscScalar innerProduct(const Vector& u, const Matrix& m, const Vector& v)
 {
-  return innerProduct(u, m* v);
+
+  auto temp = Vector{};
+  MatCreateVecs(m.get(),&temp.get(),nullptr);
+
+  m.matMult(v,temp);
+
+
+  return innerProduct(u, temp);
 }
 
 
 
 inline PetscScalar norm(const Vector& vector, const Matrix& matrix)
 {
-  auto Sv = matrix * vector;
-  PetscScalar normVal = innerProduct(Sv,vector);
+  PetscScalar normVal = innerProduct(vector,matrix,vector);
   return std::sqrt(normVal);
 }
 
