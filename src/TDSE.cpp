@@ -5,6 +5,7 @@
 #include "PetscWrappers/PetscKSP.h"
 #include "MatrixElements.h"
 
+#include "MatrixElements.h"
 Matrix TDSE::kroneckerProduct(const Matrix& A, const Matrix& B,PetscInt nnz_A, PetscInt nnz_B) 
 {
     
@@ -215,57 +216,11 @@ Matrix TDSE::constructZInteraction(const Basis& Basis, const Angular& angular)
     auto Der = Basis.PopulateMatrix(PETSC_COMM_SELF, &Basis::derIntegrand, true);
 
     Matrix Hlm_z_1{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,angular.getNlm(),angular.getNlm(),2};
-    for (int blockRow = 0; blockRow < angular.getNlm(); ++blockRow)
-    {
-        int l{};
-        int m{};
-        std::tie(l,m) = angular.getBlockMap().at(blockRow);
-
-        for (int blockCol = 0; blockCol < angular.getNlm(); ++blockCol)
-        {
-            int lprime{};
-            int mprime{};
-            std::tie(lprime,mprime) = angular.getBlockMap().at(blockCol);
-
-
-            if ((l == lprime + 1) && (m == mprime))
-            {
-                Hlm_z_1.setValue(blockRow,blockCol, -PETSC_i * AngularElements::g(l,m));
-            }
-            if ((l == lprime - 1) && (m == mprime))
-            {
-                Hlm_z_1.setValue(blockRow,blockCol, -PETSC_i * AngularElements::f(l,m));
-            }
-        }
-    }
-    Hlm_z_1.assemble();
+    AngularMatrix::populateAngularMatrix(AngularMatrixType::Z_INT_1,Hlm_z_1,angular);
 
     Matrix Hlm_z_2{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,angular.getNlm(),angular.getNlm(),2};
-    for (int blockRow = 0; blockRow < angular.getNlm(); ++blockRow)
-    {
-        int l{};
-        int m{};
-        std::tie(l,m) = angular.getBlockMap().at(blockRow);
-
-        for (int blockCol = 0; blockCol < angular.getNlm(); ++blockCol)
-        {
-            int lprime{};
-            int mprime{};
-            std::tie(lprime,mprime) = angular.getBlockMap().at(blockCol);
-
-
-            if ((l == lprime + 1) && (m == mprime))
-            {
-                Hlm_z_2.setValue(blockRow,blockCol, -PETSC_i * AngularElements::g(l,m) * (-l));
-            }
-            if ((l == lprime - 1) && (m == mprime))
-            {
-                Hlm_z_2.setValue(blockRow,blockCol, -PETSC_i * AngularElements::f(l,m) * (l+1));
-            }
-        }
-    }
-    Hlm_z_2.assemble();
-
+    AngularMatrix::populateAngularMatrix(AngularMatrixType::Z_INT_2,Hlm_z_2,angular);
+    
     auto ZInteraction = kroneckerProduct(Hlm_z_1, Der, 2, 2*Basis.getDegree() + 1);
     ZInteraction.AXPY(1.0,kroneckerProduct(Hlm_z_2, Invr, 2, 2*Basis.getDegree() + 1),SAME_NONZERO_PATTERN);
 
@@ -277,116 +232,22 @@ std::pair<Matrix,Matrix> TDSE::constructXYInteraction(const Basis& Basis, const 
     auto Invr = Basis.PopulateMatrix(PETSC_COMM_SELF, &Basis::invrIntegrand, true);
     auto Der = Basis.PopulateMatrix(PETSC_COMM_SELF, &Basis::derIntegrand, true);
 
-
-
     // Compute Hxy_1
     Matrix Hlm_xy_1{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,angular.getNlm(),angular.getNlm(),2};
-    for (int blockRow = 0; blockRow < angular.getNlm(); ++blockRow)
-    {
-        int l{};
-        int m{};
-        std::tie(l,m) = angular.getBlockMap().at(blockRow);
-
-        for (int blockCol = 0; blockCol < angular.getNlm(); ++blockCol)
-        {
-            int lprime{};
-            int mprime{};
-            std::tie(lprime,mprime) = angular.getBlockMap().at(blockCol);
-
-
-            if ((l == lprime + 1) && (m == mprime + 1))
-            {
-                Hlm_xy_1.setValue(blockRow,blockCol, PETSC_i * AngularElements::a(l,m) / 2.0);
-            }
-            if ((l == lprime - 1) && (m == mprime + 1))
-            {
-                Hlm_xy_1.setValue(blockRow,blockCol, PETSC_i * AngularElements::b(l,m) / 2.0);
-            }
-        }
-    }
-    Hlm_xy_1.assemble();
+    AngularMatrix::populateAngularMatrix(AngularMatrixType::XY_INT_1,Hlm_xy_1,angular);
 
     Matrix Hlm_xy_2{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,angular.getNlm(),angular.getNlm(),2};
-    for (int blockRow = 0; blockRow < angular.getNlm(); ++blockRow)
-    {
-        int l{};
-        int m{};
-        std::tie(l,m) = angular.getBlockMap().at(blockRow);
-
-        for (int blockCol = 0; blockCol < angular.getNlm(); ++blockCol)
-        {
-            int lprime{};
-            int mprime{};
-            std::tie(lprime,mprime) = angular.getBlockMap().at(blockCol);
-
-
-            if ((l == lprime + 1) && (m == mprime + 1))
-            {
-                Hlm_xy_2.setValue(blockRow,blockCol, PETSC_i * AngularElements::c(l,m) / 2.0);
-            }
-            if ((l == lprime - 1) && (m == mprime + 1))
-            {
-                Hlm_xy_2.setValue(blockRow,blockCol, -PETSC_i * AngularElements::d(l,m) / 2.0);
-            }
-        }
-    }
-    Hlm_xy_2.assemble();
+    AngularMatrix::populateAngularMatrix(AngularMatrixType::XY_INT_2,Hlm_xy_2,angular);
 
     auto Hxy_1 = kroneckerProduct(Hlm_xy_1,Invr,2,2*Basis.getDegree() + 1);
     Hxy_1.AXPY(1.0,kroneckerProduct(Hlm_xy_2,Der,2, 2*Basis.getDegree() + 1),SAME_NONZERO_PATTERN);
 
     // Construct Hxy_2
     Matrix Hlm_xy_3{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,angular.getNlm(),angular.getNlm(),2};
-    for (int blockRow = 0; blockRow < angular.getNlm(); ++blockRow)
-    {
-        int l{};
-        int m{};
-        std::tie(l,m) = angular.getBlockMap().at(blockRow);
-
-        for (int blockCol = 0; blockCol < angular.getNlm(); ++blockCol)
-        {
-            int lprime{};
-            int mprime{};
-            std::tie(lprime,mprime) = angular.getBlockMap().at(blockCol);
-
-
-            if ((l == lprime + 1) && (m == mprime - 1))
-            {
-                Hlm_xy_3.setValue(blockRow,blockCol, PETSC_i * AngularElements::atilde(l,m) / 2.0);
-            }
-            if ((l == lprime - 1) && (m == mprime - 1))
-            {
-                Hlm_xy_3.setValue(blockRow,blockCol, PETSC_i * AngularElements::btilde(l,m) / 2.0);
-            }
-        }
-    }
-    Hlm_xy_3.assemble();
+    AngularMatrix::populateAngularMatrix(AngularMatrixType::XY_INT_3,Hlm_xy_3,angular);
 
     Matrix Hlm_xy_4{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,angular.getNlm(),angular.getNlm(),2};
-    for (int blockRow = 0; blockRow < angular.getNlm(); ++blockRow)
-    {
-        int l{};
-        int m{};
-        std::tie(l,m) = angular.getBlockMap().at(blockRow);
-
-        for (int blockCol = 0; blockCol < angular.getNlm(); ++blockCol)
-        {
-            int lprime{};
-            int mprime{};
-            std::tie(lprime,mprime) = angular.getBlockMap().at(blockCol);
-
-
-            if ((l == lprime + 1) && (m == mprime - 1))
-            {
-                Hlm_xy_4.setValue(blockRow,blockCol, -PETSC_i * AngularElements::ctilde(l,m) / 2.0);
-            }
-            if ((l == lprime - 1) && (m == mprime - 1))
-            {
-                Hlm_xy_4.setValue(blockRow,blockCol, PETSC_i * AngularElements::dtilde(l,m) / 2.0);
-            }
-        }
-    }
-    Hlm_xy_4.assemble();
+    AngularMatrix::populateAngularMatrix(AngularMatrixType::XY_INT_4,Hlm_xy_4,angular);
 
     auto Hxy_2 = kroneckerProduct(Hlm_xy_3,Invr,2,2*Basis.getDegree() + 1);
     Hxy_2.AXPY(1.0,kroneckerProduct(Hlm_xy_4,Der,2,2*Basis.getDegree()+1),SAME_NONZERO_PATTERN);
