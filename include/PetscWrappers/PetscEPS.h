@@ -18,7 +18,6 @@ class EPSSolver
       EPSSetType(eps,EPSKRYLOVSCHUR);
       EPSSetTolerances(eps,tolerance,maxIter);
       EPSSetFromOptions(eps);
-      EPSSetUp(eps);
     }
 
 

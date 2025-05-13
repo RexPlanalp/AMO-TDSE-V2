@@ -37,7 +37,7 @@ void TISE::solve(const BSpline& bspline, const Atom& atom, const Angular& angula
     
     PetscHDF5 viewer{PETSC_COMM_WORLD, getOutputPath(), FILE_MODE_WRITE};
     EPSSolver epssolver{PETSC_COMM_WORLD,getMaxIter(),getTol()};
-
+    epssolver.setOperators(K,S);
     std::string eigenvalueGroup = "eigenvalues";
     std::string eigenvectorGroup = "eigenvectors";
    
@@ -56,7 +56,7 @@ void TISE::solve(const BSpline& bspline, const Atom& atom, const Angular& angula
         }   
 
         PetscPrintf(PETSC_COMM_WORLD,"Solving for l = %d \n\n",l); 
-        epssolver.setOperators(K,S);
+        //epssolver.setOperators(K,S);
         epssolver.setDimensions(reqPairs);
 
         auto start = MPI_Wtime();
