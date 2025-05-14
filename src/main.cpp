@@ -72,6 +72,7 @@ int main(int argc, char **argv)
 
     Observables observables{input};
     observables.computeDistribution(rank,Basis,tdse,tise,angular);
+    observables.computePhotoelectronSpectrum(rank,tise,tdse,angular,Basis,box,atom);
 
 
 

@@ -11,23 +11,50 @@
 #include "Angular.h"
 #include "PetscWrappers/PetscIS.h"
 
+struct CoulombWave
+{
+    std::vector<double> wave;
+    double phase;
+};
+
 class Observables
 {   
     public:
         Observables(const Input& input)
         : projOutBound{input.getJSON().at("Observables").at("Block").at("projOutBound")}
-        {}
+        , Emin{input.getJSON().at("Observables").at("PES").at("Emin")}
+        , Emax{input.getJSON().at("Observables").at("PES").at("Emax")}
+        , slice{input.getJSON().at("Observables").at("PES").at("slice")}
+        {
+             Ne = static_cast<int>(std::round(getEmax() / getEmin())) + 1;
+        }
         
         void projectOutBoundStates(Vector& finalState,const Matrix& S,const TISE& tise, const Angular& angular,const Basis& Basis);
 
         void computeDistribution(int rank,const Basis& Basis, const TDSE& tdse,const TISE& tise, const Angular& angular);
 
+        CoulombWave computeCoulombWave(double E, int l, const Box& box, const Atom& atom);
+        std::vector<std::complex<double>> expandState(const Vector& state, const Box& box, const Angular& angular, const Basis& basis);
+        std::pair<std::map<lm_pair,std::vector<std::complex<double>>>,std::map<std::pair<double, int>,double>> computePartialSpectra(const std::vector<std::complex<double>>& expanded_state,const Angular& angular, const Atom& atom,const Box& box);
+        void computeAngleIntegrated(const std::map<lm_pair,std::vector<std::complex<double>>>& partialSpectra,const Angular& angular);
+
+        void computePhotoelectronSpectrum(int rank,const TISE& tise, const TDSE& tdse, const Angular& angular, const Basis& basis, const Box& box, const Atom& atom);
+
         
        
         bool getProjOut() const {return projOutBound;}
+        double getEmin() const {return Emin;}
+        double getEmax() const {return Emax;}
+        const std::string& getSlice() const {return slice;}
+        int getNe() const {return Ne;}
+
         void printConfiguration(int rank);
 
 
     private:
-        bool projOutBound;
+        bool projOutBound{};
+        double Emin{};
+        double Emax{};
+        int Ne{};
+        std::string slice{};
 };

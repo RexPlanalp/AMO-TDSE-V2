@@ -87,3 +87,31 @@ inline double realDotProduct(const T& container1, const T& container2)
 
     return innerProduct;
 }
+
+
+inline std::complex<double> SimpsonsMethod(const std::vector<std::complex<double>>& vec,double dr)
+{
+    int n = vec.size() - 1;
+    std::complex<double> I {};
+
+
+    if (n % 2 != 0)
+    {
+        I += (3 * dr / 8) * (vec[n-2]+static_cast<double>(3)*vec[n-1]+static_cast<double>(3)*vec[n]);
+        n -= 2;
+    }
+
+    double p = dr / 3; 
+    I += (vec[0]+vec[n]) * p;
+    for (int vec_idx = 1; vec_idx < n; vec_idx += 2)
+    {
+        I += static_cast<double>(4) * vec[vec_idx] * p;
+    }
+    for (int vec_idx = 2; vec_idx < n-1; vec_idx += 2)
+    {
+        I += static_cast<double>(2) * vec[vec_idx] * p;
+    }
+    
+    return I;
+
+}
