@@ -25,6 +25,7 @@ class Observables
         , Emin{input.getJSON().at("Observables").at("PES").at("Emin")}
         , Emax{input.getJSON().at("Observables").at("PES").at("Emax")}
         , slice{input.getJSON().at("Observables").at("PES").at("slice")}
+        , pesStatus{input.getJSON().at("Observables").at("PES").at("status")}
         {
              Ne = static_cast<int>(std::round(getEmax() / getEmin())) + 1;
         }
@@ -48,6 +49,7 @@ class Observables
         double getEmax() const {return Emax;}
         const std::string& getSlice() const {return slice;}
         int getNe() const {return Ne;}
+        bool getPESStatus() const {return pesStatus;}
 
         void printConfiguration(int rank);
 
@@ -58,4 +60,6 @@ class Observables
         double Emax{};
         int Ne{};
         std::string slice{};
+
+        bool pesStatus{};
 };

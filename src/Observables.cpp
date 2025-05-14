@@ -394,6 +394,13 @@ void Observables::computePhotoelectronSpectrum(int rank,const TISE& tise, const 
         return;
     }
 
+    if (!getPESStatus())
+    {
+        return;
+    }
+
+    auto start_pes = MPI_Wtime();
+
     auto S = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,basis.getNbasis(),basis.getNbasis(),2*basis.getDegree() + 1};
     RadialMatrix::populateRadialMatrix(RadialMatrixType::S,S,basis,false);
 
@@ -414,6 +421,9 @@ void Observables::computePhotoelectronSpectrum(int rank,const TISE& tise, const 
 
     computeAngleIntegrated(partialSpectra,angular);
     computeAngleResolved(partialSpectra,phases);
+
+    auto end_pes = MPI_Wtime();
+    PetscPrintf(PETSC_COMM_SELF,"Computed Photoelectron Spectrum:  %f seconds \n\n", end_pes -  start_pes);
 }
 
 void Observables::printConfiguration(int rank)
