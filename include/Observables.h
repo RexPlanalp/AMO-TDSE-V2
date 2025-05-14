@@ -15,7 +15,7 @@ class Observables
 {   
     public:
         Observables(const Input& input)
-        : projOutBound{input.getJSON().at("Block").at("projOutBound")}
+        : projOutBound{input.getJSON().at("Observables").at("Block").at("projOutBound")}
         {}
         
         void projectOutBoundStates(Vector& finalState,const Matrix& S,const TISE& tise, const Angular& angular,const Basis& Basis);
@@ -25,6 +25,7 @@ class Observables
         
        
         bool getProjOut() const {return projOutBound;}
+        void printConfiguration(int rank);
 
 
     private:

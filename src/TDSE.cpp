@@ -108,9 +108,9 @@ void TDSE::printConfiguration(int rank)
 {
     if (rank == 0)
     {
-        std::cout << std::setfill('\\') << std::setw(24) << "" << '\n';
+        std::cout << std::setfill('\\') << std::setw(24) << "" << "\n\n";
         std::cout << "TDSE Configuration: " << "\n\n";
-        std::cout << std::setfill('\\') << std::setw(24) << "" << '\n';
+        std::cout << std::setfill('\\') << std::setw(24) << "" << "\n\n";
         
         std::cout << "status: " << getStatus() << "\n\n";
         std::cout << "maxIter: " << getMaxIter() << "\n\n";
@@ -396,9 +396,6 @@ void TDSE::solve(const TISE& tise,const Basis& Basis, const Angular& angular, co
 
     normVal = norm(initialState,atomicS);
     PetscPrintf(PETSC_COMM_WORLD,"Final Norm: (%.15f , %.15f) \n",normVal.real(),normVal.imag()); 
-
-    std::string outputGroup = "";
-    std::string outputName = "psiFinal";
 
     PetscHDF5 viewer(PETSC_COMM_WORLD,getOutputPath(), FILE_MODE_WRITE);
     viewer.saveVector(outputGroup,outputName,initialState);

@@ -2,13 +2,10 @@
 #SBATCH --job-name testing
 #SBATCH --output run.log
 #SBATCH --nodes 1
-#SBATCH --ntasks 32
+#SBATCH --ntasks 8
 #SBATCH --mem=8G
 
-#SBATCH --exclude=node78
-#SBATCH --exclude=node72
-#SBATCH --exclude=node69
-#SBATCH --exclude=node68
+
 
 source ~/.bashrc
 

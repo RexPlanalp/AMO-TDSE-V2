@@ -56,9 +56,9 @@ void Laser::printConfiguration(int rank)
 {
     if (rank == 0)
     {
-        std::cout << std::setfill('\\') << std::setw(24) << "" << '\n';
+        std::cout << std::setfill('\\') << std::setw(24) << "" << "\n\n";
         std::cout << "Laser Configuration: " << "\n\n";
-        std::cout << std::setfill('\\') << std::setw(24) << "" << '\n';
+        std::cout << std::setfill('\\') << std::setw(24) << "" << "\n\n";
         
         std::cout << "N_cycles: " << getN() << "\n\n";
         std::cout << "dt: " << getTimeSpacing() << "\n\n";

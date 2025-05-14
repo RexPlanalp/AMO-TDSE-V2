@@ -48,4 +48,7 @@ class TDSE
         PetscReal tolerance{};
         PetscInt maxIter{};
         PetscInt restart{};
+
+        std::string outputGroup = "";
+        std::string outputName = "psiFinal";
 };

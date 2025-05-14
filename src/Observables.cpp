@@ -1,6 +1,6 @@
 #include "Observables.h"
 
-void Observable::computeDistribution(int rank,const Basis& Basis, const TDSE& tdse,const TISE& tise, const Angular& angular)
+void Observables::computeDistribution(int rank,const Basis& Basis, const TDSE& tdse,const TISE& tise, const Angular& angular)
 {
     if (rank != 0)
     {
@@ -32,8 +32,6 @@ void Observable::computeDistribution(int rank,const Basis& Basis, const TDSE& td
 
     for (int blockIdx = 0; blockIdx < angular.getNlm(); ++blockIdx)
     {
-        std::cout << "Computing norm for block: " << blockIdx << '\n';
-
         int start = blockIdx * Basis.getNbasis();
 
         IndexSet is{PETSC_COMM_SELF,Basis.getNbasis(), start, 1};
@@ -51,7 +49,7 @@ void Observable::computeDistribution(int rank,const Basis& Basis, const TDSE& td
     outFile.close();
 }
 
-void Observable::projectOutBoundStates(Vector& finalState,const Matrix& S,const TISE& tise, const Angular& angular,const Basis& Basis)
+void Observables::projectOutBoundStates(Vector& finalState,const Matrix& S,const TISE& tise, const Angular& angular,const Basis& Basis)
 {
     PetscHDF5 viewer(PETSC_COMM_SELF,tise.getOutputPath(),FILE_MODE_READ);
 
@@ -94,5 +92,17 @@ void Observable::projectOutBoundStates(Vector& finalState,const Matrix& S,const 
         }
 
         VecRestoreSubVector(finalState.get(),is.get(),&blockVector.get());
+    }
+}
+
+void Observables::printConfiguration(int rank)
+{
+    if (rank == 0)
+    {
+        std::cout << std::setfill('\\') << std::setw(24) << "" << "\n\n";
+        std::cout << "Observables Configuration: " << "\n\n";
+        std::cout << std::setfill('\\') << std::setw(24) << "" << "\n\n";
+        
+        std::cout << "Block :  projOutBound: " << getProjOut() << "\n\n";
     }
 }
