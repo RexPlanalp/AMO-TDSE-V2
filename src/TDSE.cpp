@@ -108,7 +108,10 @@ void TDSE::printConfiguration(int rank)
 {
     if (rank == 0)
     {
+        std::cout << std::setfill('\\') << std::setw(24) << "" << '\n';
         std::cout << "TDSE Configuration: " << "\n\n";
+        std::cout << std::setfill('\\') << std::setw(24) << "" << '\n';
+        
         std::cout << "status: " << getStatus() << "\n\n";
         std::cout << "maxIter: " << getMaxIter() << "\n\n";
         std::cout << "outputPath: " << getOutputPath() << "\n\n";

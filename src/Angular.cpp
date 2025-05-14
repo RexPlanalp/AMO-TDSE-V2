@@ -1,8 +1,7 @@
-#include "Angular.h"
-#include <fstream>
-#include <iostream>
-#include "Laser.h"
+#include "common.h"
 
+#include "Angular.h"
+#include "Laser.h"
 
 void Angular::buildMaps(const Laser& laser,const std::array<int,3>& initial_state)
 {   
@@ -107,12 +106,14 @@ void Angular::buildOdd()
     }
 }
 
-
 void Angular::printConfiguration(int rank)
 {
     if (rank == 0)
-    {
+    {   
+        std::cout << std::setfill('\\') << std::setw(24) << "" << '\n';
         std::cout << "Angular Configuration: " << "\n\n";
+        std::cout << std::setfill('\\') << std::setw(24) << "" << '\n';
+
         std::cout << "lmax: " << getLmax() << "\n\n";
         std::cout << "mmax: " << getMmax() << "\n\n";
         std::cout << "mmin: " << getMmin() << "\n\n";

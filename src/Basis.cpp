@@ -136,7 +136,10 @@ void Basis::printConfiguration(int rank)
 {
     if (rank == 0)
     {
+        std::cout << std::setfill('\\') << std::setw(24) << "" << '\n';
         std::cout << "Basis Configuration: " << "\n\n";
+        std::cout << std::setfill('\\') << std::setw(24) << "" << '\n';
+        
         std::cout << "nbasis: " << getNbasis() <<  "\n\n";
         std::cout << "order: " << getOrder() <<  "\n\n";
         std::cout << "degree: " << getDegree() <<  "\n\n";
