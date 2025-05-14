@@ -4,6 +4,7 @@
 #include <fstream>
 #include <filesystem>
 #include <nlohmann/json.hpp>
+#include <gsl/gsl_sf_legendre.h>
 #include <complex>
 
 
@@ -114,4 +115,19 @@ inline std::complex<double> SimpsonsMethod(const std::vector<std::complex<double
     
     return I;
 
+}
+
+inline std::complex<double> compute_Ylm(int l, int m, double theta, double phi)
+{
+    if (m < 0) 
+    {
+        int abs_m = -m;
+        std::complex<double> Ylm = gsl_sf_legendre_sphPlm(l, abs_m, std::cos(theta)) * 
+        std::exp(std::complex<double>(0, -abs_m * phi));
+
+        return std::pow(-1.0, abs_m) * std::conj(Ylm);
+    }
+
+    return  gsl_sf_legendre_sphPlm(l, m, std::cos(theta)) * 
+            std::exp(std::complex<double>(0, m * phi));
 }

@@ -37,6 +37,7 @@ class Observables
         std::vector<std::complex<double>> expandState(const Vector& state, const Box& box, const Angular& angular, const Basis& basis);
         std::pair<std::map<lm_pair,std::vector<std::complex<double>>>,std::map<std::pair<double, int>,double>> computePartialSpectra(const std::vector<std::complex<double>>& expanded_state,const Angular& angular, const Atom& atom,const Box& box);
         void computeAngleIntegrated(const std::map<lm_pair,std::vector<std::complex<double>>>& partialSpectra,const Angular& angular);
+        void computeAngleResolved(const std::map<lm_pair,std::vector<std::complex<double>>>& partialSpectra,std::map<std::pair<double, int>,double> phases);
 
         void computePhotoelectronSpectrum(int rank,const TISE& tise, const TDSE& tdse, const Angular& angular, const Basis& basis, const Box& box, const Atom& atom);
 

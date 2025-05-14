@@ -322,6 +322,71 @@ void Observables::computeAngleIntegrated(const std::map<lm_pair,std::vector<std:
     pesFiles.close();
 }
 
+void Observables::computeAngleResolved(const std::map<lm_pair,std::vector<std::complex<double>>>& partialSpectra,std::map<std::pair<double, int>,double> phases)
+{   
+    int Ne = getNe();
+    double Emin = getEmin();
+
+        std::ofstream padFiles("misc/pad.txt", std::ios::app);
+        std::vector<double> theta_range;
+        std::vector<double> phi_range;
+
+        if (getSlice() == "XZ")
+        {
+            for (double theta = 0; theta <= M_PI; theta += 0.01) 
+            {
+                theta_range.push_back(theta);
+            }
+
+            phi_range  = {0.0,M_PI};
+        }
+        if (getSlice() == "XY")
+        {
+            theta_range = {M_PI/ 2.0};
+
+            for (double phi = 0; phi < 2.0*M_PI; phi += 0.01) 
+            {
+                phi_range.push_back(phi);
+            }
+
+        }
+        for (int EIdx = 1; EIdx <= Ne; ++EIdx)
+        {   
+
+            double E = EIdx*Emin;
+            double k = std::sqrt(2.0*E);
+
+            for (auto& theta : theta_range)
+            {
+                for (auto& phi : phi_range)
+                {   
+                    std::complex<double> pad_amplitude {};
+                    for (const auto& pair: partialSpectra)
+                    {
+                        int l = pair.first.first;
+                        int m = pair.first.second;
+
+                        std::complex<double> sph_term = compute_Ylm(l,m,theta,phi);
+
+                        double partial_phase = phases[std::make_pair(E,l)];
+                        std::complex<double> partial_amplitude = pair.second[EIdx - 1];
+
+                        std::complex<double> phase_factor = std::exp(std::complex<double>(0.0,3*l*M_PI/2.0 + partial_phase));
+
+                        pad_amplitude += sph_term*phase_factor*partial_amplitude;
+
+                    }
+
+                    double pad_prob = std::norm(pad_amplitude);
+                    pad_prob/=((2*M_PI)*(2*M_PI)*(2*M_PI));
+                    pad_prob/=k;
+
+                    padFiles << E << " " << theta << " " << phi << " " << pad_prob << "\n";
+                }
+            }
+        }
+}
+
 void Observables::computePhotoelectronSpectrum(int rank,const TISE& tise, const TDSE& tdse, const Angular& angular, const Basis& basis, const Box& box, const Atom& atom)
 {
     if (rank != 0)
@@ -348,6 +413,7 @@ void Observables::computePhotoelectronSpectrum(int rank,const TISE& tise, const 
     std::tie(partialSpectra,phases) = computePartialSpectra(expandedState,angular,atom,box);
 
     computeAngleIntegrated(partialSpectra,angular);
+    computeAngleResolved(partialSpectra,phases);
 }
 
 void Observables::printConfiguration(int rank)
