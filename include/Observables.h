@@ -11,10 +11,10 @@
 #include "Angular.h"
 #include "PetscWrappers/PetscIS.h"
 
-class Observable
+class Observables
 {   
     public:
-        Observable(const Input& input)
+        Observables(const Input& input)
         : projOutBound{input.getJSON().at("Block").at("projOutBound")}
         {}
         

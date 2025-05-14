@@ -70,8 +70,8 @@ int main(int argc, char **argv)
     tdse.solve(tise,Basis,angular,atom,laser);
     
 
-    Block block{input};
-    block.computeDistribution(rank,Basis,tdse,tise,angular);
+    Observables observables{input};
+    observables.computeDistribution(rank,Basis,tdse,tise,angular);
 
 
 
