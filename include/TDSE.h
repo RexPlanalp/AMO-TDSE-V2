@@ -27,17 +27,17 @@ class TDSE
         PetscInt getMaxIter() const {return maxIter;}
         PetscInt getRestart() const {return restart;}
 
-        void solve(const TISE& tise,const Basis& Basis, const Angular& angular, const Atom& atom, const Laser& laser);
+        void solve(const TISE& tise,const Basis& basis, const Angular& angular, const Atom& atom, const Laser& laser);
 
         void printConfiguration(int rank);
 
-        Vector loadInitialState(const TISE& tise,const Basis& Basis, const Angular& angular);
-        std::pair<Matrix,Matrix> constructAtomicInteraction(const Basis& Basis, const Angular& angular,const Atom& atom, const Laser& laser);
+        Vector loadInitialState(const TISE& tise,const Basis& basis, const Angular& angular);
+        std::pair<Matrix,Matrix> constructAtomicInteraction(const Basis& basis, const Angular& angular,const Atom& atom, const Laser& laser);
         
-        Matrix constructZInteraction(const Basis& Basis, const Angular& angular);
-        std::pair<Matrix,Matrix> constructXYInteraction(const Basis& Basis, const Angular& angular);
+        Matrix constructZInteraction(const Basis& basis, const Angular& angular);
+        std::pair<Matrix,Matrix> constructXYInteraction(const Basis& basis, const Angular& angular);
 
-        Matrix constructAtomicS(const Basis& Basis, const Angular& angular);
+        Matrix constructAtomicS(const Basis& basis, const Angular& angular);
 
     private:
         Matrix kroneckerProduct(const Matrix& A, const Matrix& B, PetscInt nnz_A, PetscInt nnz_B);

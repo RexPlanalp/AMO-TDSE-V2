@@ -36,7 +36,6 @@ int main(int argc, char **argv)
     createDirectory("TDSE",rank);
 
     Input input{inputPath};
-    input.validate();
 
     Box box{input};
     box.printConfiguration(rank);
@@ -53,26 +52,26 @@ int main(int argc, char **argv)
     Atom atom{input};
     atom.printConfiguration(rank);
 
-    Basis Basis{input};
-    Basis.buildKnots(box);
-    Basis.printConfiguration(rank);
-    //Basis.dumpTo(box,"misc",rank);
+    Basis basis{input};
+    basis.buildKnots(box);
+    basis.printConfiguration(rank);
+    //basis,dumpTo(box,"misc",rank);
 
     TISE tise{input};
     tise.printConfiguration(rank);
-    tise.solve(Basis,atom,angular);
+    tise.solve(basis,atom,angular);
 
  
     TDSE tdse{input};
     tdse.printConfiguration(rank);
 
 
-    tdse.solve(tise,Basis,angular,atom,laser);
+    tdse.solve(tise,basis,angular,atom,laser);
     
 
     Observables observables{input};
-    observables.computeDistribution(rank,Basis,tdse,tise,angular);
-    observables.computePhotoelectronSpectrum(rank,tise,tdse,angular,Basis,box,atom);
+    observables.computeDistribution(rank,basis,tdse,tise,angular);
+    observables.computePhotoelectronSpectrum(rank,tise,tdse,angular,basis,box,atom);
 
 
 

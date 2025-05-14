@@ -10,8 +10,6 @@ class Input
         : params(loadJson(inputPath))
         {}
 
-
-        void validate() const {}
         const nlohmann::json& getJSON() const {return params;}
 
 

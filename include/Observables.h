@@ -30,9 +30,9 @@ class Observables
              Ne = static_cast<int>(std::round(getEmax() / getEmin())) + 1;
         }
         
-        void projectOutBoundStates(Vector& finalState,const Matrix& S,const TISE& tise, const Angular& angular,const Basis& Basis);
+        void projectOutBoundStates(Vector& finalState,const Matrix& S,const TISE& tise, const Angular& angular,const Basis& basis);
 
-        void computeDistribution(int rank,const Basis& Basis, const TDSE& tdse,const TISE& tise, const Angular& angular);
+        void computeDistribution(int rank,const Basis& basis, const TDSE& tdse,const TISE& tise, const Angular& angular);
 
         CoulombWave computeCoulombWave(double E, int l, const Box& box, const Atom& atom);
         std::vector<std::complex<double>> expandState(const Vector& state, const Box& box, const Angular& angular, const Basis& basis);

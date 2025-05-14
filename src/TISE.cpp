@@ -8,7 +8,7 @@
 #include "MatrixElements.h"
 #include "common.h"
 
-void TISE::solve(const Basis& Basis, const Atom& atom, const Angular& angular)
+void TISE::solve(const Basis& basis, const Atom& atom, const Angular& angular)
 {   
     // If we are not running the TISE, exit
     if (!getStatus())
@@ -23,17 +23,17 @@ void TISE::solve(const Basis& Basis, const Atom& atom, const Angular& angular)
     PetscHDF5 viewer{PETSC_COMM_WORLD, getOutputPath(), FILE_MODE_WRITE};
     
     // Create Kinetic Matrix
-    auto K = Matrix{PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,Basis.getNbasis(),Basis.getNbasis(),2*Basis.getDegree() + 1};
-    RadialMatrix::populateRadialMatrix(RadialMatrixType::K,K,Basis,false);
+    auto K = Matrix{PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,basis.getNbasis(),basis.getNbasis(),2*basis.getDegree() + 1};
+    RadialMatrix::populateRadialMatrix(RadialMatrixType::K,K,basis,false);
 
-    auto Invr2 = Matrix{PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,Basis.getNbasis(),Basis.getNbasis(),2*Basis.getDegree() + 1};
-    RadialMatrix::populateRadialMatrix(RadialMatrixType::Invr2,Invr2,Basis,false);
+    auto Invr2 = Matrix{PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,basis.getNbasis(),basis.getNbasis(),2*basis.getDegree() + 1};
+    RadialMatrix::populateRadialMatrix(RadialMatrixType::Invr2,Invr2,basis,false);
     
-    auto Pot = Matrix{PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,Basis.getNbasis(),Basis.getNbasis(),2*Basis.getDegree() + 1};
-    RadialMatrix::populateRadialMatrix(atom.getType(),Pot,Basis,false);
+    auto Pot = Matrix{PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,basis.getNbasis(),basis.getNbasis(),2*basis.getDegree() + 1};
+    RadialMatrix::populateRadialMatrix(atom.getType(),Pot,basis,false);
 
-    auto S = Matrix{PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,Basis.getNbasis(),Basis.getNbasis(),2*Basis.getDegree() + 1};
-    RadialMatrix::populateRadialMatrix(RadialMatrixType::S,S,Basis,false);
+    auto S = Matrix{PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,basis.getNbasis(),basis.getNbasis(),2*basis.getDegree() + 1};
+    RadialMatrix::populateRadialMatrix(RadialMatrixType::S,S,basis,false);
 
     K.AXPY(1.0, Pot, SAME_NONZERO_PATTERN);
 

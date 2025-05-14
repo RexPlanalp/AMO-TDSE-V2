@@ -24,7 +24,7 @@ class TISE
         const std::string& getOutputPath() const {return outputPath;}
         PetscInt getNmax() const {return nmax;}
 
-        void solve(const Basis& Basis, const Atom& atom, const Angular& angular);
+        void solve(const Basis& basis, const Atom& atom, const Angular& angular);
         void printConfiguration(int rank);
     
     private:

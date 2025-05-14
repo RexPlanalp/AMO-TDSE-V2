@@ -21,7 +21,7 @@ class Simulation
         : comm{comm}, size{size}, rank{rank}
         , box{inputPar}
         , angular{inputPar}
-        , Basis{inputPar,box}
+        , basis{inputPar,box}
         , atom{inputPar}
         , laser{inputPar}
         , tise{inputPar}
@@ -34,14 +34,14 @@ class Simulation
             std::array<int,3> initial_state= inputPar.at("TDSE").at("initial_state").get<std::array<int,3>>();
             angular.buildMaps(laser,initial_state);
 
-            Basis.dumpTo(box,"misc",rank);
+            basis,dumpTo(box,"misc",rank);
             angular.dumpTo("misc",rank);
             laser.dumpTo("misc",rank);
         }
 
         void solveTISE()
         {
-            tise.solve(Basis,atom, angular);
+            tise.solve(basis,atom, angular);
         }
     
        

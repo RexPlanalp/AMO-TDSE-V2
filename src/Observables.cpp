@@ -2,20 +2,20 @@
 
 
 
-void Observables::computeDistribution(int rank,const Basis& Basis, const TDSE& tdse,const TISE& tise, const Angular& angular)
+void Observables::computeDistribution(int rank,const Basis& basis, const TDSE& tdse,const TISE& tise, const Angular& angular)
 {
     if (rank != 0)
     {
         return;
     }
 
-    auto S = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,Basis.getNbasis(),Basis.getNbasis(),2*Basis.getDegree() + 1};
-    RadialMatrix::populateRadialMatrix(RadialMatrixType::S,S,Basis,false);
+    auto S = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,basis.getNbasis(),basis.getNbasis(),2*basis.getDegree() + 1};
+    RadialMatrix::populateRadialMatrix(RadialMatrixType::S,S,basis,false);
 
     PetscHDF5 viewer{PETSC_COMM_SELF,tdse.getOutputPath(),FILE_MODE_READ};
     std::string groupName = "";
     std::string vectorName = "psiFinal";
-    auto finalState = viewer.loadVector(groupName, vectorName,Basis.getNbasis() * angular.getNlm());
+    auto finalState = viewer.loadVector(groupName, vectorName,basis.getNbasis() * angular.getNlm());
 
     std::string filename = std::string("misc") + "/block_norms.txt";
 
@@ -29,14 +29,14 @@ void Observables::computeDistribution(int rank,const Basis& Basis, const TDSE& t
 
     if (getProjOut())
     {
-        projectOutBoundStates(finalState,S,tise,angular,Basis);
+        projectOutBoundStates(finalState,S,tise,angular,basis);
     }
 
     for (int blockIdx = 0; blockIdx < angular.getNlm(); ++blockIdx)
     {
-        int start = blockIdx * Basis.getNbasis();
+        int start = blockIdx * basis.getNbasis();
 
-        IndexSet is{PETSC_COMM_SELF,Basis.getNbasis(), start, 1};
+        IndexSet is{PETSC_COMM_SELF,basis.getNbasis(), start, 1};
 
         Vector blockVector{};
         VecGetSubVector(finalState.get(), is.get(), &blockVector.get());
@@ -51,7 +51,7 @@ void Observables::computeDistribution(int rank,const Basis& Basis, const TDSE& t
     outFile.close();
 }
 
-void Observables::projectOutBoundStates(Vector& finalState,const Matrix& S,const TISE& tise, const Angular& angular,const Basis& Basis)
+void Observables::projectOutBoundStates(Vector& finalState,const Matrix& S,const TISE& tise, const Angular& angular,const Basis& basis)
 {
     PetscHDF5 viewer(PETSC_COMM_SELF,tise.getOutputPath(),FILE_MODE_READ);
 
@@ -62,9 +62,9 @@ void Observables::projectOutBoundStates(Vector& finalState,const Matrix& S,const
         std::tie(l,m) = angular.getBlockMap().at(blockIdx);
 
 
-        int start = blockIdx * Basis.getNbasis();
+        int start = blockIdx * basis.getNbasis();
         
-        IndexSet is{PETSC_COMM_SELF,Basis.getNbasis(),start,1};
+        IndexSet is{PETSC_COMM_SELF,basis.getNbasis(),start,1};
 
         auto blockVector = Vector{};
 
@@ -83,7 +83,7 @@ void Observables::projectOutBoundStates(Vector& finalState,const Matrix& S,const
 
             if (hasDataset)
             {
-                Vector tiseState = viewer.loadVector(groupName,vectorName,Basis.getNbasis());
+                Vector tiseState = viewer.loadVector(groupName,vectorName,basis.getNbasis());
 
                 PetscScalar prodVal = innerProduct(tiseState,S,blockVector);
 
