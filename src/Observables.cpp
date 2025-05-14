@@ -1,6 +1,6 @@
 #include "Observables.h"
 
-void Block::computeDistribution(int rank,const Basis& Basis, const TDSE& tdse,const TISE& tise, const Angular& angular)
+void Observable::computeDistribution(int rank,const Basis& Basis, const TDSE& tdse,const TISE& tise, const Angular& angular)
 {
     if (rank != 0)
     {
@@ -51,7 +51,7 @@ void Block::computeDistribution(int rank,const Basis& Basis, const TDSE& tdse,co
     outFile.close();
 }
 
-void Block::projectOutBoundStates(Vector& finalState,const Matrix& S,const TISE& tise, const Angular& angular,const Basis& Basis)
+void Observable::projectOutBoundStates(Vector& finalState,const Matrix& S,const TISE& tise, const Angular& angular,const Basis& Basis)
 {
     PetscHDF5 viewer(PETSC_COMM_SELF,tise.getOutputPath(),FILE_MODE_READ);
 

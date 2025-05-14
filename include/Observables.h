@@ -11,16 +11,18 @@
 #include "Angular.h"
 #include "PetscWrappers/PetscIS.h"
 
-class Block
+class Observable
 {   
     public:
-        Block(const Input& input)
+        Observable(const Input& input)
         : projOutBound{input.getJSON().at("Block").at("projOutBound")}
         {}
+        
+        void projectOutBoundStates(Vector& finalState,const Matrix& S,const TISE& tise, const Angular& angular,const Basis& Basis);
 
         void computeDistribution(int rank,const Basis& Basis, const TDSE& tdse,const TISE& tise, const Angular& angular);
 
-        void projectOutBoundStates(Vector& finalState,const Matrix& S,const TISE& tise, const Angular& angular,const Basis& Basis);
+        
        
         bool getProjOut() const {return projOutBound;}
 
