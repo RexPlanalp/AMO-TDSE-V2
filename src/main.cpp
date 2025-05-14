@@ -60,27 +60,15 @@ int main(int argc, char **argv)
 
     TISE tise{input};
     tise.printConfiguration(rank);
-
-    auto start = std::chrono::high_resolution_clock::now();
     tise.solve(Basis,atom,angular);
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> delta = end - start;
-    if (rank == 0)
-    {
-        std::cout << delta.count() << "\n\n";
-    }
 
+ 
     TDSE tdse{input};
     tdse.printConfiguration(rank);
 
-    start = std::chrono::high_resolution_clock::now();
+
     tdse.solve(tise,Basis,angular,atom,laser);
-    end = std::chrono::high_resolution_clock::now();
-    delta = end - start;
-    if (rank == 0)
-    {
-        std::cout << delta.count() << "\n\n";
-    }
+    
 
     Block block{input};
     block.computeDistribution(rank,Basis,tdse,tise,angular);

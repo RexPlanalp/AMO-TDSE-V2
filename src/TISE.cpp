@@ -77,10 +77,9 @@ void TISE::solve(const Basis& Basis, const Atom& atom, const Angular& angular)
             auto normVal = norm(eigenvector,S);
             PetscPrintf(PETSC_COMM_WORLD,"Eigenvector %d -> Norm(%.4f , %.4f) -> Eigenvalue(%.4f , %.4f)  \n",convPair+1,normVal.real(),normVal.imag(),eigenvalue.real(),eigenvalue.imag()); 
         }
-        auto total_end = MPI_Wtime();
-        PetscPrintf(PETSC_COMM_WORLD,"Solved eigenvalue problem in:  %f seconds \n\n", total_end -  total_start);
     }
-
+    auto total_end = MPI_Wtime();
+    PetscPrintf(PETSC_COMM_WORLD,"Solved eigenvalue problem in:  %f seconds \n\n", total_end -  total_start);
 }
 
 
