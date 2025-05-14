@@ -8,6 +8,10 @@ void Observables::computeDistribution(int rank,const Basis& basis, const TDSE& t
     {
         return;
     }
+    if (!getBlockStatus())
+    {
+        return;
+    }
 
     auto S = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,basis.getNbasis(),basis.getNbasis(),2*basis.getDegree() + 1};
     RadialMatrix::populateRadialMatrix(RadialMatrixType::S,S,basis,false);
