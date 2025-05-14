@@ -292,7 +292,7 @@ void Observables::computeAngleIntegrated(const std::map<lm_pair,std::vector<std:
     int nlm = angular.getNlm();
     double Emin = getEmin();
 
-    std::ofstream pesFiles("misc/pes.txt", std::ios::app);
+    std::ofstream pesFiles("misc/pes.txt");
     std::vector<std::complex<double>> pes(Ne);
     
     for (int blockIdx = 0; blockIdx < nlm; ++blockIdx)
@@ -331,7 +331,7 @@ void Observables::computeAngleResolved(const std::map<lm_pair,std::vector<std::c
     int Ne = getNe();
     double Emin = getEmin();
 
-        std::ofstream padFiles("misc/pad.txt", std::ios::app);
+        std::ofstream padFiles("misc/pad.txt");
         std::vector<double> theta_range;
         std::vector<double> phi_range;
 

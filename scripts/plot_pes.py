@@ -1,7 +1,7 @@
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.colors import LogNorm, Normalize
-import matplotlib.colors as mcolors
+import numpy as np # type: ignore
+import matplotlib.pyplot as plt # type: ignore
+from matplotlib.colors import LogNorm, Normalize # type: ignore
+import matplotlib.colors as mcolors # type: ignore
 import json
 
 
@@ -10,7 +10,7 @@ pes_cpp = data[:,1]
 e_cpp  = data[:,0]
 plt.semilogy(e_cpp,pes_cpp,label = "PES")
 plt.legend()
-plt.savefig("images/pes.png")
+plt.savefig("images/pes.png",dpi = 200)
 
 
 
@@ -33,11 +33,11 @@ cmap = "hot_r"
 
 fig,ax = plt.subplots()
 
-norm = mcolors.LogNorm(vmin=min_val,vmax=max_val)
-#norm = mcolors.Normalize(vmin=min_val,vmax=max_val)
+#norm = mcolors.LogNorm(vmin=min_val,vmax=max_val)
+norm = mcolors.Normalize(vmin=min_val,vmax=max_val)
 
-sc = ax.scatter(kx,kz,c=pad_p,norm=norm,cmap=cmap)
-#sc = ax.scatter(kx,ky,c=pad_p,norm=norm,cmap=cmap)
+#sc = ax.scatter(kx,kz,c=pad_p,norm=norm,cmap=cmap)
+sc = ax.scatter(kx,ky,c=pad_p,norm=norm,cmap=cmap)
 ax.set_aspect("equal",adjustable = "box")
 fig.colorbar(sc,ax=ax)
-fig.savefig("images/pad.png")
+fig.savefig("images/pad.png",dpi = 200)
