@@ -55,7 +55,9 @@ The code supports various observables of interest. Examples include angle-resolv
 
 ### Bound State Populations
 
-![Alt text for your image](examples/bound/images/harmonic_spectrum.png)
+Note: This job was run starting in the 2s state with the laser frequency tuned to the 2s -> 4p transition energy. 
+
+![Alt text for your image](examples/bound/images/bound_pops.png)
 
 ## Dependencies and Installation
 
