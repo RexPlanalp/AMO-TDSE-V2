@@ -43,7 +43,7 @@ cbar.set_label("Population")
 
 # Axis labels and formatting
 ax.set_xlabel("l (Orbital Quantum Number)")
-ax.set_ylabel("n (Principle Angular Momentum)")
+ax.set_ylabel("n (Principle Quantum Number)")
 ax.set_title("Population Heatmap (Bound States)")
 ax.set_xticks(range(nmax+1))
 ax.set_yticks(range(nmax+1))
