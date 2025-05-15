@@ -1,43 +1,77 @@
-import numpy as np # type: ignore
-import matplotlib.pyplot as plt # type: ignore
-from matplotlib.colors import LogNorm, Normalize # type: ignore
-import matplotlib.colors as mcolors # type: ignore
+import numpy as np 
+
+import matplotlib.pyplot as plt 
+from matplotlib.colors import LogNorm, Normalize 
+import matplotlib.colors as mcolors 
+
 import json
+import sys
+
+with open("input.json") as f:
+    input = json.load(f)
 
 
-data = np.loadtxt("misc/pes.txt")
-pes_cpp = data[:,1]
-e_cpp  = data[:,0]
-plt.semilogy(e_cpp,pes_cpp,label = "PES")
-plt.legend()
-plt.savefig("images/pes.png",dpi = 200)
+slice = input["Observables"]["PES"]["slice"]
+norm = input["Observables"]["PES"]["norm"]
+threshold = input["Observables"]["PES"]["threshold"]
+
+# Plot Angle Integrated Spectrum
+angleIntegratedData = np.loadtxt("misc/pes.txt")
+
+energyData = np.array(angleIntegratedData[:,0])
+pesData = np.array(angleIntegratedData[:,1])
+
+fig,ax = plt.subplots()
+ax.semilogy(energyData,pesData,label = "Angle Integrated Spectrum",color = "k",linewidth = 0.8)
+ax.set_ylabel("Probability")
+ax.set_xlabel("Energy (au)")
+ax.legend()
+fig.savefig("images/pes.png",dpi = 200)
 
 
+# Plot Angle Resolved Spectrum
+angleResolvedData = np.loadtxt("misc/pad.txt")
 
+energyData = np.array(angleResolvedData[:,0])
+momentumData = np.sqrt(2*energyData)
 
-pad_data = np.loadtxt("misc/pad.txt")
-pad_e = np.array(pad_data[:,0])
-pad_k = np.sqrt(2*pad_e)
-pad_theta = np.array(pad_data[:,1])
-pad_phi = np.array(pad_data[:,2])
-pad_p = np.array(pad_data[:,3])
+thetaData = np.array(angleResolvedData[:,1])
+phiData = np.array(angleResolvedData[:,2])
+padData = np.array(angleResolvedData[:,3])
 
-kx = pad_k*np.sin(pad_theta)*np.cos(pad_phi)
-ky = pad_k*np.sin(pad_theta)*np.sin(pad_phi)
-kz = pad_k*np.cos(pad_theta)
+kx = momentumData*np.sin(thetaData)*np.cos(phiData)
+ky = momentumData*np.sin(thetaData)*np.sin(phiData)
+kz = momentumData*np.cos(thetaData)
 
-max_val = np.max(pad_p)
-min_val = max_val*1e-6
+maxVal = np.max(padData)
+minVal= maxVal*threshold
 
 cmap = "hot_r"
 
 fig,ax = plt.subplots()
 
-#norm = mcolors.LogNorm(vmin=min_val,vmax=max_val)
-norm = mcolors.Normalize(vmin=min_val,vmax=max_val)
+if (slice == "XZ"):
+    xLabel = "kx"
+    yLabel = "kz"
 
-#sc = ax.scatter(kx,kz,c=pad_p,norm=norm,cmap=cmap)
-sc = ax.scatter(kx,ky,c=pad_p,norm=norm,cmap=cmap)
+    xData = kx
+    yData = kz
+
+elif (slice == "XY"):
+    xLabel = "kx"
+    yLabel = "ky"
+
+    xData = kx
+    yData = ky
+
+if (norm == "log"):
+    plotNorm = mcolors.LogNorm(minVal,maxVal)
+elif (norm == "linear"):
+    plotNorm = mcolors.Normalize(minVal,maxVal)
+
+scatterPlot = ax.scatter(xData,yData,c=padData,norm=plotNorm,cmap=cmap)
 ax.set_aspect("equal",adjustable = "box")
-fig.colorbar(sc,ax=ax)
+ax.set_xlabel(xLabel)
+ax.set_ylabel(yLabel)
+fig.colorbar(scatterPlot,ax=ax)
 fig.savefig("images/pad.png",dpi = 200)

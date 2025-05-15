@@ -1,16 +1,20 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-laser_data = np.loadtxt("misc/laser.txt")
-t = laser_data[:,0]
-Ax = laser_data[:,1]
-Ay = laser_data[:,2]
-Az = laser_data[:,3]
+laserData = np.loadtxt("misc/laser.txt")
+
+t = laserData[:,0]
+Ax = laserData[:,1]
+Ay = laserData[:,2]
+Az = laserData[:,3]
+
+fig,ax = plt.subplots()
 
 
-
-plt.plot(t,Ax,color = "k",label = "Ax",linewidth = 0.8)
-plt.plot(t,Ay,color = "brown",label = "Ay",linewidth = 0.8)
-plt.plot(t,Az,color = "blue",label = "Az",linewidth = 0.8)
-plt.legend()
-plt.savefig("images/laser.png",dpi=200)
+ax.plot(t,Ax,color = "k",label = "Ax",linewidth = 0.8)
+ax.plot(t,Ay,color = "brown",label = "Ay",linewidth = 0.8)
+ax.plot(t,Az,color = "blue",label = "Az",linewidth = 0.8)
+ax.set_ylabel("Vector Potential")
+ax.set_xlabel("Time (au)")
+ax.legend()
+fig.savefig("images/laser.png",dpi=200)

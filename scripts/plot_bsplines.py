@@ -25,28 +25,24 @@ r = np.array([i * dr for i in range(Nr)])
 
 
 
-plt.figure(figsize=(8,8))
+fig,ax = plt.subplots()
 for i in range(n_bspline):
-    plt.plot(r, real[i*Nr:(i+1)*Nr], color='black',linewidth = 0.8)  # real part
-    plt.plot(r, imag[i*Nr:(i+1)*Nr], color='brown',linewidth = 0.8)  # imag part
-plt.xlabel('Point index')
-plt.ylabel('Value')
-plt.title('B-spline basis functions (real:black, imag:brown)')
-plt.tight_layout()
-plt.show()
-plt.savefig("images/bsplines.png",dpi = 200)
+    ax.plot(r, real[i*Nr:(i+1)*Nr], color='black',linewidth = 0.8)  
+    ax.plot(r, imag[i*Nr:(i+1)*Nr], color='brown',linewidth = 0.8)  
+ax.set_xlabel('r (au)')
+ax.set_ylabel("BSpline")
+ax.tight_layout()
+fig.savefig("images/bsplines.png",dpi = 200)
 
 
-plt.figure(figsize=(8,8))
+fig,ax = plt.subplots()
 for i in range(n_bspline):
-    plt.plot(r, dreal[i*Nr:(i+1)*Nr], color='black',linewidth = 0.8)  # real part
-    plt.plot(r, dimag[i*Nr:(i+1)*Nr], color='brown',linewidth = 0.8)  # imag part
-plt.xlabel('Point index')
-plt.ylabel('Value')
-plt.title('B-spline basis functions (real:black, imag:brown)')
-plt.tight_layout()
-plt.show()
-plt.savefig("images/dbsplines.png",dpi = 200)
+    ax.plot(r, dreal[i*Nr:(i+1)*Nr], color='black',linewidth = 0.8)  
+    ax.plot(r, dimag[i*Nr:(i+1)*Nr], color='brown',linewidth = 0.8)  
+ax.set_xlabel('r (au)')
+ax.set_ylabel("d-BSpline")
+ax.tight_layout()
+ax.savefig("images/dbsplines.png",dpi = 200)
    
 
 
