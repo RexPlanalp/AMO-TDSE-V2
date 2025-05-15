@@ -9,6 +9,7 @@ with open("input.json") as f:
 
 nmax = input["TISE"]["nmax"]
 initialState = input["TDSE"]["initialNLM"]
+exclude = input["Observables"]["Bound"]["exclude"]
 
 bound_pops = np.loadtxt("misc/bound_pops.txt")
 
@@ -21,8 +22,9 @@ for i in range(rows):
     l = int(bound_pops[i,1])
     pop = bound_pops[i,2]
 
-    if (n == initialState[0] and l == initialState[1]):
-        continue
+    if exclude:
+        if (n == initialState[0] and l == initialState[1]):
+            continue
    
     pop_matrix[n,l] = pop
 for n in range(nmax+1):
