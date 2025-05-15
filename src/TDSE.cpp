@@ -318,6 +318,37 @@ Matrix TDSE::constructZHHG(const Basis& basis, const Angular& angular)
     return kroneckerProduct(Hlm_hhg_z,Invr2,2,2*basis.getDegree() + 1);
 }
 
+void computeHHG(int rank, std::ofstream& hhgFile, bool hhgStatus, int timeIdx,const Laser& laser, const Vector& state, const Matrix& XHHG, const Matrix& YHHG, const Matrix& ZHHG)
+{
+    if (hhgStatus)
+    {   
+        std::complex<double> xVal{};
+        std::complex<double> yVal{};
+        std::complex<double> zVal{};
+
+        if (laser.getComponents()[0])
+        {
+            xVal = norm(state,XHHG);
+            xVal = xVal * xVal;
+        }
+        if (laser.getComponents()[1])
+        {
+            yVal = norm(state,YHHG);
+            yVal = yVal  * yVal ;
+        }
+        if (laser.getComponents()[2])
+        {
+            zVal = norm(state,ZHHG);
+            zVal = zVal * zVal;
+        }
+
+        if (rank == 0)
+        {
+            hhgFile << timeIdx*laser.getTimeSpacing()  << " " << xVal.real() << " "  << laser.A(timeIdx*laser.getTimeSpacing(),0) << " " << yVal.real() << " " << laser.A(timeIdx*laser.getTimeSpacing(),1)   << " " << zVal.real() << " " << laser.A(timeIdx*laser.getTimeSpacing(),2)  << "\n";
+        }
+    }
+}
+
 void TDSE::solve(int rank,const TISE& tise,const Basis& basis, const Angular& angular, const Atom& atom, const Laser& laser)
 {
     if (!getStatus())
@@ -375,9 +406,6 @@ void TDSE::solve(int rank,const TISE& tise,const Basis& basis, const Angular& an
 
     // Setup HHG if necessary
     std::ofstream hhgFile;
-    std::complex<double> xVal{};
-    std::complex<double> yVal{};
-    std::complex<double> zVal{};
     if (getHHGStatus() && (rank == 0))
     {
         hhgFile.open(std::string("misc/") + std::string("hhg_data.txt"));
@@ -396,29 +424,7 @@ void TDSE::solve(int rank,const TISE& tise,const Basis& basis, const Angular& an
     for (int timeIdx = 0; timeIdx < laser.getNt(); ++timeIdx)
     {
 
-        if (getHHGStatus())
-        {
-            if (laser.getComponents()[0])
-            {
-                xVal = norm(initialState,XHHG);
-                xVal = xVal * xVal;
-            }
-            if (laser.getComponents()[1])
-            {
-                yVal = norm(initialState,YHHG);
-                yVal = yVal  * yVal ;
-            }
-            if (laser.getComponents()[2])
-            {
-                zVal = norm(initialState,ZHHG);
-                zVal = zVal * zVal;
-            }
-
-            if (rank == 0)
-            {
-                hhgFile << timeIdx*laser.getTimeSpacing()  << " " << xVal.real() << " "  << laser.A(timeIdx*laser.getTimeSpacing(),0) << " " << yVal.real() << " " << laser.A(timeIdx*laser.getTimeSpacing(),1)   << " " << zVal.real() << " " << laser.A(timeIdx*laser.getTimeSpacing(),2)  << "\n";
-            }
-        }
+        computeHHG(rank,hhgFile,getHHGStatus(),timeIdx,laser,initialState,XHHG,YHHG,ZHHG);
 
 
         double tNow = timeIdx * laser.getTimeSpacing() + laser.getTimeSpacing() / 2.0;
