@@ -1,0 +1,68 @@
+{
+    "Box": {
+        "gridSize" : 500,
+        "gridSpacing" : 0.01
+    },
+
+    "Angular" : {
+        "lmax" : 15,
+        "mmin" : -15,
+        "mmax" : 15
+    },
+
+    "Basis" : {
+        "nbasis" : 400,
+        "order" : 7,
+        "spacing" : "linear",
+        "R0r" : 0.99,
+        "etar" : 0.25
+    },
+
+    "Atom" : {
+        "potential" : "H"
+    },
+
+    "Laser" : {
+        "N" : 6.0,
+        "timeSpacing" : 0.05,
+        "w" : 0.057,
+        "I" : 3.51E14,
+        "polarization" : [0,0,1],
+        "poynting" : [0,1,0],
+        "ell" : 0,
+        "cepr" : 0
+    },
+
+    "TISE" : {
+        "status" : true,
+        "outputPath" : "TISE/tise.h5",
+        "nmax" : 10,
+        "tolerance" : 1.0E-15,
+        "max_iter" : 3000
+    },
+
+    "TDSE" : {
+        "status" : true,
+        "outputPath" : "TDSE/tdse.h5",
+        "initialNLM" : [1, 0, 0],
+        "tolerance" : 1.0E-15,
+        "maxIter" : 10000,
+        "restart" : 30,
+        "HHG" : true
+    },
+    "Observables" : {
+        "PES" : {
+            "status" : false,
+            "Emin" : 0.001,
+            "Emax" : 1.0,
+            "slice" : "XZ",
+            "norm" : "log",
+            "threshold" : 1E-6
+        },
+        "Block" : {
+            "status" : false,
+            "projOutBound" : true,
+            "norm" : "linear"
+        }
+    }
+}

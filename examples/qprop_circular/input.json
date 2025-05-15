@@ -1,0 +1,75 @@
+{
+    "Box": {
+        "gridSize" : 1500,
+        "gridSpacing" : 0.01
+    },
+
+    "Angular" : {
+        "lmax" : 25,
+        "mmin" : -25,
+        "mmax" : 25
+    },
+
+    "Basis" : {
+        "nbasis" : 1500,
+        "order" : 7,
+        "spacing" : "linear",
+        "R0r" : 0.99,
+        "etar" : 0.25
+    },
+
+    "Atom" : {
+        "potential" : "H"
+    },
+
+    "Laser" : {
+        "N" : 2,
+        "timeSpacing" : 0.05,
+        "w" : 0.114,
+        "I" : 2.0E14,
+        "polarization" : [1,1,0],
+        "poynting" : [0,0,1],
+        "ell" : 1,
+        "cepr" : 0
+    },
+
+    "TISE" : {
+        "status" : false,
+        "outputPath" : "TISE/tise.h5",
+        "nmax" : 10,
+        "tolerance" : 1.0E-8,
+        "max_iter" : 3000
+    },
+
+    "TDSE" : {
+        "status" : true,
+        "outputPath" : "TDSE/tdse.h5",
+        "initialNLM" : [1, 0, 0],
+        "tolerance" : 1.0E-15,
+        "maxIter" : 10000,
+        "restart" : 30,
+        "HHG" : true
+    },
+
+    "Observables" : {
+        "PES" : {
+            "status" : false,
+            "Emin" : 0.001,
+            "Emax" : 0.5,
+            "slice" : "XY",
+            "norm" : "linear",
+            "threshold" : 1E-6
+        },
+        "Block" : {
+            "status" : true,
+            "projOutBound" : true,
+            "norm" : "linear"
+        }
+    },
+
+    "debug" : false,
+    "miscOutput" : "misc",
+    "dumpLaser" : true,
+    "dumpBSpline" : false,
+    "dumpAngular" : true
+}
