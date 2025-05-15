@@ -66,7 +66,7 @@ int main(int argc, char **argv)
     tdse.printConfiguration(rank);
 
 
-    tdse.solve(tise,basis,angular,atom,laser);
+    tdse.solve(rank,tise,basis,angular,atom,laser);
     
 
     Observables observables{input};

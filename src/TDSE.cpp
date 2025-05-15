@@ -121,7 +121,6 @@ void TDSE::printConfiguration(int rank)
     }
 }
 
-
 Vector TDSE::loadInitialState(const TISE& tise,const Basis& basis, const Angular& angular)
 {   
     // Create a zero initialized vector to hold the initialte state
@@ -286,8 +285,40 @@ Matrix TDSE::constructAtomicS(const Basis& basis, const Angular& angular)
     return kroneckerProduct(I,S,1,2*basis.getDegree() + 1);
 }
 
+Matrix TDSE::constructXHHG(const Basis& basis, const Angular& angular)
+{
+    auto Invr2 = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,basis.getNbasis(),basis.getNbasis(),2*basis.getDegree() + 1};
+    RadialMatrix::populateRadialMatrix(RadialMatrixType::Invr2,Invr2,basis,false);
 
-void TDSE::solve(const TISE& tise,const Basis& basis, const Angular& angular, const Atom& atom, const Laser& laser)
+    Matrix Hlm_hhg_x{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,angular.getNlm(),angular.getNlm(),4};
+    AngularMatrix::populateAngularMatrix(AngularMatrixType::X_HHG,Hlm_hhg_x,angular);
+
+    return kroneckerProduct(Hlm_hhg_x,Invr2,4,2*basis.getDegree() + 1);
+}
+
+Matrix TDSE::constructYHHG(const Basis& basis, const Angular& angular)
+{
+    auto Invr2 = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,basis.getNbasis(),basis.getNbasis(),2*basis.getDegree() + 1};
+    RadialMatrix::populateRadialMatrix(RadialMatrixType::Invr2,Invr2,basis,false);
+
+    Matrix Hlm_hhg_y{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,angular.getNlm(),angular.getNlm(),4};
+    AngularMatrix::populateAngularMatrix(AngularMatrixType::Y_HHG,Hlm_hhg_y,angular);
+
+    return kroneckerProduct(Hlm_hhg_y,Invr2,4,2*basis.getDegree() + 1);
+}
+
+Matrix TDSE::constructZHHG(const Basis& basis, const Angular& angular)
+{
+    auto Invr2 = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,basis.getNbasis(),basis.getNbasis(),2*basis.getDegree() + 1};
+    RadialMatrix::populateRadialMatrix(RadialMatrixType::Invr2,Invr2,basis,false);
+
+    Matrix Hlm_hhg_z{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,angular.getNlm(),angular.getNlm(),4};
+    AngularMatrix::populateAngularMatrix(AngularMatrixType::Z_HHG,Hlm_hhg_z,angular);
+
+    return kroneckerProduct(Hlm_hhg_z,Invr2,2,2*basis.getDegree() + 1);
+}
+
+void TDSE::solve(int rank,const TISE& tise,const Basis& basis, const Angular& angular, const Atom& atom, const Laser& laser)
 {
     if (!getStatus())
     {
@@ -309,22 +340,49 @@ void TDSE::solve(const TISE& tise,const Basis& basis, const Angular& angular, co
     std::tie(interactionLeft,interactionRight) = constructAtomicInteraction(basis,angular,atom,laser);
 
     Matrix ZInteraction{};
+    Matrix ZHHG{};
     if (laser.getComponents()[2])
     {
         ZInteraction = constructZInteraction(basis,angular);
+        if (getHHGStatus())
+        {
+            ZHHG = constructZHHG(basis,angular);
+        }
     }
 
     Matrix Hxy_1{};
     Matrix Hxy_2{};
+    Matrix XHHG{};
+    Matrix YHHG{};
     if ((laser.getComponents()[0]) || (laser.getComponents()[1]))
     {
         std::tie(Hxy_1,Hxy_2) = constructXYInteraction(basis,angular);
+
+        if (getHHGStatus() && laser.getComponents()[0])
+        {
+            XHHG = constructXHHG(basis,angular);
+        }
+        if (getHHGStatus() && laser.getComponents()[1])
+        {
+            YHHG = constructYHHG(basis,angular);
+        }
     }
 
     PetscScalar alpha = PETSC_i * laser.getTimeSpacing() / 2.0;
 
     auto end_setup = MPI_Wtime();
     PetscPrintf(PETSC_COMM_WORLD,"Time to setup TDSE: %f \n", end_setup-start_setup);
+
+    // Setup HHG if necessary
+    std::ofstream hhgFile;
+    std::complex<double> xVal{};
+    std::complex<double> yVal{};
+    std::complex<double> zVal{};
+    if (getHHGStatus() && (rank == 0))
+    {
+        hhgFile.open(std::string("misc/") + std::string("hhg_data.txt"));
+        hhgFile << std::fixed << std::setprecision(15); 
+    }
 
 
     // Solve TDSE
@@ -337,13 +395,39 @@ void TDSE::solve(const TISE& tise,const Basis& basis, const Angular& angular, co
     auto start_solve = MPI_Wtime();
     for (int timeIdx = 0; timeIdx < laser.getNt(); ++timeIdx)
     {
+
+        if (getHHGStatus())
+        {
+            if (laser.getComponents()[0])
+            {
+                xVal = norm(initialState,XHHG);
+                xVal = xVal * xVal;
+            }
+            if (laser.getComponents()[1])
+            {
+                yVal = norm(initialState,YHHG);
+                yVal = yVal  * yVal ;
+            }
+            if (laser.getComponents()[2])
+            {
+                zVal = norm(initialState,ZHHG);
+                zVal = zVal * zVal;
+            }
+
+            if (rank == 0)
+            {
+                hhgFile << timeIdx*laser.getTimeSpacing()  << " " << xVal.real() << " "  << laser.A(timeIdx*laser.getTimeSpacing(),0) << " " << yVal.real() << " " << laser.A(timeIdx*laser.getTimeSpacing(),1)   << " " << zVal.real() << " " << laser.A(timeIdx*laser.getTimeSpacing(),2)  << "\n";
+            }
+        }
+
+
         double tNow = timeIdx * laser.getTimeSpacing() + laser.getTimeSpacing() / 2.0;
         
         if (timeIdx == 0)
         {
             if (laser.getComponents()[2])
             {
-                auto Az = laser.A(tNow,2);;
+                auto Az = laser.A(tNow,2);
 
                 interactionLeft.AXPY(Az * alpha, ZInteraction,DIFFERENT_NONZERO_PATTERN);
                 interactionRight.AXPY(-Az * alpha, ZInteraction,DIFFERENT_NONZERO_PATTERN);
@@ -351,7 +435,7 @@ void TDSE::solve(const TISE& tise,const Basis& basis, const Angular& angular, co
             if ((laser.getComponents()[0]) || (laser.getComponents()[1]))
             {
                 auto deltaAtilde = (laser.A(tNow,0) + PETSC_i * laser.A(tNow,1));
-                auto deltaAtildeStar = (laser.A(tNow,0) - PETSC_i * laser.A(tNow,1));;
+                auto deltaAtildeStar = (laser.A(tNow,0) - PETSC_i * laser.A(tNow,1));
 
                 interactionLeft.AXPY(alpha * deltaAtildeStar,Hxy_1,DIFFERENT_NONZERO_PATTERN);
                 interactionRight.AXPY(-alpha * deltaAtildeStar,Hxy_1,DIFFERENT_NONZERO_PATTERN);
@@ -384,9 +468,10 @@ void TDSE::solve(const TISE& tise,const Basis& basis, const Angular& angular, co
             }
         }
 
-
         interactionRight.matMult(initialState,rhs);
         ksp.solve(rhs,initialState);
+
+
         
     }
 
@@ -399,6 +484,11 @@ void TDSE::solve(const TISE& tise,const Basis& basis, const Angular& angular, co
 
     PetscHDF5 viewer(PETSC_COMM_WORLD,getOutputPath(), FILE_MODE_WRITE);
     viewer.saveVector(outputGroup,outputName,initialState);
+
+    if (getHHGStatus() && (rank == 0))
+    {
+        hhgFile.close();
+    }
 
     
 }

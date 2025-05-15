@@ -2,7 +2,7 @@
 #SBATCH --job-name testing
 #SBATCH --output run.log
 #SBATCH --nodes 1
-#SBATCH --ntasks 8
+#SBATCH --ntasks 4
 #SBATCH --mem=8G
 
 

@@ -13,7 +13,10 @@ enum class AngularMatrixType
     XY_INT_1,
     XY_INT_2,
     XY_INT_3,
-    XY_INT_4
+    XY_INT_4,
+    X_HHG,
+    Y_HHG,
+    Z_HHG
 };
 
 enum class RadialMatrixType
@@ -222,6 +225,52 @@ namespace AngularMatrix
                         else if ((l == lprime - 1)&&(m == mprime - 1))
                         {
                             matrix.setValue(blockRow,blockCol, PETSC_i * AngularElements::dtilde(l,m)/2);
+                        }
+                    break;
+                    case AngularMatrixType::X_HHG:
+                        if ((l == lprime + 1) && (m == mprime - 1))
+                        {   
+                            matrix.setValue(blockRow,blockCol,AngularElements::charlie(l,m));
+                        }
+                        else if ((l == lprime - 1) && (m == mprime - 1))
+                        {   
+                            matrix.setValue(blockRow,blockCol,AngularElements::delta(l,m));
+                        }
+                        else if ((l == lprime + 1) && (m == mprime + 1))
+                        {
+                            matrix.setValue(blockRow,blockCol,-AngularElements::alpha(l,m));
+                        }
+                        else if ((l == lprime - 1) && (m == mprime + 1))
+                        {
+                            matrix.setValue(blockRow,blockCol,-AngularElements::beta(l,m));
+                        }
+                    break;
+                    case AngularMatrixType::Y_HHG:
+                        if ((l == lprime + 1) && (m == mprime - 1))
+                        {
+                            matrix.setValue(blockRow,blockCol,AngularElements::charlie(l,m));
+                        }
+                        else if ((l == lprime - 1) && (m == mprime - 1))
+                        {
+                            matrix.setValue(blockRow,blockCol,AngularElements::delta(l,m));
+                        }
+                        else if ((l == lprime + 1) && (m == mprime + 1))
+                        {
+                            matrix.setValue(blockRow,blockCol,AngularElements::alpha(l,m));
+                        }
+                        else if ((l == lprime - 1) && (m == mprime + 1))
+                        {
+                            matrix.setValue(blockRow,blockCol,AngularElements::beta(l,m));
+                        }
+                    break;
+                    case AngularMatrixType::Z_HHG:
+                        if ((l == lprime + 1) && (m == mprime))
+                        {
+                            matrix.setValue(blockRow,blockCol,AngularElements::echo(l,m));
+                        }
+                        else if ((l == lprime - 1) && (m == mprime))
+                        {
+                            matrix.setValue(blockRow,blockCol,AngularElements::foxtrot(l,m));
                         }
                     break;
                 }

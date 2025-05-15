@@ -18,6 +18,7 @@ class TDSE
         , tolerance{input.getJSON().at("TDSE").at("tolerance")}
         , maxIter{input.getJSON().at("TDSE").at("maxIter")}
         , restart{input.getJSON().at("TDSE").at("restart")}
+        , hhgStatus{input.getJSON().at("TDSE").at("HHG")}
         {}
 
         bool getStatus() const {return status;}
@@ -26,9 +27,9 @@ class TDSE
         PetscReal getTol() const {return tolerance;}
         PetscInt getMaxIter() const {return maxIter;}
         PetscInt getRestart() const {return restart;}
+        bool getHHGStatus() const {return hhgStatus;}
 
-        void solve(const TISE& tise,const Basis& basis, const Angular& angular, const Atom& atom, const Laser& laser);
-
+        void solve(int rank,const TISE& tise,const Basis& basis, const Angular& angular, const Atom& atom, const Laser& laser);
         void printConfiguration(int rank);
 
         Vector loadInitialState(const TISE& tise,const Basis& basis, const Angular& angular);
@@ -36,6 +37,10 @@ class TDSE
         
         Matrix constructZInteraction(const Basis& basis, const Angular& angular);
         std::pair<Matrix,Matrix> constructXYInteraction(const Basis& basis, const Angular& angular);
+
+        Matrix constructXHHG(const Basis& basis, const Angular& angular);
+        Matrix constructYHHG(const Basis& basis, const Angular& angular);
+        Matrix constructZHHG(const Basis& basis, const Angular& angular);
 
         Matrix constructAtomicS(const Basis& basis, const Angular& angular);
 
@@ -48,6 +53,7 @@ class TDSE
         PetscReal tolerance{};
         PetscInt maxIter{};
         PetscInt restart{};
+        bool hhgStatus{};
 
         std::string outputGroup = "";
         std::string outputName = "psiFinal";
