@@ -37,6 +37,8 @@ The best solution that I am aware of to address both of these issues is Exterior
 
 The code supports various observables of interest. Examples include angle-resolved as well as angle-integrated photoelectron spectra, microscopic high harmonic generation, and bound state populations. Example of each are plotted below, and the input file used to achieve these results is included in the examples directory. 
 
+There is an existing simulation called QPROP developed by a research group at the University of Rostock. During development of my code I used some of their examples as benchmarks to ensure my simulation was working correctly. As such, all examples below (aside from the bound state population) are examples they have used in their papers. 
+
 ### Photoelectron Spectra
 
 #### Linear Polarization
