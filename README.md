@@ -33,6 +33,17 @@ Because we cannot simulate using an infinitely large spacial grid, a choice must
 
 The best solution that I am aware of to address both of these issues is Exterior Complex Scaling. Exterior complex scaling rotates the position coordinate into the complex plane past some cutoff position. While the details are too lengthy to include here, the result is that you get perfect absorption with no spurious reflections from the cutoff position, and it adaptively suppresses based on wavepacket energy, preventing even the highest energy wavepackets from reaching the boundary. The implementation is also remarkably simple when using a BSpline basis making this approach even more attractive. 
 
+## Observables
+
+The code supports various observables of interest. Examples include angle-resolved as well as angle-integrated photoelectron spectra, microscopic high harmonic generation, and bound state populations. Example of each are plotted below, and the input file used to achieve these results is included in the examples directory. 
+
+### Photoelectron Spectra
+
+#### Linear Polarization
+
+| ![Alt text for your image](examples/qprop_lin/images/pes.png) | ![Alt text for your image](examples/qprop_lin/images/pad.png) |
+|-----------------------------------|-----------------------------------|
+
 ## Dependencies and Installation
 
 ### Dependencies
