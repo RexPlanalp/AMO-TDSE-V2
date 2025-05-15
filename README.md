@@ -44,6 +44,19 @@ The code supports various observables of interest. Examples include angle-resolv
 | ![Alt text for your image](examples/qprop_lin/images/pes.png) | ![Alt text for your image](examples/qprop_lin/images/pad.png) |
 |-----------------------------------|-----------------------------------|
 
+#### Circular Polarization 
+
+| ![Alt text for your image](examples/qprop_circular/images/pes.png) | ![Alt text for your image](examples/qprop_circular/images/pad.png) |
+|-----------------------------------|-----------------------------------|
+
+### High Harmonic Spectra
+
+![Alt text for your image](examples/qprop_hhg/images/harmonic_spectrum.png)
+
+### Bound State Populations
+
+![Alt text for your image](examples/bound/images/harmonic_spectrum.png)
+
 ## Dependencies and Installation
 
 ### Dependencies
