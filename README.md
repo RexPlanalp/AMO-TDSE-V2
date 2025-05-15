@@ -33,6 +33,85 @@ Because we cannot simulate using an infinitely large spacial grid, a choice must
 
 The best solution that I am aware of to address both of these issues is Exterior Complex Scaling. Exterior complex scaling rotates the position coordinate into the complex plane past some cutoff position. While the details are too lengthy to include here, the result is that you get perfect absorption with no spurious reflections from the cutoff position, and it adaptively suppresses based on wavepacket energy, preventing even the highest energy wavepackets from reaching the boundary. The implementation is also remarkably simple when using a BSpline basis making this approach even more attractive. 
 
+## Dependencies and Installation
+
+### Dependencies
+- **Spack:** Version 1.0.0
+- **CMake:** Version 3.14 
+- **PETSc:** Version 3.22.2 
+- **SLEPc:** Version 3.22.2
+- **GSL:** Version 2.8
+- **Nlohmann Json:**  Version 3.11.3
+-  **Matplotlib:**  Version 3.10.1
+-  **Python:** Version 3.13.2
+-  
+
+- ### Installation
+
+This simulation was built with HPC environments in mind. As such when developing, testing, and running the simulation I found the package manager Spack the simplest and easiest way to get a PETSC/SLEPc build up and running. 
+
+#### Step 1: Install Spack 
+
+```
+git clone https://github.com/spack/spack.git
+cd spack
+source share/spack/setup-env.sh
+```
+
+#### Step 2: Create and acivate environment
+
+```
+spack env create my-env
+spack env activate my-env
+```
+
+#### Step 3: Add packages to environment
+
+```
+spack add petsc \
+    clanguage=C++ \
+    +complex \
+    +double \
+    +hdf5 \
+    +hypre \
+    +metis \
+    +mpi \
+    +mumps \
+    +superlu-dist \
+    +scalapack \
+    +openmp \
+    +strumpack \
+    +shared
+
+spack add slepc \
+	+arpack
+
+spack add cmake
+
+spack add nlohmann-json
+
+spack add gsl
+
+spack add python
+
+spack install py-matplotlib
+
+```
+
+#### Step 4: Concretize and install 
+
+```
+spack concretize
+
+spack install
+```
+
+
+
+
+
+
+
 
 
 
