@@ -430,6 +430,89 @@ void Observables::computePhotoelectronSpectrum(int rank,const TISE& tise, const 
     PetscPrintf(PETSC_COMM_SELF,"Computed Photoelectron Spectrum:  %f seconds \n\n", end_pes -  start_pes);
 }
 
+double Observables::computeBoundPopulation(int n_bound, int l_bound, const Vector& state,const TISE& tise,const Basis& basis,const Angular& angular)
+{
+
+    if ((l_bound >= n_bound) || (n_bound > tise.getNmax()))
+    {
+        return 0.0;
+    }
+    
+
+    double probability = 0;
+
+    PetscHDF5 viewer{PETSC_COMM_SELF, tise.getOutputPath(), FILE_MODE_READ};
+
+    std::string eigenvectorGroup = "eigenvectors";
+    std::string vectorName = std::string("psi_") + std::to_string(n_bound) + std::string("_")  + std::to_string(l_bound);
+    auto boundState = viewer.loadVector(eigenvectorGroup, vectorName, basis.getNbasis());
+
+  
+
+
+   
+
+    auto S = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,basis.getNbasis(),basis.getNbasis(),2*basis.getDegree() + 1};
+    RadialMatrix::populateRadialMatrix(RadialMatrixType::S,S,basis,false);
+
+    for (int blockIdx = 0; blockIdx < angular.getNlm(); ++blockIdx)
+    {
+
+
+        std::pair<int, int> lmPair = angular.getBlockMap().at(blockIdx);
+        int l = lmPair.first;
+        
+
+        if (!(l == l_bound))
+        {   
+            continue;
+        }
+
+       
+
+        int start = blockIdx * basis.getNbasis();
+        auto is = IndexSet{PETSC_COMM_SELF, basis.getNbasis(), start, 1};
+
+        Vector stateBlock{};
+        VecGetSubVector(state.get(), is.get(), &stateBlock.get());
+
+
+        std::complex<double> projection = innerProduct(boundState,S,stateBlock);
+        probability += std::norm(projection);
+
+        VecRestoreSubVector(state.get(), is.get(), &stateBlock.get());
+    }
+    return probability;
+}
+
+void Observables::computeBoundDistribution(int rank,const Basis& basis, const Angular& angular, const TISE& tise, const TDSE& tdse)
+{
+    if ((rank != 0) || (!getBoundStatus()))
+    {
+        return;
+    }
+
+    std::ofstream file(std::string("misc/") + std::string("bound_pops.txt"));
+    file << std::fixed << std::setprecision(15);
+
+    PetscHDF5 viewer{PETSC_COMM_SELF,tdse.getOutputPath(),FILE_MODE_READ};
+    std::string groupName = "";
+    std::string vectorName = "psiFinal";
+    auto finalState = viewer.loadVector(groupName, vectorName,basis.getNbasis() * angular.getNlm());
+
+    for (int n = 1; n <= tise.getNmax(); ++n)
+    {
+        for (int l = 0; l < n; ++l)
+        {   
+            double pop = computeBoundPopulation(n,l,finalState,tise,basis,angular);
+            file << n << " " << l << " " << pop << '\n';
+        }
+    }
+    file.close();
+}
+
+
+
 void Observables::printConfiguration(int rank)
 {
     if (rank == 0)

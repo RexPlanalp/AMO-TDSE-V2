@@ -27,6 +27,7 @@ class Observables
         , slice{input.getJSON().at("Observables").at("PES").at("slice")}
         , pesStatus{input.getJSON().at("Observables").at("PES").at("status")}
         , blockStatus{input.getJSON().at("Observables").at("Block").at("status")}
+        , boundStatus{input.getJSON().at("Observables").at("Bound").at("status")}
         {
              Ne = static_cast<int>(std::round(getEmax() / getEmin())) + 1;
         }
@@ -40,9 +41,10 @@ class Observables
         std::pair<std::map<lm_pair,std::vector<std::complex<double>>>,std::map<std::pair<double, int>,double>> computePartialSpectra(const std::vector<std::complex<double>>& expanded_state,const Angular& angular, const Atom& atom,const Box& box);
         void computeAngleIntegrated(const std::map<lm_pair,std::vector<std::complex<double>>>& partialSpectra,const Angular& angular);
         void computeAngleResolved(const std::map<lm_pair,std::vector<std::complex<double>>>& partialSpectra,std::map<std::pair<double, int>,double> phases);
-
         void computePhotoelectronSpectrum(int rank,const TISE& tise, const TDSE& tdse, const Angular& angular, const Basis& basis, const Box& box, const Atom& atom);
 
+        double computeBoundPopulation(int n_bound, int l_bound, const Vector& state,const TISE& tise,const Basis& basis,const Angular& angular);
+        void computeBoundDistribution(int rank,const Basis& basis, const Angular& angular, const TISE& tise, const TDSE& tdse);
         
        
         bool getProjOut() const {return projOutBound;}
@@ -52,6 +54,7 @@ class Observables
         int getNe() const {return Ne;}
         bool getPESStatus() const {return pesStatus;}
         bool getBlockStatus() const {return blockStatus;}
+        bool getBoundStatus() const {return boundStatus;}
 
         void printConfiguration(int rank);
 
@@ -65,4 +68,5 @@ class Observables
 
         bool pesStatus{};
         bool blockStatus{};
+        bool boundStatus{};
 };
