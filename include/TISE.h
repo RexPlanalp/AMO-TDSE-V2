@@ -10,13 +10,15 @@
 class TISE
 {
     public:
-        explicit TISE(const Input& input) 
+        explicit TISE(int rank,const Input& input) 
         : maxIter(input.getJSON().at("TISE").at("max_iter"))
         , tolerance(input.getJSON().at("TISE").at("tolerance"))
         , status{input.getJSON().at("TISE").at("status")}
         , outputPath{input.getJSON().at("TISE").at("outputPath")}
         , nmax(input.getJSON().at("TISE").at("nmax"))
-        {}
+        {
+            createDirectory("TISE",rank);
+        }
 
         PetscInt getMaxIter() const {return maxIter;}
         PetscReal getTol() const {return tolerance;}

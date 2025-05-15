@@ -11,7 +11,7 @@
 
 class TDSE
 {   public:
-        explicit TDSE(const Input& input)
+        explicit TDSE(int rank,const Input& input)
         : status{input.getJSON().at("TDSE").at("status")}
         , outputPath{input.getJSON().at("TDSE").at("outputPath")}
         , initialNLM{input.getJSON().at("TDSE").at("initialNLM").get<std::array<int,3>>()}
@@ -19,7 +19,9 @@ class TDSE
         , maxIter{input.getJSON().at("TDSE").at("maxIter")}
         , restart{input.getJSON().at("TDSE").at("restart")}
         , hhgStatus{input.getJSON().at("TDSE").at("HHG")}
-        {}
+        {
+            createDirectory("TDSE",rank);
+        }
 
         bool getStatus() const {return status;}
         const std::string& getOutputPath() const {return outputPath;}
