@@ -15,7 +15,7 @@ The simulation relies on PETSc and SLEPc for sparse, parallelized linear algebra
 
 ## Numerical Techniques
 
-There are a few numerical techniques that were employed that make this code stand out from other similar projects one can find online.
+There are a few numerical techniques that were employed that make this code stand out from other similar projects one can find online. In general, here are at least two concessions that must be made when solving the Schrodinger Equation numerically. The first is that we cannot use an infinite number of basis functions to perfectly represent our wavefunction, and we cannot use an infinitly large spacial grid. The first two techniques listed below address each of these issues.
 
 ### BSpline Basis Functions
 
@@ -29,7 +29,10 @@ A BSpline basis addresses this in two ways. First, by adjusting the knot vector 
 
 ### Exterior Complex Scaling
 
-There are at least two concessions that must be made when solving the Schrodinger Equation numerically. 
+Because we cannot simulate using an infinitely large spacial grid, a choice must be made of how large of a finite grid we should use. What we want to avoid then is the wavefunction hitting the boundary, causing unphysical reflections back towards the atom. There are many techniques that seek to address this issue. For example there are masking functions, where at each time step of the evolution the wavefunction past some cutoff distance is multiplied by a damping parameter to smoothly force it to zero. Another is the addition of complex absorbing potentials, which bake in suppression of the wavefunction past some distance into the time propagation. These have their drawbacks however, such as (smaller) reflections occuring at the cutoff point, or being unable to prevent reflections in time for sufficiently high energy wavepackets. 
+
+The best solution that I am aware of to address both of these issues is Exterior Complex Scaling. Exterior complex scaling rotates the position coordinate into the complex plane past some cutoff position. While the details are too lengthy to include here, the result is that you get perfect absorption with no spurious reflections from the cutoff position, and it adaptively suppresses based on wavepacket energy, preventing even the highest energy wavepackets from reaching the boundary. The implementation is also remarkably simple when using a BSpline basis making this approach even more attractive. 
+
 
 
 
