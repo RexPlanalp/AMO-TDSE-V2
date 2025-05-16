@@ -62,7 +62,7 @@ Note: This job was run starting in the 2s state with the laser frequency tuned t
 ![Alt text for your image](examples/bound/images/bound_pops.png)
 
 
-## 📄 Input File Guide (Template)
+## 📄 Input File Guide
 
 > **Note:** Values with units will be labeled with (au) for atomic units or (SI) for SI units.
 
@@ -70,7 +70,7 @@ Note: This job was run starting in the 2s state with the laser frequency tuned t
 
 ### 🔹 `Box`
 
-- `gridSize` —   Radial size of simulation box (au).
+- `gridSize` —   Radial size of the simulation box (au).
 - `gridSpacing` —  Radial step size used for plotting BSpline and Numerov method in PES
 
 ---
@@ -126,36 +126,37 @@ Note: This job was run starting in the 2s state with the laser frequency tuned t
 
 - `status` —   Whether to run TDSE or not 
 - `outputPath` —   Where to store output
-- `initialNLM` —   
-- `tolerance` —   
-- `maxIter` —   
-- `restart` —   
-- `HHG` —   
+- `initialNLM` —   Bound state to use as initial condition
+- `tolerance` —   relative tolerance when solving the linear system
+- `maxIter` —   Maximum iterations allows when converging
+- `restart` —   Max number of Krylov subspace vectors before restarting
+- `HHG` —   Whether to compute HHG values during propagation
 
 ---
 
 ### 🔹 `Observables.PES`
 
-- `status` —   
-- `Emin` —   
-- `Emax` —   
-- `slice` —   
-- `norm` —   
-- `threshold` —   
+- `status` —   Whether to compute photoelectron spectra after time propagation
+- `Emin` —   Minimum energy (must be nonzero)
+- `Emax` —   Maximum energy
+- `slice` —   Which plane to plot the angular distribution in
+- `norm` —   Whether to plot on a logarithmic or linear scale
+- `threshold` —   Determines the top % of values to plot
 
 ---
 
 ### 🔹 `Observables.Block`
 
-- `status` —   
-- `projOutBound` —   
-- `norm` —   
+- `status` —   Whether to compute block distribution after time propagation
+- `projOutBound` —   Whether to project out bound states before computing
+- `norm` —   Whether ot plot on a logarithmic or linear scale
 
 ---
 
 ### 🔹 `Observables.Bound`
 
-- `status` —   
+- `status` —   Whether to compute bound state populations after time propagation
+-  `exclude` —   Whether to exclude the initial state to avoid skewing the plot
  
 
 ## Dependencies and Installation
