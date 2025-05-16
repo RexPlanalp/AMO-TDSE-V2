@@ -61,6 +61,103 @@ Note: This job was run starting in the 2s state with the laser frequency tuned t
 
 ![Alt text for your image](examples/bound/images/bound_pops.png)
 
+
+## 📄 Input File Guide (Template)
+
+> **Note:** Values with units will be labeled with (au) for atomic units or (SI) for SI units.
+
+---
+
+### 🔹 `Box`
+
+- `gridSize` —   Radial size of simulation box (au).
+- `gridSpacing` —  Radial step size used for plotting BSpline and Numerov method in PES
+
+---
+
+### 🔹 `Angular`
+
+- `lmax` —   Maximum l value to expand up to 
+- `mmin` —   Minumum m value to expand up to
+- `mmax` —   Maximum m value to expand up to
+
+---
+
+### 🔹 `Basis`
+
+- `nbasis` —   Number of BSpline basis functions
+- `order` —   Order of BSpline basis functions
+- `spacing` —   Determines knot spacing. Currently supports linear
+- `R0r` —   Ratio which determines at which distance R0 is set to
+- `etar` —   Ratio which determines what angle of pi to rotate by
+
+---
+
+### 🔹 `Atom`
+
+- `potential` —   Atomic potential to solve for. Currently supports Hydrogen.
+
+---
+
+### 🔹 `Laser`
+
+- `N` —   Number of cycles of central frequency. 
+- `timeSpacing` —   Size of time step to use in time propagation (au)
+- `w` —   Centra frequency of laser (au)
+- `I` —   Intensity of laser (SI)
+- `polarization` —   Boolean polarization
+- `poynting` —   Boolean poynting
+- `ell` —   Elliptiity
+- `cepr` —   Ratio which determines what angle of pi the carrier envelope ophase is 
+
+---
+
+### 🔹 `TISE`
+
+- `status` —   Whether to run TISE or not
+- `outputPath` —   Where to store output
+- `nmax` —   Maximum energy to solve for
+- `tolerance` —   relative tolerance when solving for eigenvalues/eigenvectors
+- `max_iter` —   Maximum iterations allows when converging
+
+---
+
+### 🔹 `TDSE`
+
+- `status` —   Whether to run TDSE or not 
+- `outputPath` —   Where to store output
+- `initialNLM` —   
+- `tolerance` —   
+- `maxIter` —   
+- `restart` —   
+- `HHG` —   
+
+---
+
+### 🔹 `Observables.PES`
+
+- `status` —   
+- `Emin` —   
+- `Emax` —   
+- `slice` —   
+- `norm` —   
+- `threshold` —   
+
+---
+
+### 🔹 `Observables.Block`
+
+- `status` —   
+- `projOutBound` —   
+- `norm` —   
+
+---
+
+### 🔹 `Observables.Bound`
+
+- `status` —   
+ 
+
 ## Dependencies and Installation
 
 ### Dependencies
