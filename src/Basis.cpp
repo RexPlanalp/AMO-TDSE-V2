@@ -141,20 +141,6 @@ std::complex<double> Basis::integrateMatrixElement(int i, int j,MatrixIntegrand 
     return total;
 }
 
-// void Basis::printConfiguration(int rank)
-// {
-//     if (rank == 0)
-//     {
-//         std::cout << std::setfill('\\') << std::setw(24) << "" << "\n\n";
-//         std::cout << "Basis Configuration: " << "\n\n";
-//         std::cout << std::setfill('\\') << std::setw(24) << "" << "\n\n";
-        
-//         std::cout << "nbasis: " << getNbasis() <<  "\n\n";
-//         std::cout << "order: " << getOrder() <<  "\n\n";
-//         std::cout << "degree: " << getDegree() <<  "\n\n";
-//         std::cout << "spacing: " << getSpacing() <<  "\n\n";
-//     }
-// }
 
 // void Basis::dumpTo(const Box& box, const std::string& directory, int rank)
 // {

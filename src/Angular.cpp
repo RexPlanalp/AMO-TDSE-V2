@@ -100,20 +100,6 @@ void Angular::buildOdd()
     }
 }
 
-// void Angular::printConfiguration(int rank)
-// {
-//     if (rank == 0)
-//     {   
-//         std::cout << std::setfill('\\') << std::setw(24) << "" << "\n\n";
-//         std::cout << "Angular Configuration: " << "\n\n";
-//         std::cout << std::setfill('\\') << std::setw(24) << "" << "\n\n";
-
-//         std::cout << "lmax: " << getLmax() << "\n\n";
-//         std::cout << "mmax: " << getMmax() << "\n\n";
-//         std::cout << "mmin: " << getMmin() << "\n\n";
-//         std::cout << "nlm: "  << getNlm() << "\n\n";
-//     }
-// }
 
 
 // void Angular::dumpTo(const std::string& directory, int rank)

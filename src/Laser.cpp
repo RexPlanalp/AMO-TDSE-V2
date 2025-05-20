@@ -80,29 +80,3 @@ double Laser::operator[](int i) const
 //         outFile.close();
 //     }
 // }
-
-// void Laser::printConfiguration(int rank)
-// {
-//     if (rank == 0)
-//     {
-//         std::cout << std::setfill('\\') << std::setw(24) << "" << "\n\n";
-//         std::cout << "Laser Configuration: " << "\n\n";
-//         std::cout << std::setfill('\\') << std::setw(24) << "" << "\n\n";
-        
-//         std::cout << "N_cycles: " << getN() << "\n\n";
-//         std::cout << "dt: " << getTimeSpacing() << "\n\n";
-//         std::cout << "tmax: " << getTmax() << "\n\n";
-//         std::cout << "Nt: " << getNt() << "\n\n";
-//         std::cout << "w: " << getW() << "\n\n";
-//         std::cout << "I: " << getI() << "\n\n";
-//         std::cout << "A_0: " << getA0() << "\n\n";
-//         std::cout << "ell: " << getEll() << "\n\n";
-//         std::cout << "CEP: " << getCEP() << "\n\n";
-//         std::cout << "polarization: " << getPolarization()[0] << " " << getPolarization()[1] << " " << getPolarization()[2] <<  "\n\n";
-//         std::cout << "poynting: " << getPoynting()[0] << " " << getPoynting()[1] << " " << getPoynting()[2] <<  "\n\n";
-//         std::cout << "ellipticity: " << getEllipticity()[0] << " " << getEllipticity()[1] << " " << getEllipticity()[2] <<  "\n\n";
-//         std::cout << "components: " << getComponents()[0] << " " << getComponents()[1] << " " << getComponents()[2] <<  "\n\n";
-
-
-//     }
-// }

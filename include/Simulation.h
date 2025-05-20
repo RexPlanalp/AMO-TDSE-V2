@@ -44,17 +44,7 @@ class Simulation
         , m_tiseOutput{input.getJSON().at("Simulation").at("tiseOutput")}
         , m_tdseOutput{input.getJSON().at("Simulation").at("tdseOutput")}
         {   
-            createDirectory(getMISCOutput(),getRank());
-            createDirectory(getIMAGEOutput(),getRank());
-
-            if (getTISEStatus())
-            {
-                createDirectory(getTISEOutput(),getRank());
-            }
-            if (getTDSEStatus())
-            {
-                createDirectory(getTDSEOutput(),getRank());
-            }
+            buildDirectories();
         }
         
         const SimulationContext& getCtx() const {return m_ctx;}
@@ -109,6 +99,8 @@ class Simulation
         std::string m_TDSEoutputName = "psiFinal";
 
         // Private Methods
+        void buildDirectories();
+
         void populateAngularMatrix(AngularMatrixType Type, Matrix& matrix);
         void populateRadialMatrix(RadialMatrixType Type,Matrix& matrix,bool use_ecs);
 
@@ -125,8 +117,6 @@ class Simulation
         Matrix kroneckerProduct(const Matrix& A, const Matrix& B, PetscInt nnz_A, PetscInt nnz_B);
 
 
-
-
         void projectOutBoundStates(Vector& state, const Matrix& matrix);
 
         CoulombWave computeCoulombWave(double E, int l);
@@ -137,4 +127,19 @@ class Simulation
         
         double computeBoundPopulation(int n_bound, int l_bound, const Vector& state);
        
-};      
+};   
+
+
+inline std::ostream& operator<<(std::ostream& out, const Simulation& simulation)
+{
+    out << std::setfill('\\') << std::setw(24) << "" << "\n\n";
+    out << "Simulation Configuration: " << "\n\n";
+    out << std::setfill('\\') << std::setw(24) << "" << "\n\n";
+    
+    out << "TISE: " << simulation.getTISEStatus() << "\n\n";
+    out << "TDSE: " << simulation.getTDSEStatus() << "\n\n";
+    out << "HHG: " << simulation.getHHGStatus() << "\n\n";
+    out << "BLOCK: " << simulation.getBLOCKStatus() << "\n\n";
+    out << "PES: " << simulation.getPESStatus() << "\n\n";
+    out << "BOUND: " << simulation.getBOUNDStatus() << "\n\n";
+}

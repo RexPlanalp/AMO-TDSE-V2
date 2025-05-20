@@ -80,3 +80,27 @@ class Laser
         void buildVectors();
 
 };
+
+
+
+inline std::ostream& operator<<(std::ostream& out, const Laser& laser)
+{
+
+        out << std::setfill('\\') << std::setw(24) << "" << "\n\n";
+        out << "Laser Configuration: " << "\n\n";
+        out << std::setfill('\\') << std::setw(24) << "" << "\n\n";
+        
+        out << "Ncycles: " << laser.getN() << "\n\n";
+        out << "dt: " << laser.getTimeSpacing() << "\n\n";
+        out << "tmax: " << laser.getTmax() << "\n\n";
+        out << "Nt: " << laser.getNt() << "\n\n";
+        out << "w: " << laser.getW() << "\n\n";
+        out << "I: " << laser.getI() << "\n\n";
+        out << "A_0: " << laser.getA0() << "\n\n";
+        out << "ell: " << laser.getEll() << "\n\n";
+        out << "CEP: " << laser.getCEP() << "\n\n";
+        out << "polarization: " << laser.getPolarization()[0] << " " << laser.getPolarization()[1] << " " << laser.getPolarization()[2] <<  "\n\n";
+        out << "poynting: " << laser.getPoynting()[0] << " " << laser.getPoynting()[1] << " " << laser.getPoynting()[2] <<  "\n\n";
+        out << "ellipticity: " << laser.getEllipticity()[0] << " " << laser.getEllipticity()[1] << " " << laser.getEllipticity()[2] <<  "\n\n";
+        out << "components: " << laser.getComponents()[0] << " " << laser.getComponents()[1] << " " << laser.getComponents()[2] <<  "\n\n";
+}

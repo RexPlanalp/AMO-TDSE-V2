@@ -79,6 +79,19 @@ class Basis
 
 
 
+inline std::ostream& operator<<(std::ostream&, const Basis& basis)
+{
+    std::cout << std::setfill('\\') << std::setw(24) << "" << "\n\n";
+    std::cout << "Basis Configuration: " << "\n\n";
+    std::cout << std::setfill('\\') << std::setw(24) << "" << "\n\n";
+    
+    std::cout << "nbasis: " << basis.getNbasis() <<  "\n\n";
+    std::cout << "order: " << gbasis.etOrder() <<  "\n\n";
+    std::cout << "degree: " << basis.getDegree() <<  "\n\n";
+    std::cout << "spacing: " << basis.getSpacing() <<  "\n\n";
+}
+
+
 
 
 

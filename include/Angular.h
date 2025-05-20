@@ -64,6 +64,19 @@ class Angular
 
 
 
+inline std::ostream& operator<<(std::ostream& out, const Angular& angular)
+{
+    out << std::setfill('\\') << std::setw(24) << "" << "\n\n";
+    out << "Angular Configuration: " << "\n\n";
+    out << std::setfill('\\') << std::setw(24) << "" << "\n\n";
+
+    out << "lmax: " << angular.getLmax() << "\n\n";
+    out << "mmax: " << angular.getMmax() << "\n\n";
+    out << "mmin: " << angular.getMmin() << "\n\n";
+    out << "nlm: "  << angular.getNblocks() << "\n\n";
+}
+
+
 
 
 

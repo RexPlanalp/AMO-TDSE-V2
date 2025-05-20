@@ -37,3 +37,14 @@ class Box
         void buildNr();
         void buildPositions();
 };
+
+inline std::ostream& operator<<(std::ostream& out, const Box& box) 
+{ 
+    out << std::setfill('\\') << std::setw(24) << "" << "\n\n";
+    out << "Box Configuration: " << "\n\n";
+    out << std::setfill('\\') << std::setw(24) << "" << "\n\n";
+    
+    out << "rmax: " << box.getGridSize() << "\n\n";
+    out << "dr: " << box.getGridSpacing() << "\n\n";
+    out << "Nr: " << box.getNr() << "\n\n";
+}

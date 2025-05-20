@@ -36,9 +36,24 @@ int main(int argc, char* argv[])
     Basis basis{input,box};
     Observables observables{input};
 
+    
     SimulationContext ctx = {tise,tdse,box,laser,angular,atom,basis,observables};
 
     Simulation simulation{size,rank,communicator,input,ctx};
+
+    if (rank == 0)
+    {   
+        std::cout << tise << '\n';
+        std::cout << tdse << '\n';
+        std::cout << box << '\n';
+        std::cout << laser << '\n';
+        std::cout << angular << '\n';
+        std::cout << atom << '\n';
+        std::cout << basis << '\n';
+        std::cout << observables << '\n';
+        std::cout << simulation << '\n';
+    }
+
 
     simulation.solveTISE();
     simulation.solveTDSE();

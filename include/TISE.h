@@ -30,3 +30,15 @@ class TISE
         PetscReal m_tolerance{};
         PetscInt m_nmax{};
 };
+
+
+inline std::ostream& operator<<(std::ostream& out, const TISE& tise)
+{
+    out << std::setfill('\\') << std::setw(24) << "" << "\n\n";
+    out << "TISE Configuration: " << "\n\n";
+    out << std::setfill('\\') << std::setw(24) << "" << "\n\n";
+        
+    out << "maxIter: " << tise.getMaxIter() << "\n\n";
+    out << "Tolerance: " << tise.getTol() << "\n\n";
+    out << "nmax: " << tise.getNmax() << "\n\n";
+}

@@ -5,6 +5,22 @@
 #include "PetscWrappers/PetscKSP.h"
 #include "PetscWrappers/PetscIS.h"
 
+void Simulation::buildDirectories()
+{
+    createDirectory(getMISCOutput(),getRank());
+    createDirectory(getIMAGEOutput(),getRank());
+
+    if (getTISEStatus())
+    {
+        createDirectory(getTISEOutput(),getRank());
+    }
+    if (getTDSEStatus())
+    {
+        createDirectory(getTDSEOutput(),getRank());
+    }
+}
+
+
 void Simulation::solveTISE()
 {   
     // If we are not running the TISE, exit
