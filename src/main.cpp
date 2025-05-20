@@ -40,6 +40,7 @@ int main(int argc, char* argv[])
     Simulation simulation{size,rank,communicator,input,ctx};
 
     simulation.solveTISE();
+    simulation.solveTDSE();
 
 
 

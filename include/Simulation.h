@@ -42,6 +42,7 @@ class Simulation
         const SimulationContext& getCtx() const {return m_ctx;}
         PetscMPIInt getRank() const {return m_rank;}
         const std::string& getTISEOutput() const {return m_tiseOutput;}
+        const std::string& getTDSEOutput() const {return m_tdseOutput;}
 
 
         // Public Methods
@@ -88,6 +89,7 @@ class Simulation
         Matrix constructYHHG();
         Matrix constructZHHG();
         Matrix constructAtomicS();
+        void computeHHG(std::ofstream& hhgFile,int timeIdx,const Vector& state, const Matrix& XHHG, const Matrix& YHHG, const Matrix& ZHHG);
 
         Matrix kroneckerProduct(const Matrix& A, const Matrix& B, PetscInt nnz_A, PetscInt nnz_B);
 };      

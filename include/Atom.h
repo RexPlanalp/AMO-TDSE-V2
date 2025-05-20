@@ -5,6 +5,8 @@
 #include "Potentials.h"
 #include "MatrixElements.h"
 
+enum class RadialMatrixType;
+
 class Atom {
     public:
 

@@ -1,13 +1,7 @@
 #pragma once
 
 #include "Input.h"
-#include "petsc.h"
-#include "PetscWrappers/PetscVec.h"
-#include "TISE.h"
-#include "Basis.h"
-
-
-#include "PetscWrappers/PetscMat.h"
+#include  "petsc.h"
 
 class TDSE
 {   

@@ -2,6 +2,7 @@
 
 #include "PetscWrappers/PetscHDF5.h"
 #include "PetscWrappers/PetscOperators.h"
+#include "PetscWrappers/PetscKSP.h"
 
 void Simulation::solveTISE()
 {   
@@ -262,4 +263,486 @@ void Simulation::populateRadialMatrix(RadialMatrixType Type,Matrix& matrix,bool 
         }
     }
     matrix.assemble();
+}
+
+
+Matrix Simulation::kroneckerProduct(const Matrix& A, const Matrix& B,PetscInt nnz_A, PetscInt nnz_B) 
+{
+    // Get matrix dimensions
+    PetscInt am, an, bm, bn;
+    MatGetSize(A.get(), &am, &an); 
+    MatGetSize(B.get(), &bm, &bn); 
+
+    // Compute dimensions of Kronecker product matrix
+    PetscInt cm = am * bm;
+    PetscInt cn = an * bn;
+
+    // Access internal csr data of A and B
+    const PetscInt *ai, *aj, *bi, *bj;
+    const PetscScalar *aa, *ba;
+    MatGetRowIJ(A.get(), 0, PETSC_FALSE, PETSC_FALSE, &am, &ai, &aj, NULL);
+    MatGetRowIJ(B.get(), 0, PETSC_FALSE, PETSC_FALSE, &bm, &bi, &bj, NULL);
+    MatSeqAIJGetArrayRead(A.get(), &aa); 
+    MatSeqAIJGetArrayRead(B.get(), &ba); 
+
+    // Estimate upper bound for nnz_per row
+    PetscInt nnz_C = nnz_A * nnz_B;
+
+
+    // Create parallel matrix C
+    auto C = Matrix{PETSC_COMM_WORLD,PETSC_DETERMINE,PETSC_DETERMINE,cm,cn,nnz_C};
+
+    // Preallocate matrix C for local rows
+    PetscInt local_nnz = 0;
+    PetscInt *ci = new PetscInt[C.getEnd() - C.getStart() + 1];
+    PetscInt *cj = nullptr;
+    PetscScalar *cv = nullptr;
+
+
+    ci[0] = 0;
+    for (PetscInt iC = C.getStart(); iC < C.getEnd(); ++iC) {
+        PetscInt iA = iC / bm; // Row index in A
+        PetscInt iB = iC % bm; // Row index in B
+
+
+        for (PetscInt n = ai[iA]; n < ai[iA + 1]; ++n) {
+            for (PetscInt q = bi[iB]; q < bi[iB + 1]; ++q) {
+                local_nnz++;
+            }
+        }
+
+
+        ci[iC - C.getStart() + 1] = local_nnz;
+    }
+
+
+    cj = new PetscInt[local_nnz];
+    cv = new PetscScalar[local_nnz];
+
+
+    local_nnz = 0;
+    for (PetscInt iC = C.getStart(); iC < C.getEnd(); ++iC) {
+        PetscInt iA = iC / bm;
+        PetscInt iB = iC % bm;
+
+
+        for (PetscInt n = ai[iA]; n < ai[iA + 1]; ++n) {
+            PetscInt colA = aj[n];
+            PetscScalar valA = aa[n];
+
+
+            for (PetscInt q = bi[iB]; q < bi[iB + 1]; ++q) {
+                cj[local_nnz] = colA * bn + bj[q];
+                cv[local_nnz] = valA * ba[q];
+                local_nnz++;
+            }
+        }
+    }
+
+    
+
+    MatMPIAIJSetPreallocationCSR(C.get(), ci, cj, cv); 
+
+
+    // Clean up
+    delete[] ci;
+    delete[] cj;
+    delete[] cv;
+
+
+    MatRestoreRowIJ(A.get(), 0, PETSC_FALSE, PETSC_FALSE, &am, &ai, &aj,nullptr); 
+    MatRestoreRowIJ(B.get(), 0, PETSC_FALSE, PETSC_FALSE, &bm, &bi, &bj,nullptr); 
+    MatSeqAIJRestoreArrayRead(A.get(), &aa); 
+    MatSeqAIJRestoreArrayRead(B.get(), &ba); 
+
+
+    // Assemble the matrix
+    C.assemble();
+
+    return C;
+}
+
+
+
+Vector Simulation::loadInitialState()
+{   
+    // Create a zero initialized vector to hold the initialte state
+    auto initialState = Vector{PETSC_COMM_WORLD,PETSC_DETERMINE,getCtx().basis.getNbasis() * getCtx().angular.getNblocks()};
+    initialState.setConstant(0.0);
+
+    // Define group name and vector name to read vector from hdf5
+    std::string eigenvectorGroup = "eigenvectors";
+    std::string vectorName = std::string("psi_") + std::to_string(getCtx().tdse.getInitialN()) + std::string("_")  + std::to_string(getCtx().tdse.getInitialL());
+
+    // Create hdf5 viewer for reading from file
+    // Read in the vector 
+    std::string filePath = getTISEOutput() + std::string("/tise.h5");
+    PetscHDF5 viewer{PETSC_COMM_SELF, filePath, FILE_MODE_READ};
+    auto tiseOutput = viewer.loadVector(eigenvectorGroup ,vectorName,getCtx().basis.getNbasis());
+
+
+    // Extract tiseOutput to easily readable array
+    const PetscScalar* tiseOutputArray;
+    VecGetArrayRead(tiseOutput.get(), &tiseOutputArray);
+
+    int blockIdx = getCtx().angular.getLMMap().at(std::make_pair(getCtx().tdse.getInitialL(),getCtx().tdse.getInitialM()));
+    for (int localIdx = 0; localIdx < getCtx().basis.getNbasis(); ++localIdx)
+    {
+        int globalIdx = blockIdx * getCtx().basis.getNbasis() + localIdx;
+
+        if (globalIdx >= initialState.getStart() && globalIdx < initialState.getEnd())
+        {   
+            initialState.setValue(globalIdx, tiseOutputArray[localIdx]);
+        }
+    }
+    initialState.assemble();
+
+    VecRestoreArrayRead(tiseOutput.get(), &tiseOutputArray);
+
+    return initialState;
+}
+
+
+std::pair<Matrix,Matrix> Simulation::constructAtomicInteraction()
+{
+    Matrix I{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,getCtx().angular.getNblocks(),getCtx().angular.getNblocks(), 1};
+    for (int blockIdx = 0; blockIdx < getCtx().angular.getNblocks(); ++blockIdx)
+    {
+        I.setValue(blockIdx, blockIdx, 1.0);
+    }
+    I.assemble();
+
+ 
+    auto totalLeft = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,getCtx().basis.getNbasis(),getCtx().basis.getNbasis(),2*getCtx().basis.getDegree() + 1};
+    populateRadialMatrix(RadialMatrixType::S,totalLeft,true);
+   
+    auto totalRight = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,getCtx().basis.getNbasis(),getCtx().basis.getNbasis(),2*getCtx().basis.getDegree() + 1};
+    populateRadialMatrix(RadialMatrixType::S,totalRight,true);
+
+    auto K = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,getCtx().basis.getNbasis(),getCtx().basis.getNbasis(),2*getCtx().basis.getDegree() + 1};
+    populateRadialMatrix(RadialMatrixType::K,K,true);
+    
+    auto Pot = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,getCtx().basis.getNbasis(),getCtx().basis.getNbasis(),2*getCtx().basis.getDegree() + 1};
+    populateRadialMatrix(getCtx().atom.getType(),Pot,true);
+
+    totalLeft.AXPY(PETSC_i * getCtx().laser.getTimeSpacing() / 2.0, K, SAME_NONZERO_PATTERN);
+    totalLeft.AXPY(PETSC_i * getCtx().laser.getTimeSpacing() / 2.0, Pot, SAME_NONZERO_PATTERN);
+
+    totalRight.AXPY(-PETSC_i * getCtx().laser.getTimeSpacing() / 2.0, K, SAME_NONZERO_PATTERN);
+    totalRight.AXPY(-PETSC_i * getCtx().laser.getTimeSpacing() / 2.0, Pot, SAME_NONZERO_PATTERN);
+
+
+    auto firstTermLeft = kroneckerProduct(I,totalLeft,1.0,2*getCtx().basis.getDegree() + 1);
+    auto firstTermRight = kroneckerProduct(I,totalRight,1.0,2*getCtx().basis.getDegree() + 1);
+
+    Matrix modifiedI{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,getCtx().angular.getNblocks(),getCtx().angular.getNblocks(), 1};
+    for (int blockIdx = 0; blockIdx < getCtx().angular.getNblocks(); ++blockIdx)
+    {   
+        int l{};
+        int m{};
+        std::tie(l,m) = getCtx().angular.getBlockMap().at(blockIdx);
+        modifiedI.setValue(blockIdx, blockIdx, l*(l+1) / 2.0);
+    }
+    modifiedI.assemble();
+
+    auto centrifugalLeft = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,getCtx().basis.getNbasis(),getCtx().basis.getNbasis(),2*getCtx().basis.getDegree() + 1};
+    populateRadialMatrix(RadialMatrixType::Invr2,centrifugalLeft,true);
+    
+    auto centrifugalRight = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,getCtx().basis.getNbasis(),getCtx().basis.getNbasis(),2*getCtx().basis.getDegree() + 1};
+    populateRadialMatrix(RadialMatrixType::Invr2,centrifugalRight,true);
+
+    centrifugalLeft *= PETSC_i * getCtx().laser.getTimeSpacing() / 2.0;
+    centrifugalRight *= -PETSC_i * getCtx().laser.getTimeSpacing() / 2.0;
+
+    auto secondTermLeft = kroneckerProduct(modifiedI, centrifugalLeft, 1.0,2*getCtx().basis.getDegree() + 1);
+    auto secondTermRight = kroneckerProduct(modifiedI, centrifugalRight, 1.0,2*getCtx().basis.getDegree() + 1);
+
+    firstTermLeft.AXPY(1.0, secondTermLeft, SAME_NONZERO_PATTERN);
+    firstTermRight.AXPY(1.0, secondTermRight, SAME_NONZERO_PATTERN);
+
+    return std::make_pair(firstTermLeft,firstTermRight);
+}
+
+
+Matrix Simulation::constructZInteraction()
+{
+    auto Der = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,getCtx().basis.getNbasis(),getCtx().basis.getNbasis(),2*getCtx().basis.getDegree() + 1};
+    populateRadialMatrix(RadialMatrixType::Der,Der,true);
+
+
+    auto Invr = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,getCtx().basis.getNbasis(),getCtx().basis.getNbasis(),2*getCtx().basis.getDegree() + 1};
+    populateRadialMatrix(RadialMatrixType::Invr,Invr,true);
+
+    Matrix Hlm_z_1{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,getCtx().angular.getNblocks(),getCtx().angular.getNblocks(),2};
+    populateAngularMatrix(AngularMatrixType::Z_INT_1,Hlm_z_1);
+
+    Matrix Hlm_z_2{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,getCtx().angular.getNblocks(),getCtx().angular.getNblocks(),2};
+    populateAngularMatrix(AngularMatrixType::Z_INT_2,Hlm_z_2);
+    
+    auto ZInteraction = kroneckerProduct(Hlm_z_1, Der, 2, 2*getCtx().basis.getDegree() + 1);
+    ZInteraction.AXPY(1.0,kroneckerProduct(Hlm_z_2, Invr, 2, 2*getCtx().basis.getDegree() + 1),SAME_NONZERO_PATTERN);
+
+    return ZInteraction;
+}
+
+std::pair<Matrix,Matrix> Simulation::constructXYInteraction()
+{
+    auto Der = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,getCtx().basis.getNbasis(),getCtx().basis.getNbasis(),2*getCtx().basis.getDegree() + 1};
+    populateRadialMatrix(RadialMatrixType::Der,Der,true);
+
+    auto Invr = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,getCtx().basis.getNbasis(),getCtx().basis.getNbasis(),2*getCtx().basis.getDegree() + 1};
+    populateRadialMatrix(RadialMatrixType::Invr,Invr,true);
+
+    // Compute Hxy_1
+    Matrix Hlm_xy_1{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,getCtx().angular.getNblocks(),getCtx().angular.getNblocks(),2};
+    populateAngularMatrix(AngularMatrixType::XY_INT_1,Hlm_xy_1);
+
+    Matrix Hlm_xy_2{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,getCtx().angular.getNblocks(),getCtx().angular.getNblocks(),2};
+    populateAngularMatrix(AngularMatrixType::XY_INT_2,Hlm_xy_2);
+
+    auto Hxy_1 = kroneckerProduct(Hlm_xy_1,Invr,2,2*getCtx().basis.getDegree() + 1);
+    Hxy_1.AXPY(1.0,kroneckerProduct(Hlm_xy_2,Der,2, 2*getCtx().basis.getDegree() + 1),SAME_NONZERO_PATTERN);
+
+    // Construct Hxy_2
+    Matrix Hlm_xy_3{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,getCtx().angular.getNblocks(),getCtx().angular.getNblocks(),2};
+    populateAngularMatrix(AngularMatrixType::XY_INT_3,Hlm_xy_3);
+
+    Matrix Hlm_xy_4{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,getCtx().angular.getNblocks(),getCtx().angular.getNblocks(),2};
+    populateAngularMatrix(AngularMatrixType::XY_INT_4,Hlm_xy_4);
+
+    auto Hxy_2 = kroneckerProduct(Hlm_xy_3,Invr,2,2*getCtx().basis.getDegree() + 1);
+    Hxy_2.AXPY(1.0,kroneckerProduct(Hlm_xy_4,Der,2,2*getCtx().basis.getDegree()+1),SAME_NONZERO_PATTERN);
+
+    return std::make_pair(Hxy_1,Hxy_2);
+}
+
+Matrix Simulation::constructAtomicS()
+{
+    Matrix I{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,getCtx().angular.getNblocks(),getCtx().angular.getNblocks(), 1};
+    for (int blockIdx = 0; blockIdx < getCtx().angular.getNblocks(); ++blockIdx)
+    {
+        I.setValue(blockIdx, blockIdx, 1.0);
+    }
+    I.assemble();
+
+    auto S = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,getCtx().basis.getNbasis(),getCtx().basis.getNbasis(),2*getCtx().basis.getDegree() + 1};
+    populateRadialMatrix(RadialMatrixType::S,S,true);
+    
+    return kroneckerProduct(I,S,1,2*getCtx().basis.getDegree() + 1);
+}
+
+Matrix Simulation::constructXHHG()
+{
+    auto Invr2 = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,getCtx().basis.getNbasis(),getCtx().basis.getNbasis(),2*getCtx().basis.getDegree() + 1};
+    populateRadialMatrix(RadialMatrixType::Invr2,Invr2,false);
+
+    Matrix Hlm_hhg_x{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,getCtx().angular.getNblocks(),getCtx().angular.getNblocks(),4};
+    populateAngularMatrix(AngularMatrixType::X_HHG,Hlm_hhg_x);
+
+    return kroneckerProduct(Hlm_hhg_x,Invr2,4,2*getCtx().basis.getDegree() + 1);
+}
+
+Matrix Simulation::constructYHHG()
+{
+    auto Invr2 = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,getCtx().basis.getNbasis(),getCtx().basis.getNbasis(),2*getCtx().basis.getDegree() + 1};
+    populateRadialMatrix(RadialMatrixType::Invr2,Invr2,false);
+
+    Matrix Hlm_hhg_y{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,getCtx().angular.getNblocks(),getCtx().angular.getNblocks(),4};
+    populateAngularMatrix(AngularMatrixType::Y_HHG,Hlm_hhg_y);
+
+    return kroneckerProduct(Hlm_hhg_y,Invr2,4,2*getCtx().basis.getDegree() + 1);
+}
+
+Matrix Simulation::constructZHHG()
+{
+    auto Invr2 = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,getCtx().basis.getNbasis(),getCtx().basis.getNbasis(),2*getCtx().basis.getDegree() + 1};
+    populateRadialMatrix(RadialMatrixType::Invr2,Invr2,false);
+
+    Matrix Hlm_hhg_z{PETSC_COMM_SELF,PETSC_DETERMINE,PETSC_DETERMINE,getCtx().angular.getNblocks(),getCtx().angular.getNblocks(),4};
+    populateAngularMatrix(AngularMatrixType::Z_HHG,Hlm_hhg_z);
+
+    return kroneckerProduct(Hlm_hhg_z,Invr2,2,2*getCtx().basis.getDegree() + 1);
+}
+
+void Simulation::computeHHG(std::ofstream& hhgFile,int timeIdx,const Vector& state, const Matrix& XHHG, const Matrix& YHHG, const Matrix& ZHHG)
+{
+    if (getHHGStatus())
+    {   
+        std::complex<double> xVal{};
+        std::complex<double> yVal{};
+        std::complex<double> zVal{};
+
+        if (getCtx().laser.getComponents()[0])
+        {
+            xVal = norm(state,XHHG);
+            xVal = xVal * xVal;
+        }
+        if (getCtx().laser.getComponents()[1])
+        {
+            yVal = norm(state,YHHG);
+            yVal = yVal  * yVal ;
+        }
+        if (getCtx().laser.getComponents()[2])
+        {
+            zVal = norm(state,ZHHG);
+            zVal = zVal * zVal;
+        }
+
+        if (getRank()== 0)
+        {
+            hhgFile << timeIdx*getCtx().laser.getTimeSpacing()  << " " << xVal.real() << " "  << getCtx().laser.A(timeIdx*getCtx().laser.getTimeSpacing(),0) << " " << yVal.real() << " " << getCtx().laser.A(timeIdx*getCtx().laser.getTimeSpacing(),1)   << " " << zVal.real() << " " << getCtx().laser.A(timeIdx*getCtx().laser.getTimeSpacing(),2)  << "\n";
+        }
+    }
+}
+
+
+
+
+void Simulation::solveTDSE()
+{
+    if (!getTDSEStatus())
+    {
+        return;
+    }
+
+    // Prepate Matrices/Input state for solver
+    auto start_setup = MPI_Wtime();
+
+    auto initialState = loadInitialState();
+
+    auto atomicS = constructAtomicS();
+
+    auto normVal = norm(initialState,atomicS);
+    PetscPrintf(PETSC_COMM_WORLD,"Initial Norm: (%.15f , %.15f) \n",normVal.real(),normVal.imag()); 
+
+    Matrix interactionLeft{};
+    Matrix interactionRight{};
+    std::tie(interactionLeft,interactionRight) = constructAtomicInteraction();
+
+    Matrix ZInteraction{};
+    Matrix ZHHG{};
+    if (getCtx().laser.getComponents()[2])
+    {
+        ZInteraction = constructZInteraction();
+        if (getHHGStatus())
+        {
+            ZHHG = constructZHHG();
+        }
+    }
+
+    Matrix Hxy_1{};
+    Matrix Hxy_2{};
+    Matrix XHHG{};
+    Matrix YHHG{};
+    if ((getCtx().laser.getComponents()[0]) || (getCtx().laser.getComponents()[1]))
+    {
+        std::tie(Hxy_1,Hxy_2) = constructXYInteraction();
+
+        if (getHHGStatus() && getCtx().laser.getComponents()[0])
+        {
+            XHHG = constructXHHG();
+        }
+        if (getHHGStatus() && getCtx().laser.getComponents()[1])
+        {
+            YHHG = constructYHHG();
+        }
+    }
+
+    PetscScalar alpha = PETSC_i * getCtx().laser.getTimeSpacing() / 2.0;
+
+    auto end_setup = MPI_Wtime();
+    PetscPrintf(PETSC_COMM_WORLD,"Time to setup TDSE: %f \n", end_setup-start_setup);
+
+    // Setup HHG if necessary
+    std::ofstream hhgFile;
+    if (getHHGStatus() && (getRank() == 0))
+    {
+        hhgFile.open(std::string("misc/") + std::string("hhg_data.txt"));
+        hhgFile << std::fixed << std::setprecision(15); 
+    }
+
+
+    // Solve TDSE
+    KSPSolver ksp(PETSC_COMM_WORLD,getCtx().tdse.getMaxIter(),getCtx().tdse.getTol(),getCtx().tdse.getRestart());
+    ksp.setOperators(interactionLeft);
+
+    auto rhs = Vector{};
+    interactionRight.setupVector(rhs);
+
+    auto start_solve = MPI_Wtime();
+    for (int timeIdx = 0; timeIdx < getCtx().laser.getNt(); ++timeIdx)
+    {
+
+        computeHHG(hhgFile,timeIdx,initialState,XHHG,YHHG,ZHHG);
+
+
+        double tNow = timeIdx * getCtx().laser.getTimeSpacing() + getCtx().laser.getTimeSpacing() / 2.0;
+        
+        if (timeIdx == 0)
+        {
+            if (getCtx().laser.getComponents()[2])
+            {
+                auto Az = getCtx().laser.A(tNow,2);
+
+                interactionLeft.AXPY(Az * alpha, ZInteraction,DIFFERENT_NONZERO_PATTERN);
+                interactionRight.AXPY(-Az * alpha, ZInteraction,DIFFERENT_NONZERO_PATTERN);
+            }
+            if ((getCtx().laser.getComponents()[0]) || (getCtx().laser.getComponents()[1]))
+            {
+                auto deltaAtilde = (getCtx().laser.A(tNow,0) + PETSC_i * getCtx().laser.A(tNow,1));
+                auto deltaAtildeStar = (getCtx().laser.A(tNow,0) - PETSC_i * getCtx().laser.A(tNow,1));
+
+                interactionLeft.AXPY(alpha * deltaAtildeStar,Hxy_1,DIFFERENT_NONZERO_PATTERN);
+                interactionRight.AXPY(-alpha * deltaAtildeStar,Hxy_1,DIFFERENT_NONZERO_PATTERN);
+
+                interactionLeft.AXPY(alpha*deltaAtilde,Hxy_2,DIFFERENT_NONZERO_PATTERN);
+                interactionRight.AXPY(-alpha*deltaAtilde,Hxy_2,DIFFERENT_NONZERO_PATTERN);
+            }
+        }
+        else
+        {   
+            double tPrev = (timeIdx - 1) * getCtx().laser.getTimeSpacing() + getCtx().laser.getTimeSpacing() / 2.0;
+
+            if (getCtx().laser.getComponents()[2])
+            {
+                auto deltaAz = (getCtx().laser.A(tNow,2) - getCtx().laser.A(tPrev,2));
+
+                interactionLeft.AXPY( deltaAz * alpha, ZInteraction,SUBSET_NONZERO_PATTERN);
+                interactionRight.AXPY( -deltaAz * alpha, ZInteraction,SUBSET_NONZERO_PATTERN);
+            }
+            if ((getCtx().laser.getComponents()[0]) || (getCtx().laser.getComponents()[1]))
+            {
+                auto deltaAtilde = ((getCtx().laser.A(tNow,0) + PETSC_i * getCtx().laser.A(tNow,1)) - (getCtx().laser.A(tPrev,0) + PETSC_i * getCtx().laser.A(tPrev,1)));
+                auto deltaAtildeStar = ((getCtx().laser.A(tNow,0) - PETSC_i * getCtx().laser.A(tNow,1)) - (getCtx().laser.A(tPrev,0) - PETSC_i * getCtx().laser.A(tPrev,1)));
+
+                interactionLeft.AXPY(alpha * deltaAtildeStar,Hxy_1,SUBSET_NONZERO_PATTERN);
+                interactionRight.AXPY(-alpha * deltaAtildeStar,Hxy_1,SUBSET_NONZERO_PATTERN);
+
+                interactionLeft.AXPY(alpha*deltaAtilde,Hxy_2,SUBSET_NONZERO_PATTERN);
+                interactionRight.AXPY(-alpha*deltaAtilde,Hxy_2,SUBSET_NONZERO_PATTERN);
+            }
+        }
+
+        interactionRight.matMult(initialState,rhs);
+        ksp.solve(rhs,initialState);
+
+
+        
+    }
+
+    
+    auto end_solve = MPI_Wtime();
+    PetscPrintf(PETSC_COMM_WORLD,"Time to solve TDSE: %f \n", end_solve-start_solve);
+
+    normVal = norm(initialState,atomicS);
+    PetscPrintf(PETSC_COMM_WORLD,"Final Norm: (%.15f , %.15f) \n",normVal.real(),normVal.imag()); 
+
+    std::string filePath = getTDSEOutput() + std::string("/tdse.h5");
+    PetscHDF5 viewer(PETSC_COMM_WORLD,filePath, FILE_MODE_WRITE);
+    viewer.saveVector(outputGroup,outputName,initialState);
+
+    if (getHHGStatus() && (getRank() == 0))
+    {
+        hhgFile.close();
+    }
 }
