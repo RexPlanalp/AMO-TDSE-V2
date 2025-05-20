@@ -13,35 +13,23 @@ class TISE
         TISE() = default;
 
         explicit TISE(const Input& input) 
-        : maxIter(input.getJSON().at("TISE").at("max_iter"))
-        , tolerance(input.getJSON().at("TISE").at("tolerance"))
-        , status{input.getJSON().at("TISE").at("status")}
-        , outputPath{input.getJSON().at("TISE").at("outputPath")}
-        , nmax(input.getJSON().at("TISE").at("nmax"))
+        : m_maxIter(input.getJSON().at("TISE").at("max_iter"))
+        , m_tolerance(input.getJSON().at("TISE").at("tolerance"))
+        , m_status{input.getJSON().at("TISE").at("status")}
+        , m_nmax(input.getJSON().at("TISE").at("nmax"))
         {}
 
-        PetscInt getMaxIter() const {return maxIter;}
-        PetscReal getTol() const {return tolerance;}
-        bool getStatus() const {return status;}
-        const std::string& getOutputPath() const {return outputPath;}
-        PetscInt getNmax() const {return nmax;}
+        PetscInt getMaxIter() const {return m_maxIter;}
+        PetscReal getTol() const {return m_tolerance;}
+        bool getStatus() const {return m_status;}
+        PetscInt getNmax() const {return m_nmax;}
 
        
     
     private:
-        // Member List Initialized
-        PetscInt maxIter{};
-        PetscReal tolerance{};
-        bool status{};
-        std::string outputPath{};
-        PetscInt nmax{};
-
-        std::string eigenvalueGroup = "eigenvalues";
-        std::string eigenvectorGroup = "eigenvectors";
-
-       
-        
-    
-    
-
+        // List Initialized
+        PetscInt m_maxIter{};
+        PetscReal m_tolerance{};
+        bool m_status{};
+        PetscInt m_nmax{};
 };
