@@ -142,4 +142,6 @@ inline std::ostream& operator<<(std::ostream& out, const Simulation& simulation)
     out << "BLOCK: " << simulation.getBLOCKStatus() << "\n\n";
     out << "PES: " << simulation.getPESStatus() << "\n\n";
     out << "BOUND: " << simulation.getBOUNDStatus() << "\n\n";
+
+    return out;
 }

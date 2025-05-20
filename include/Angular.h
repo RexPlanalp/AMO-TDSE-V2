@@ -75,6 +75,8 @@ inline std::ostream& operator<<(std::ostream& out, const Angular& angular)
     out << "mmax: " << angular.getMmax() << "\n\n";
     out << "mmin: " << angular.getMmin() << "\n\n";
     out << "nlm: "  << angular.getNblocks() << "\n\n";
+
+    return out;
 }
 
 

@@ -47,4 +47,6 @@ inline std::ostream& operator<<(std::ostream& out, const Box& box)
     out << "rmax: " << box.getGridSize() << "\n\n";
     out << "dr: " << box.getGridSpacing() << "\n\n";
     out << "Nr: " << box.getNr() << "\n\n";
+    
+    return out;
 }

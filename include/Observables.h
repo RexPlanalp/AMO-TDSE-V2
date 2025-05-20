@@ -49,4 +49,6 @@ inline std::ostream& operator<<(std::ostream& out, const Observables& observable
     out << "Emax: " << observables.getEmax() << "\n\n";
     out << "Ne: " << observables.getNe() << "\n\n";
     out << "Slice: " << observables.getSlice() << "\n\n";
+
+    return out;
 }

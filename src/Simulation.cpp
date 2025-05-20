@@ -783,7 +783,7 @@ void Simulation::computeBlockDistribution()
     PetscHDF5 viewer{PETSC_COMM_SELF,filePath,FILE_MODE_READ};
     auto finalState = viewer.loadVector(m_TDSEoutputGroup, m_TDSEoutputName,getCtx().basis.getNbasis() * getCtx().angular.getNblocks());
 
-    std::string filename = std::string("misc") + "/block_norms.txt";
+    std::string filename = getMISCOutput() + "/block_norms.txt";
 
     std::ofstream outFile(filename);
     outFile << std::fixed << std::setprecision(15);

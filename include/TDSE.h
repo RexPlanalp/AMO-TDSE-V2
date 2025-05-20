@@ -34,13 +34,15 @@ class TDSE
 
 inline std::ostream& operator<<(std::ostream& out, const TDSE& tdse)
 {
-        out << std::setfill('\\') << std::setw(24) << "" << "\n\n";
-        out << "TDSE Configuration: " << "\n\n";
-        out << std::setfill('\\') << std::setw(24) << "" << "\n\n";
-        
+    out << std::setfill('\\') << std::setw(24) << "" << "\n\n";
+    out << "TDSE Configuration: " << "\n\n";
+    out << std::setfill('\\') << std::setw(24) << "" << "\n\n";
+    
 
-        out << "maxIter: " << tdse.getMaxIter() << "\n\n";
-        out << "Restart: " << tdse.getRestart() << "\n\n";
-        out << "Tol: " << tdse.getTol() << "\n\n";
-        out << "Initial nlm: " << "n = " << tdse.getInitialN()  << " l = " << tdse.getInitialL()  << " m = " << tdse.getInitialM() << "\n\n";
+    out << "maxIter: " << tdse.getMaxIter() << "\n\n";
+    out << "Restart: " << tdse.getRestart() << "\n\n";
+    out << "Tol: " << tdse.getTol() << "\n\n";
+    out << "Initial nlm: " << "n = " << tdse.getInitialN()  << " l = " << tdse.getInitialL()  << " m = " << tdse.getInitialM() << "\n\n";
+
+    return out;
 }

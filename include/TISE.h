@@ -41,4 +41,6 @@ inline std::ostream& operator<<(std::ostream& out, const TISE& tise)
     out << "maxIter: " << tise.getMaxIter() << "\n\n";
     out << "Tolerance: " << tise.getTol() << "\n\n";
     out << "nmax: " << tise.getNmax() << "\n\n";
+
+    return out;
 }

@@ -103,4 +103,6 @@ inline std::ostream& operator<<(std::ostream& out, const Laser& laser)
         out << "poynting: " << laser.getPoynting()[0] << " " << laser.getPoynting()[1] << " " << laser.getPoynting()[2] <<  "\n\n";
         out << "ellipticity: " << laser.getEllipticity()[0] << " " << laser.getEllipticity()[1] << " " << laser.getEllipticity()[2] <<  "\n\n";
         out << "components: " << laser.getComponents()[0] << " " << laser.getComponents()[1] << " " << laser.getComponents()[2] <<  "\n\n";
+
+        return out;
 }

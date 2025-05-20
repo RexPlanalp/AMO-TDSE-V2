@@ -45,4 +45,6 @@ inline std::ostream& operator<<(std::ostream& out,const Atom& atom)
     out << std::setfill('\\') << std::setw(24) << "" << "\n\n";
 
     out << "Species: " << atom.getSpecies() <<  "\n\n";
+
+    return out;
 }
