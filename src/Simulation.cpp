@@ -6,7 +6,7 @@
 void Simulation::solveTISE()
 {   
     // If we are not running the TISE, exit
-    if (!getCtx().tise.getStatus())
+    if (!getTISEStatus())
     {
         return;
     }

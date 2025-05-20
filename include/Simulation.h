@@ -25,12 +25,15 @@ class Simulation
         , m_rank{rank}
         , m_communicator{communicator}
         , m_ctx{ctx}
+        , m_runTISE{input.getJSON().at("Simulation").at("runTISE")}
+        , m_runTDSE{input.getJSON().at("Simulation").at("runTDSE")}
+        , m_runHHG{input.getJSON().at("Simulation").at("runHHG")}
         , m_miscOutput{input.getJSON().at("Simulation").at("miscOutput")}
         , m_imageOutput{input.getJSON().at("Simulation").at("imageOutput")}
         , m_tiseOutput{input.getJSON().at("Simulation").at("tiseOutput")}
         , m_tdseOutput{input.getJSON().at("Simulation").at("tdseOutput")}
         {
-            if (getCtx().tise.getStatus())
+            if (getTISEStatus())
             {
                 createDirectory(getTISEOutput(),getRank());
             }
@@ -42,7 +45,15 @@ class Simulation
 
 
         // Public Methods
+        bool getTISEStatus() const {return m_runTISE;}
+        bool getTDSEStatus() const {return m_runTDSE;}
+        bool getHHGStatus() const {return m_runHHG;}
         void solveTISE();
+        void solveTDSE();
+
+
+        
+
 
   
     private:
@@ -51,6 +62,9 @@ class Simulation
         PetscMPIInt m_rank{};
         MPI_Comm m_communicator{};
         SimulationContext m_ctx{};
+        bool m_runTISE{};
+        bool m_runTDSE{};
+        bool m_runHHG{};
         std::string m_miscOutput{};
         std::string m_imageOutput{};
         std::string m_tiseOutput{};
@@ -59,7 +73,21 @@ class Simulation
         std::string m_eigenvalueGroup = "eigenvalues";
         std::string m_eigenvectorGroup = "eigenvectors";
 
+        std::string outputGroup = "";
+        std::string outputName = "psiFinal";
+
         // Private Methods
         void populateAngularMatrix(AngularMatrixType Type, Matrix& matrix);
         void populateRadialMatrix(RadialMatrixType Type,Matrix& matrix,bool use_ecs);
+
+        Vector loadInitialState();
+        std::pair<Matrix,Matrix> constructAtomicInteraction();
+        Matrix constructZInteraction();
+        std::pair<Matrix,Matrix> constructXYInteraction();
+        Matrix constructXHHG();
+        Matrix constructYHHG();
+        Matrix constructZHHG();
+        Matrix constructAtomicS();
+
+        Matrix kroneckerProduct(const Matrix& A, const Matrix& B, PetscInt nnz_A, PetscInt nnz_B);
 };      
