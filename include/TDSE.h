@@ -10,14 +10,12 @@ class TDSE
 
 
         explicit TDSE(const Input& input)
-        : m_status{input.getJSON().at("TDSE").at("status")}
-        , m_initialNLM{input.getJSON().at("TDSE").at("initialNLM").get<std::array<int,3>>()}
+        : m_initialNLM{input.getJSON().at("TDSE").at("initialNLM").get<std::array<int,3>>()}
         , m_tolerance{input.getJSON().at("TDSE").at("tolerance")}
         , m_maxIter{input.getJSON().at("TDSE").at("maxIter")}
         , m_restart{input.getJSON().at("TDSE").at("restart")}
         {}
 
-        bool getStatus() const {return m_status;}
         int getInitialN() const {return m_initialNLM[0];}
         int getInitialL() const {return m_initialNLM[1];}
         int getInitialM() const {return m_initialNLM[2];}
@@ -28,7 +26,6 @@ class TDSE
 
        
     private:
-        bool m_status{};
         std::array<int,3> m_initialNLM{};
         PetscReal m_tolerance{};
         PetscInt m_maxIter{};

@@ -32,10 +32,15 @@ class Simulation
         , m_imageOutput{input.getJSON().at("Simulation").at("imageOutput")}
         , m_tiseOutput{input.getJSON().at("Simulation").at("tiseOutput")}
         , m_tdseOutput{input.getJSON().at("Simulation").at("tdseOutput")}
-        {
+        {   
+            createDirectory(getMISCOutput(),getRank());
             if (getTISEStatus())
             {
                 createDirectory(getTISEOutput(),getRank());
+            }
+            if (getTDSEStatus())
+            {
+                createDirectory(getTDSEOutput(),getRank());
             }
         }
         
@@ -43,6 +48,7 @@ class Simulation
         PetscMPIInt getRank() const {return m_rank;}
         const std::string& getTISEOutput() const {return m_tiseOutput;}
         const std::string& getTDSEOutput() const {return m_tdseOutput;}
+        const std::string& getMISCOutput() const {return m_miscOutput;}
 
 
         // Public Methods
