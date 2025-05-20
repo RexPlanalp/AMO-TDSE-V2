@@ -17,9 +17,18 @@ const std::unordered_map<int, std::pair<std::vector<double>, std::vector<double>
     {8, {{-0.96028986, -0.79666648, -0.52553241, -0.18343464, 0.18343464, 0.52553241, 0.79666648, 0.96028986}, {0.10122854, 0.22238103, 0.31370665, 0.36268378, 0.36268378, 0.31370665, 0.22238103, 0.10122854}}}
 };
 
+void Basis::buildParameters()
+{
+    m_degree = getOrder() - 1;
+    m_roots = GaussLegendre::RootsAndWeights.at(getOrder()).first;
+    m_weights = GaussLegendre::RootsAndWeights.at(getOrder()).second;
+            
+    m_eta *= M_PI;
+}
+
 void Basis::buildKnots(const Box& box)
 {
-    if (spacing == "linear")
+    if (getSpacing() == "linear")
     {
         buildLinearKnots(box);
     }
@@ -32,11 +41,11 @@ void Basis::buildComplexKnots()
 {
     int N_knots = getNbasis() + getOrder();
 
-    complex_knots.resize(N_knots);
+    m_complexKnots.resize(N_knots);
 
     for (int idx = 0; idx < N_knots; ++idx) 
     {
-        complex_knots[idx] = ecs_x(std::real(knots[idx]));
+        m_complexKnots[idx] = ecs_x(std::real(m_knots[idx]));
     }
 }
 
@@ -48,41 +57,41 @@ void Basis::buildLinearKnots(const Box& box)
     int N_middle  = N_knots - leftMult - rightMult;   
     double step   = box.getGridSize() / (N_middle - 1);
 
-    knots.clear();
-    knots.reserve(N_knots);
+    m_knots.clear();
+    m_knots.reserve(N_knots);
 
     for (int i = 0; i < leftMult; ++i)
     {
-        knots.push_back(0.0);
+        m_knots.push_back(0.0);
     }
         
     for (int j = 0; j < N_middle; ++j)
     {
-        knots.push_back(j * step);
+        m_knots.push_back(j * step);
     }
         
     for (int i = 0; i < rightMult; ++i)
     {
-        knots.push_back(box.getGridSize());
+        m_knots.push_back(box.getGridSize());
     }
 
 }
 
 void Basis::buildR0()
 {
-    double target   = R0 * std::real(knots.back());
-    double min_val  = std::abs(knots[0] - target);
-    double knot_val = std::real(knots[0]);
+    double target   = getR0() * std::real(getKnots().back());
+    double min_val  = std::abs(getKnots()[0] - target);
+    double knot_val = std::real(getKnots()[0]);
 
-    for (size_t idx = 1; idx < knots.size(); ++idx) {
-        double diff = std::abs(knots[idx] - target);
+    for (size_t idx = 1; idx < getKnots().size(); ++idx) {
+        double diff = std::abs(getKnots()[idx] - target);
         if (diff < min_val) {
             min_val  = diff;
-            knot_val = std::real(knots[idx]);
+            knot_val = std::real(getKnots()[idx]);
         }
     }
 
-    R0 = knot_val;
+    m_R0 = knot_val;
 }
 
 std::complex<double> Basis::integrateMatrixElement(int i, int j,MatrixIntegrand integrand,bool use_ecs) const
@@ -94,8 +103,8 @@ std::complex<double> Basis::integrateMatrixElement(int i, int j,MatrixIntegrand 
 
     for (int k = lower; k <= upper + getDegree(); ++k)
     {
-        double a = std::real(knots[k]);
-        double b = std::real(knots[k + 1]);
+        double a = std::real(getKnots()[k]);
+        double b = std::real(getKnots()[k + 1]);
 
 
         if (a == b)
@@ -107,23 +116,23 @@ std::complex<double> Basis::integrateMatrixElement(int i, int j,MatrixIntegrand 
         double half_b_plus_a = 0.5 * (b + a);
 
 
-        for (size_t r = 0; r < roots.size(); ++r)
+        for (size_t r = 0; r < getRoots().size(); ++r)
         {
-            double x_val = half_b_minus_a * roots[r] + half_b_plus_a;
-            double weight_val = weights[r];
+            double x_val = half_b_minus_a * getRoots()[r] + half_b_plus_a;
+            double weight_val = getWeights()[r];
 
             if (use_ecs)
             {
                 std::complex<double> x = ecs_x(x_val);
                 std::complex<double> weight = ecs_w(x_val, weight_val) * half_b_minus_a;
-                std::complex<double> integrand_val = (*integrand)(i, j,getDegree(), x,complex_knots);
+                std::complex<double> integrand_val = (*integrand)(i, j,getDegree(), x,getComplexKnots());
                 total += weight * integrand_val;
             }
             else
             {
                 std::complex<double> x = x_val;
                 std::complex<double> weight = weight_val* half_b_minus_a;
-                std::complex<double> integrand_val = (*integrand)(i, j,getDegree(), x,knots);
+                std::complex<double> integrand_val = (*integrand)(i, j,getDegree(), x,getKnots());
                 total += weight * integrand_val;
             }
         }
@@ -132,77 +141,77 @@ std::complex<double> Basis::integrateMatrixElement(int i, int j,MatrixIntegrand 
     return total;
 }
 
-void Basis::printConfiguration(int rank)
-{
-    if (rank == 0)
-    {
-        std::cout << std::setfill('\\') << std::setw(24) << "" << "\n\n";
-        std::cout << "Basis Configuration: " << "\n\n";
-        std::cout << std::setfill('\\') << std::setw(24) << "" << "\n\n";
+// void Basis::printConfiguration(int rank)
+// {
+//     if (rank == 0)
+//     {
+//         std::cout << std::setfill('\\') << std::setw(24) << "" << "\n\n";
+//         std::cout << "Basis Configuration: " << "\n\n";
+//         std::cout << std::setfill('\\') << std::setw(24) << "" << "\n\n";
         
-        std::cout << "nbasis: " << getNbasis() <<  "\n\n";
-        std::cout << "order: " << getOrder() <<  "\n\n";
-        std::cout << "degree: " << getDegree() <<  "\n\n";
-        std::cout << "spacing: " << getSpacing() <<  "\n\n";
-    }
-}
+//         std::cout << "nbasis: " << getNbasis() <<  "\n\n";
+//         std::cout << "order: " << getOrder() <<  "\n\n";
+//         std::cout << "degree: " << getDegree() <<  "\n\n";
+//         std::cout << "spacing: " << getSpacing() <<  "\n\n";
+//     }
+// }
 
-void Basis::dumpTo(const Box& box, const std::string& directory, int rank)
-{
-    if (rank == 0) 
-    {
-        std::string filename = directory + "/Basiss.txt";
+// void Basis::dumpTo(const Box& box, const std::string& directory, int rank)
+// {
+//     if (rank == 0) 
+//     {
+//         std::string filename = directory + "/Basiss.txt";
 
-        std::ofstream outFile(filename);
+//         std::ofstream outFile(filename);
 
-        if (!outFile) 
-        {
-            std::cerr << "Error opening file: " << filename << '\n';
-        }
+//         if (!outFile) 
+//         {
+//             std::cerr << "Error opening file: " << filename << '\n';
+//         }
 
-        for (int spline = 0; spline < getNbasis(); ++spline) 
-        {
-            for (int ridx = 0; ridx < box.getNr(); ++ridx) 
-            {   
-                std::complex<double> value = BSplines::B(spline,getDegree(), ecs_x(ridx * box.getGridSpacing()),complex_knots);
-                outFile << value.real() << " " << value.imag() << '\n';
-            }
-        }
-        outFile.close();
+//         for (int spline = 0; spline < getNbasis(); ++spline) 
+//         {
+//             for (int ridx = 0; ridx < box.getNr(); ++ridx) 
+//             {   
+//                 std::complex<double> value = BSplines::B(spline,getDegree(), ecs_x(ridx * box.getGridSpacing()),complex_knots);
+//                 outFile << value.real() << " " << value.imag() << '\n';
+//             }
+//         }
+//         outFile.close();
 
-        std::string filename2 = directory + "/dBasiss.txt";
+//         std::string filename2 = directory + "/dBasiss.txt";
 
-        std::ofstream outFile2(filename2);
+//         std::ofstream outFile2(filename2);
 
-        if (!outFile2) 
-        {
-            std::cerr << "Error opening file: " << filename2 << '\n';
-        }
+//         if (!outFile2) 
+//         {
+//             std::cerr << "Error opening file: " << filename2 << '\n';
+//         }
 
-        for (int spline = 0; spline < getNbasis(); ++spline) 
-        {
-            for (int ridx = 0; ridx < box.getNr(); ++ridx) 
-            {
-                std::complex<double> value = BSplines::dB(spline,getDegree(), ecs_x(ridx * box.getGridSpacing()),complex_knots);
-                outFile2 << value.real() << " " << value.imag() << '\n';
-            }
-        }
-        outFile2.close();
+//         for (int spline = 0; spline < getNbasis(); ++spline) 
+//         {
+//             for (int ridx = 0; ridx < box.getNr(); ++ridx) 
+//             {
+//                 std::complex<double> value = BSplines::dB(spline,getDegree(), ecs_x(ridx * box.getGridSpacing()),complex_knots);
+//                 outFile2 << value.real() << " " << value.imag() << '\n';
+//             }
+//         }
+//         outFile2.close();
 
-        std::string filename3 = directory + "/Basis_metadata.txt";
+//         std::string filename3 = directory + "/Basis_metadata.txt";
 
-        std::ofstream outFile3(filename3);
+//         std::ofstream outFile3(filename3);
 
-        if (!outFile3) 
-        {
-            std::cerr << "Error opening file: " << filename2 << '\n';
-        }
+//         if (!outFile3) 
+//         {
+//             std::cerr << "Error opening file: " << filename2 << '\n';
+//         }
 
-        outFile3 << box.getNr() << " " << box.getGridSpacing() << '\n';
+//         outFile3 << box.getNr() << " " << box.getGridSpacing() << '\n';
 
-        outFile3.close();
-    }
-}
+//         outFile3.close();
+//     }
+// }
 
 
 

@@ -25,11 +25,6 @@ class Laser
             buildVectors();
         }
 
-        // Build Methods
-        void buildParameters();
-        void buildNt();
-        void buildTimes();
-        void buildVectors();
 
 
         // Getters
@@ -76,8 +71,12 @@ class Laser
         std::array<int,3> m_components{};
         std::vector<double> m_times{};
 
-        //  Privae  Member functions
+        //  Private  Member functions
         double sin2_envelope(double t) const;
         void validateInput();
+        void buildParameters();
+        void buildNt();
+        void buildTimes();
+        void buildVectors();
 
 };

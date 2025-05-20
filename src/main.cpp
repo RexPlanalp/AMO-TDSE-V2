@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
 
     SimulationContext ctx = {tise,tdse,box,laser,angular,atom,basis};
 
-    Simulation simulation{size,rank,communicator,ctx};
+    Simulation simulation{size,rank,communicator,input,ctx};
 
 
 

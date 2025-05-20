@@ -23,35 +23,30 @@ class Basis
 
 
         explicit Basis(const Input& input,const Box& box)
-        : nbasis{input.getJSON().at("Basis").at("nbasis")}
-        , order{input.getJSON().at("Basis").at("order")}
-        , R0{input.getJSON().at("Basis").at("R0r")}
-        , eta{input.getJSON().at("Basis").at("etar")}
-        , spacing{input.getJSON().at("Basis").at("spacing")}
+        : m_Nbasis{input.getJSON().at("Basis").at("nbasis")}
+        , m_order{input.getJSON().at("Basis").at("order")}
+        , m_R0{input.getJSON().at("Basis").at("R0r")}
+        , m_eta{input.getJSON().at("Basis").at("etar")}
+        , m_spacing{input.getJSON().at("Basis").at("spacing")}
         {
-            degree = order - 1;
-            roots = GaussLegendre::RootsAndWeights.at(order).first;
-            weights = GaussLegendre::RootsAndWeights.at(order).second;
-            
-            eta *= M_PI;
-
+            buildParameters();
             buildKnots(box);
         }
 
-        int getNbasis() const {return nbasis;}
-        int getOrder() const {return order;}
-        int getDegree() const {return degree;}
-        double getR0() const {return R0;}
-        double getEta() const {return eta;}
-        const std::string& getSpacing() const {return spacing;}
-        const std::vector<std::complex<double>> getKnots() const {return knots;}
-        const std::vector<std::complex<double>> getComplexKnots() const {return complex_knots;}
+        int getNbasis() const {return m_Nbasis;}
+        int getOrder() const {return m_order;}
+        int getDegree() const {return m_degree;}
+        double getR0() const {return m_R0;}
+        double getEta() const {return m_eta;}
+        const std::string& getSpacing() const {return m_spacing;}
+        const std::vector<std::complex<double>> getKnots() const {return m_knots;}
+        const std::vector<std::complex<double>> getComplexKnots() const {return m_complexKnots;}
+        const std::vector<double> getRoots() const {return m_roots;}
+        const std::vector<double> getWeights() const {return m_weights;}
         
         std::complex<double> integrateMatrixElement(int i, int j,MatrixIntegrand integrand,bool use_ecs) const;
 
-        void printConfiguration(int rank);
-        void dumpTo(const Box& box, const std::string& directory, int rank);
-        void buildKnots(const Box& box);
+        
 
 
         
@@ -59,22 +54,24 @@ class Basis
 
     private:
         // Member List Initialized
-        int nbasis{};
-        int order{};
-        double R0{};
-        double eta{};
-        std::string spacing{};
+        int m_Nbasis{};
+        int m_order{};
+        double m_R0{};
+        double m_eta{};
+        std::string m_spacing{};
 
         // Derived
-        int degree{};
-        std::vector<std::complex<double>> knots{};
-        std::vector<std::complex<double>> complex_knots{};
-        std::vector<double> roots{};
-        std::vector<double> weights{};
+        int m_degree{};
+        std::vector<std::complex<double>> m_knots{};
+        std::vector<std::complex<double>> m_complexKnots{};
+        std::vector<double> m_roots{};
+        std::vector<double> m_weights{};
 
-        // Member Functions
-        std::complex<double> ecs_x(double x) const {return (x < R0) ? (std::complex<double>{x, 0.0}) : R0 + (x - R0) * std::exp(std::complex<double>{0, eta});}
-        std::complex<double> ecs_w(double x, double w) const { return (x < R0) ? (std::complex<double>{w, 0.0}) : w * std::exp(std::complex<double>{0, eta});}
+        // Private Methods
+        std::complex<double> ecs_x(double x) const {return (x < getR0()) ? (std::complex<double>{x, 0.0}) : getR0() + (x - getR0()) * std::exp(std::complex<double>{0, getEta()});}
+        std::complex<double> ecs_w(double x, double w) const { return (x < getR0()) ? (std::complex<double>{w, 0.0}) : w * std::exp(std::complex<double>{0, getEta()});}
+        void buildParameters();
+        void buildKnots(const Box& box);
         void buildLinearKnots(const Box& box);
         void buildComplexKnots();
         void buildR0();

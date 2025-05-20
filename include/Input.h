@@ -13,5 +13,5 @@ class Input
 
 
     private:     
-        nlohmann::json params;
+        nlohmann::json params{};
 };

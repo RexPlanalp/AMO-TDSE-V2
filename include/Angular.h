@@ -24,8 +24,7 @@ class Angular
             buildMaps(laser,tdse);
         }
 
-        // Build Methods
-        void buildMaps(const Laser& laser, const TDSE& tdse);
+        
 
         // Getters
         int getLmax() const {return m_lmax;}
@@ -60,6 +59,7 @@ class Angular
         void buildXYZ();
         void buildOdd();
         void buildEven();
+        void buildMaps(const Laser& laser, const TDSE& tdse);
 };
 
 

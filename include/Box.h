@@ -16,9 +16,7 @@ class Box
             buildPositions();
         }
 
-        // Building Methods
-        void buildNr();
-        void buildPositions();
+
 
         // Getters
         double getGridSize() const {return m_gridSize;}
@@ -34,4 +32,8 @@ class Box
         // Derived
         int m_Nr{};
         std::vector<double> m_positions{};
+
+        // Private Methods
+        void buildNr();
+        void buildPositions();
 };
