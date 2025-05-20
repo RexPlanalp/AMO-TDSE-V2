@@ -102,24 +102,21 @@ void Angular::buildOdd()
 
 
 
-// void Angular::dumpTo(const std::string& directory, int rank)
-// {   
-//     if (rank == 0)
-//     {
-//         std::string filename = directory + "/lm_map.txt";
+void Angular::dumpTo(const std::string& directory)
+{   
+    std::string filename = directory + "/lm_map.txt";
 
-//         std::ofstream outFile(filename);
+    std::ofstream outFile(filename);
 
-//         if (!outFile)
-//         {
-//             std::cerr << "Error opening file: " << filename << '\n';
-//         }
+    if (!outFile)
+    {
+        std::cerr << "Error opening file: " << filename << '\n';
+    }
 
-//         for (const auto& entry : getLMMap()) 
-//         {
-//             outFile << entry.first.first << " " << entry.first.second << " " << entry.second << "\n";
-//         }
+    for (const auto& entry : getLMMap()) 
+    {
+        outFile << entry.first.first << " " << entry.first.second << " " << entry.second << "\n";
+    }
 
-//         outFile.close();
-//     }
-// }
+    outFile.close();
+}

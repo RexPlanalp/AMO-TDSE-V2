@@ -25,6 +25,7 @@ class Angular
         }
 
         
+        void dumpTo(const std::string& directory);
 
         // Getters
         int getLmax() const {return m_lmax;}

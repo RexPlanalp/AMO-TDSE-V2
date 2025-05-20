@@ -59,24 +59,23 @@ double Laser::operator[](int i) const
     return m_times[i];
 }
 
-// void Laser::dumpTo(const std::string& directory,int rank)
-// {
-//     if (rank == 0)
-//     {
-//         std::string filename = directory + "/laser.txt";
+void Laser::dumpTo(const std::string& directory)
+{
 
-//         std::ofstream outFile(filename);
-    
-//         if (!outFile)
-//         {
-//             std::cerr << "Error opening file: " << filename << '\n';
-//         }
-    
-//         for (int idx{0}; idx < getNt(); ++idx) 
-//         {
-//             outFile << getTime(idx) << " " << A(getTime(idx),0) << " " << A(getTime(idx),1) << " " << A(getTime(idx),2) << "\n";
-//         }
-    
-//         outFile.close();
-//     }
-// }
+    std::string filename = directory + "/laser.txt";
+
+    std::ofstream outFile(filename);
+
+    if (!outFile)
+    {
+        std::cerr << "Error opening file: " << filename << '\n';
+    }
+
+    for (int idx{0}; idx < getNt(); ++idx) 
+    {
+        outFile << (*this)[idx] << " " << A((*this)[idx],0) << " " << A((*this)[idx],1) << " " << A((*this)[idx],2) << "\n";
+    }
+
+    outFile.close();
+
+}

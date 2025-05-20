@@ -25,7 +25,7 @@ class Laser
             buildVectors();
         }
 
-
+        void dumpTo(const std::string& directory);
 
         // Getters
         double getN() const {return m_Ncycles;} 

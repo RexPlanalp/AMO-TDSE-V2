@@ -52,6 +52,10 @@ int main(int argc, char* argv[])
         std::cout << basis << '\n';
         std::cout << observables << '\n';
         std::cout << simulation << '\n';
+
+        laser.dumpTo(simulation.getMISCOutput());
+        angular.dumpTo(simulation.getMISCOutput());
+
     }
 
 
