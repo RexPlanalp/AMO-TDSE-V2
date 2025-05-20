@@ -3,6 +3,7 @@
 #include "PetscWrappers/PetscHDF5.h"
 #include "PetscWrappers/PetscOperators.h"
 #include "PetscWrappers/PetscKSP.h"
+#include "PetscWrappers/PetscIS.h"
 
 void Simulation::solveTISE()
 {   
@@ -739,10 +740,537 @@ void Simulation::solveTDSE()
 
     std::string filePath = getTDSEOutput() + std::string("/tdse.h5");
     PetscHDF5 viewer(PETSC_COMM_WORLD,filePath, FILE_MODE_WRITE);
-    viewer.saveVector(outputGroup,outputName,initialState);
+    viewer.saveVector(m_TDSEoutputGroup,m_TDSEoutputName,initialState);
 
     if (getHHGStatus() && (getRank() == 0))
     {
         hhgFile.close();
     }
 }
+
+
+void Simulation::computeBlockDistribution()
+{
+    if (getRank() != 0)
+    {
+        return;
+    }
+    if (!getBLOCKStatus())
+    {
+        return;
+    }
+
+    auto S = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,getCtx().basis.getNbasis(),getCtx().basis.getNbasis(),2*getCtx().basis.getDegree() + 1};
+    populateRadialMatrix(RadialMatrixType::S,S,false);
+
+    std::string filePath = getTDSEOutput() + std::string("/tdse.h5");
+    PetscHDF5 viewer{PETSC_COMM_SELF,filePath,FILE_MODE_READ};
+    auto finalState = viewer.loadVector(m_TDSEoutputGroup, m_TDSEoutputName,getCtx().basis.getNbasis() * getCtx().angular.getNblocks());
+
+    std::string filename = std::string("misc") + "/block_norms.txt";
+
+    std::ofstream outFile(filename);
+    outFile << std::fixed << std::setprecision(15);
+
+    if (!outFile)
+    {
+        std::cerr << "Error opening file: " << filename << '\n';
+    }
+
+    if (getCtx().observables.getProjOut())
+    {
+        projectOutBoundStates(finalState,S);
+    }
+
+    for (int blockIdx = 0; blockIdx < getCtx().angular.getNblocks(); ++blockIdx)
+    {
+        int start = blockIdx * getCtx().basis.getNbasis();
+
+        IndexSet is{PETSC_COMM_SELF,getCtx().basis.getNbasis(), start, 1};
+
+        Vector blockVector{};
+        VecGetSubVector(finalState.get(), is.get(), &blockVector.get());
+
+        auto normVal = innerProduct(blockVector,S,blockVector);
+
+        VecRestoreSubVector(finalState.get(), is.get(), &blockVector.get());
+
+        outFile << blockIdx << " " << normVal.real() << " " << normVal.imag() << '\n';
+    }
+
+    outFile.close();
+}
+
+void Simulation::projectOutBoundStates(Vector& finalState,const Matrix& S)
+{   
+    std::string filePath = getTISEOutput() + std::string("/tise.h5");
+    PetscHDF5 viewer(PETSC_COMM_SELF,filePath,FILE_MODE_READ);
+
+    for (int blockIdx = 0; blockIdx < getCtx().angular.getNblocks(); ++blockIdx)
+    {
+        int l{};
+        int m{};
+        std::tie(l,m) = getCtx().angular.getBlockMap().at(blockIdx);
+
+
+        int start = blockIdx * getCtx().basis.getNbasis();
+        
+        IndexSet is{PETSC_COMM_SELF,getCtx().basis.getNbasis(),start,1};
+
+        auto blockVector = Vector{};
+
+        VecGetSubVector(finalState.get(),is.get(),&blockVector.get());
+
+
+        for (int n = 0; n <= getCtx().tise.getNmax(); ++n)
+        {
+            std::string groupName = "eigenvectors";
+            std::string vectorName = std::string("psi_") + std::to_string(n) + std::string("_") + std::to_string(l);
+
+            std::string datasetName = groupName + "/" + vectorName;
+
+            PetscBool hasDataset{};
+            PetscViewerHDF5HasDataset(viewer.get(),datasetName.c_str(),&hasDataset);
+
+            if (hasDataset)
+            {
+                Vector tiseState = viewer.loadVector(groupName,vectorName,getCtx().basis.getNbasis());
+
+                PetscScalar prodVal = innerProduct(tiseState,S,blockVector);
+
+                blockVector.AXPY(-prodVal, tiseState);
+            }
+
+
+        }
+
+        VecRestoreSubVector(finalState.get(),is.get(),&blockVector.get());
+    }
+}
+
+CoulombWave Simulation::computeCoulombWave(double E, int l)
+{
+    // Unpack necessary variables
+    int Nr = getCtx().box.getNr();
+    double dr = getCtx().box.getGridSpacing();
+
+    // Initialize empty vector to store wave
+    std::vector<double> wave(Nr, 0.0);
+
+    // Compute some relevant values
+    double dr2 = dr * dr;
+    double k = std::sqrt(2.0 * E);
+    int lterm = l * (l + 1);
+
+    // Bootstrap the Numerov method
+    wave[0] = 0.0;
+    wave[1] = 1.0;
+
+    // Numerov method to populate wave
+    for (int rIdx = 2; rIdx < Nr; ++rIdx) 
+    {   
+        // Compute next step
+        double rVal = rIdx * dr;
+        double term = dr2 * (lterm/(rVal*rVal) + 2.0*getCtx().atom.potential(rVal).real() - 2.0*E);
+        wave[rIdx] = wave[rIdx - 1] * (term + 2.0) - wave[rIdx - 2];
+
+        // Check to ensure wave hasnt blown up, and normalize if it has
+        if (std::abs(wave[rIdx]) > 1E10) 
+        {
+            double maxMag = std::abs(*std::max_element(wave.begin(), wave.end(), 
+                [](double a, double b) { return std::abs(a) < std::abs(b); }));
+
+            for (auto& value : wave)
+            {
+                value /= maxMag;
+            }
+        }
+    }
+
+    // Compute values to normalize
+    double rEnd = (Nr - 2) * dr;
+    double waveEnd = wave[Nr - 2];
+    double dwaveEnd = (wave[Nr - 1] - wave[Nr - 3]) / (2.0 * dr);
+    
+    // Normalize
+    double denom = k + 1.0/(k * rEnd);
+    double termPsi = std::abs(waveEnd) * std::abs(waveEnd);
+    double termDer = std::abs(dwaveEnd/denom) * std::abs(dwaveEnd/denom);
+    double normVal = std::sqrt(termPsi + termDer);
+
+    if (normVal > 0.0) 
+    {
+        for (auto& value : wave)
+        {
+            value /= normVal;
+        }
+    }
+
+    
+
+    // Compute values to compute phase
+    std::complex<double> numerator(0.0, waveEnd);
+    numerator += dwaveEnd / denom;
+
+    const double scale = 2.0 * k * rEnd;
+    const std::complex<double> denomC = std::exp(std::complex<double>(0.0, 1.0/k) * std::log(scale));
+    const std::complex<double> fraction = numerator / denomC;
+    const double phase = std::arg(fraction) - k * rEnd + l * M_PI/2.0;
+
+    return CoulombWave{wave,phase};
+}
+
+std::vector<std::complex<double>> Simulation::expandState(const Vector& state)
+{   
+    int Nr = getCtx().box.getNr();
+    double dr = getCtx().box.getGridSpacing();
+    int nlm = getCtx().angular.getNblocks();
+    int nbasis = getCtx().basis.getNbasis();
+    int degree = getCtx().basis.getDegree();
+
+    // Unpacked the petsc vector into a C-style array
+    const std::complex<double>* stateArray;
+    VecGetArrayRead(state.get(), reinterpret_cast<const PetscScalar**>(&stateArray));
+    
+    // Allocate vector to hold position space state
+    std::vector<std::complex<double>> expanded_state(Nr * nlm);
+
+
+    // Evaluate all bspline basis functions in their nonzero intervals
+    for (int bsplineIdx = 0; bsplineIdx < nbasis; ++bsplineIdx)
+    {   
+        // Get the start and end of the interval where the bspline is nonzero
+        std::complex<double> start = getCtx().basis.getKnots()[bsplineIdx];
+        std::complex<double> end = getCtx().basis.getKnots()[bsplineIdx+degree+1];
+
+        // Initialize vectors to store nonzero bspline values and the position indices where they occur
+        std::vector<std::complex<double>> bsplineEval{};
+        std::vector<int> bsplineEvalIndices{};
+
+        // Loop over all grid points
+        for (int rIdx = 0; rIdx < Nr; ++rIdx)
+        {   
+            // Compute position
+            double r = rIdx*dr;
+
+            // See if position is in nonzero interval for this spline, if so evaluate
+            if (r >= start.real() && r < end.real())
+            {
+                std::complex<double> bsplineVal = BSplines::B(bsplineIdx,degree,r,getCtx().basis.getKnots());
+                bsplineEval.push_back(bsplineVal);
+                bsplineEvalIndices.push_back(rIdx);
+            }
+        }
+
+        // Loop over each block 
+        for (int blockIdx = 0; blockIdx < nlm; ++blockIdx)
+        {   
+            // Get the bspline coefficients
+            std::complex<double> coeff = stateArray[blockIdx*nbasis + bsplineIdx];
+
+            // Loop over all grid points and add contribution to the expanded state for this block
+            for (size_t rSubIdx = 0; rSubIdx < bsplineEval.size(); ++rSubIdx)
+            {
+                expanded_state[blockIdx*Nr + bsplineEvalIndices[rSubIdx]] += coeff*bsplineEval[rSubIdx];
+            }
+        }
+    }
+    return  expanded_state;
+}
+
+std::pair<std::map<lmPair,std::vector<std::complex<double>>>,std::map<std::pair<double, int>,double>> Simulation::computePartialSpectra(const std::vector<std::complex<double>>& expanded_state)
+{
+    std::map<lmPair,std::vector<std::complex<double>>> partialSpectra;
+
+    std::map<std::pair<double, int>,double> phases;
+
+    int nlm = getCtx().angular.getNblocks();
+    int Ne = getCtx().observables.getNe();
+    double Emin = getCtx().observables.getEmin();
+    int Nr = getCtx().box.getNr();
+    double dr = getCtx().box.getGridSpacing();
+
+    // Allocate space for each partial spectra
+    for (int blockIdx = 0; blockIdx < nlm; ++blockIdx)
+    {
+        std::pair<int,int> lmPair = getCtx().angular.getBlockMap().at(blockIdx);
+        int l = lmPair.first;
+        int m = lmPair.second;
+        partialSpectra[std::make_pair(l, m)].reserve(Ne); 
+    }
+
+
+    for (int EIdx = 1; EIdx <= Ne; ++EIdx)
+    {
+        for (int blockIdx = 0; blockIdx < nlm; ++blockIdx)
+        {
+            std::pair<int,int> lm_pair = getCtx().angular.getBlockMap().at(blockIdx);
+            int l = lm_pair.first;
+            int m = lm_pair.second;
+            CoulombWave coulombResult = computeCoulombWave(EIdx*Emin, l);
+            
+            phases[std::make_pair(EIdx*Emin,l)] = coulombResult.phase;
+
+
+            auto start = expanded_state.begin() + Nr*blockIdx;  
+            auto end = expanded_state.begin() + Nr*(blockIdx+1);    
+
+            // Extract subvector
+            std::vector<std::complex<double>> blockVector(start, end);  
+
+            // We want to form the position space inner product aka integrate. 
+            // So first we to a pointwise mult. Since coulomb wave is real no need for complex conjugation
+
+            for (int rIdx = 0; rIdx < Nr; ++rIdx)
+            {
+                blockVector[rIdx] = blockVector[rIdx] * coulombResult.wave[rIdx];
+            }
+
+            std::complex<double> I = SimpsonsMethod(blockVector,dr);  
+            partialSpectra[std::make_pair(l,m)].push_back(I);
+        }
+    }
+    return std::make_pair(partialSpectra,phases);
+}
+
+void Simulation::computeAngleIntegrated(const std::map<lmPair,std::vector<std::complex<double>>>& partialSpectra)
+{   
+    int Ne = getCtx().observables.getNe();
+    int nlm = getCtx().angular.getNblocks();
+    double Emin = getCtx().observables.getEmin();
+
+    std::ofstream pesFiles("misc/pes.txt");
+    std::vector<std::complex<double>> pes(Ne);
+    
+    for (int blockIdx = 0; blockIdx < nlm; ++blockIdx)
+    {   
+        lmPair lm_pair = getCtx().angular.getBlockMap().at(blockIdx);
+        int l = lm_pair.first;
+        int m = lm_pair.second;
+
+        std::vector<std::complex<double>> partialSpectrum = partialSpectra.at(std::make_pair(l,m));
+
+        std::vector<std::complex<double>> magSq(Ne);
+        for (size_t idx = 0; idx < partialSpectrum.size(); ++idx)
+        {
+            magSq[idx] = partialSpectrum[idx] * std::conj(partialSpectrum[idx]);
+        }
+
+        for (size_t idx = 0; idx < magSq.size(); ++idx)
+        {
+            pes[idx] += magSq[idx];
+        }
+    }
+    
+
+    for (size_t idx = 1; idx < pes.size(); ++idx)
+    {   
+        std::complex<double> val = pes[idx];
+        val /= ((2*M_PI)*(2*M_PI)*(2*M_PI));
+        pesFiles << idx*Emin << " " << val.real() << " " << "\n";
+    }
+
+    pesFiles.close();
+}
+
+void Simulation::computeAngleResolved(const std::map<lmPair,std::vector<std::complex<double>>>& partialSpectra,std::map<std::pair<double, int>,double> phases)
+{   
+    int Ne = getCtx().observables.getNe();
+    double Emin = getCtx().observables.getEmin();
+
+        std::ofstream padFiles("misc/pad.txt");
+        std::vector<double> theta_range;
+        std::vector<double> phi_range;
+
+        if (getCtx().observables.getSlice() == "XZ")
+        {
+            for (double theta = 0; theta <= M_PI; theta += 0.01) 
+            {
+                theta_range.push_back(theta);
+            }
+
+            phi_range  = {0.0,M_PI};
+        }
+        if (getCtx().observables.getSlice() == "XY")
+        {
+            theta_range = {M_PI/ 2.0};
+
+            for (double phi = 0; phi < 2.0*M_PI; phi += 0.01) 
+            {
+                phi_range.push_back(phi);
+            }
+
+        }
+        for (int EIdx = 1; EIdx <= Ne; ++EIdx)
+        {   
+
+            double E = EIdx*Emin;
+            double k = std::sqrt(2.0*E);
+
+            for (auto& theta : theta_range)
+            {
+                for (auto& phi : phi_range)
+                {   
+                    std::complex<double> pad_amplitude {};
+                    for (const auto& pair: partialSpectra)
+                    {
+                        int l = pair.first.first;
+                        int m = pair.first.second;
+
+                        std::complex<double> sph_term = compute_Ylm(l,m,theta,phi);
+
+                        double partial_phase = phases[std::make_pair(E,l)];
+                        std::complex<double> partial_amplitude = pair.second[EIdx - 1];
+
+                        std::complex<double> phase_factor = std::exp(std::complex<double>(0.0,3*l*M_PI/2.0 + partial_phase));
+
+                        pad_amplitude += sph_term*phase_factor*partial_amplitude;
+
+                    }
+
+                    double pad_prob = std::norm(pad_amplitude);
+                    pad_prob/=((2*M_PI)*(2*M_PI)*(2*M_PI));
+                    pad_prob/=k;
+
+                    padFiles << E << " " << theta << " " << phi << " " << pad_prob << "\n";
+                }
+            }
+        }
+}
+
+void Simulation::computePhotoelectronSpectrum()
+{
+    if (getRank() != 0)
+    {
+        return;
+    }
+
+    if (!getPESStatus())
+    {
+        return;
+    }
+
+    auto start_pes = MPI_Wtime();
+
+    auto S = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,getCtx().basis.getNbasis(),getCtx().basis.getNbasis(),2*getCtx().basis.getDegree() + 1};
+    populateRadialMatrix(RadialMatrixType::S,S,false);
+
+    std::string filePath = getTDSEOutput() + std::string("/tdse.h5");
+    PetscHDF5 viewer{PETSC_COMM_SELF,filePath,FILE_MODE_READ};
+    std::string groupName = "";
+    std::string vectorName = "psiFinal";
+    auto finalState = viewer.loadVector(groupName, vectorName,getCtx().basis.getNbasis() * getCtx().angular.getNblocks());
+
+    projectOutBoundStates(finalState,S);
+
+    std::vector<std::complex<double>> expandedState = expandState(finalState);
+
+
+    std::map<lmPair,std::vector<std::complex<double>>> partialSpectra;
+    std::map<std::pair<double, int>,double> phases;
+
+    std::tie(partialSpectra,phases) = computePartialSpectra(expandedState);
+
+    computeAngleIntegrated(partialSpectra);
+    computeAngleResolved(partialSpectra,phases);
+
+    auto end_pes = MPI_Wtime();
+    PetscPrintf(PETSC_COMM_SELF,"Computed Photoelectron Spectrum:  %f seconds \n\n", end_pes -  start_pes);
+}
+
+double Simulation::computeBoundPopulation(int n_bound, int l_bound, const Vector& state)
+{
+
+    if ((l_bound >= n_bound) || (n_bound > getCtx().tise.getNmax()))
+    {
+        return 0.0;
+    }
+    
+
+    double probability = 0;
+
+    std::string filePath = getTISEOutput() + std::string("/tise.h5;");
+    PetscHDF5 viewer{PETSC_COMM_SELF, filePath, FILE_MODE_READ};
+
+    std::string eigenvectorGroup = "eigenvectors";
+    std::string vectorName = std::string("psi_") + std::to_string(n_bound) + std::string("_")  + std::to_string(l_bound);
+    auto boundState = viewer.loadVector(eigenvectorGroup, vectorName, getCtx().basis.getNbasis());
+
+  
+
+
+   
+
+    auto S = Matrix{PETSC_COMM_SELF,PETSC_DECIDE,PETSC_DECIDE,getCtx().basis.getNbasis(),getCtx().basis.getNbasis(),2*getCtx().basis.getDegree() + 1};
+    populateRadialMatrix(RadialMatrixType::S,S,false);
+
+    for (int blockIdx = 0; blockIdx < getCtx().angular.getNblocks(); ++blockIdx)
+    {
+
+
+        std::pair<int, int> lmPair = getCtx().angular.getBlockMap().at(blockIdx);
+        int l = lmPair.first;
+        
+
+        if (!(l == l_bound))
+        {   
+            continue;
+        }
+
+       
+
+        int start = blockIdx * getCtx().basis.getNbasis();
+        auto is = IndexSet{PETSC_COMM_SELF, getCtx().basis.getNbasis(), start, 1};
+
+        Vector stateBlock{};
+        VecGetSubVector(state.get(), is.get(), &stateBlock.get());
+
+
+        std::complex<double> projection = innerProduct(boundState,S,stateBlock);
+        probability += std::norm(projection);
+
+        VecRestoreSubVector(state.get(), is.get(), &stateBlock.get());
+    }
+    return probability;
+}
+
+void Simulation::computeBoundDistribution()
+{
+    if ((getRank() != 0) || (!getBOUNDStatus()))
+    {
+        return;
+    }
+
+    std::ofstream file(std::string("misc/") + std::string("bound_pops.txt"));
+    file << std::fixed << std::setprecision(15);
+
+    std::string filePath = getTDSEOutput() + std::string("/tdse.h5");
+    PetscHDF5 viewer{PETSC_COMM_SELF,filePath,FILE_MODE_READ};
+    std::string groupName = "";
+    std::string vectorName = "psiFinal";
+    auto finalState = viewer.loadVector(groupName, vectorName,getCtx().basis.getNbasis() * getCtx().angular.getNblocks());
+
+    for (int n = 1; n <= getCtx().tise.getNmax(); ++n)
+    {
+        for (int l = 0; l < n; ++l)
+        {   
+            double pop = computeBoundPopulation(n,l,finalState);
+            file << n << " " << l << " " << pop << '\n';
+        }
+    }
+    file.close();
+}
+
+
+
+// void Observables::printConfiguration(int rank)
+// {
+//     if (rank == 0)
+//     {
+//         std::cout << std::setfill('\\') << std::setw(24) << "" << "\n\n";
+//         std::cout << "Observables Configuration: " << "\n\n";
+//         std::cout << std::setfill('\\') << std::setw(24) << "" << "\n\n";
+        
+//         std::cout << "Block :  projOutBound: " << getProjOut() << "\n\n";
+//     }
+// }

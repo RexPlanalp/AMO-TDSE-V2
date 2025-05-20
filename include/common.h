@@ -9,6 +9,7 @@
 #include "Laser.h"
 #include "TDSE.h"
 #include "TISE.h"
+#include "Observables.h"
 
 
 

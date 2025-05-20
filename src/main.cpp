@@ -34,14 +34,17 @@ int main(int argc, char* argv[])
     Angular angular{input,laser,tdse};
     Atom atom{input};
     Basis basis{input,box};
+    Observables observables{input};
 
-    SimulationContext ctx = {tise,tdse,box,laser,angular,atom,basis};
+    SimulationContext ctx = {tise,tdse,box,laser,angular,atom,basis,observables};
 
     Simulation simulation{size,rank,communicator,input,ctx};
 
     simulation.solveTISE();
     simulation.solveTDSE();
-
+    simulation.computeBlockDistribution();
+    simulation.computeBoundDistribution();
+    simulation.computePhotoelectronSpectrum();
 
 
 
