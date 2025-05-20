@@ -15,7 +15,8 @@ void Simulation::solveTISE()
     auto total_start = MPI_Wtime();
 
     // Create HDF5 File to store output
-    PetscHDF5 viewer{PETSC_COMM_WORLD, getTISEOutput(), FILE_MODE_WRITE};
+    std::string filePath = getTISEOutput() + std::string("/tise.h5");
+    PetscHDF5 viewer{PETSC_COMM_WORLD, filePath, FILE_MODE_WRITE};
     
     // Create Kinetic Matrix
     auto K = Matrix{PETSC_COMM_WORLD,PETSC_DECIDE,PETSC_DECIDE,getCtx().basis.getNbasis(),getCtx().basis.getNbasis(),2*getCtx().basis.getDegree() + 1};
@@ -241,7 +242,11 @@ void Simulation::populateRadialMatrix(RadialMatrixType Type,Matrix& matrix,bool 
                 integrand = &RadialElements::HIntegrand;
             }
         break;
+    }
 
+    if (!integrand)
+    {
+        return;
     }
 
 

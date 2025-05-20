@@ -29,9 +29,15 @@ class Simulation
         , m_imageOutput{input.getJSON().at("Simulation").at("imageOutput")}
         , m_tiseOutput{input.getJSON().at("Simulation").at("tiseOutput")}
         , m_tdseOutput{input.getJSON().at("Simulation").at("tdseOutput")}
-        {}
-
+        {
+            if (getCtx().tise.getStatus())
+            {
+                createDirectory(getTISEOutput(),getRank());
+            }
+        }
+        
         const SimulationContext& getCtx() const {return m_ctx;}
+        PetscMPIInt getRank() const {return m_rank;}
         const std::string& getTISEOutput() const {return m_tiseOutput;}
 
 
