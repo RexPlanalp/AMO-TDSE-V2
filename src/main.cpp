@@ -39,6 +39,8 @@ int main(int argc, char* argv[])
 
     Simulation simulation{size,rank,communicator,input,ctx};
 
+    simulation.solveTISE();
+
 
 
 
@@ -51,7 +53,7 @@ int main(int argc, char* argv[])
     // tdse.solve(rank,tise,basis,angular,atom,laser);
     
 
-    Observables observables{input};
+    //Observables observables{input};
     // observables.computeDistribution(rank,basis,tdse,tise,angular);
     // observables.computePhotoelectronSpectrum(rank,tise,tdse,angular,basis,box,atom);
     // observables.computeBoundDistribution(rank,basis,angular,tise,tdse);

@@ -4,7 +4,6 @@
 
 #include "Input.h"
 
-
 struct SimulationContext
 {   
     TISE tise{};
@@ -31,6 +30,14 @@ class Simulation
         , m_tiseOutput{input.getJSON().at("Simulation").at("tiseOutput")}
         , m_tdseOutput{input.getJSON().at("Simulation").at("tdseOutput")}
         {}
+
+        const SimulationContext& getCtx() const {return m_ctx;}
+        const std::string& getTISEOutput() const {return m_tiseOutput;}
+
+
+        // Public Methods
+        void solveTISE();
+
   
     private:
         // List Initialized
@@ -43,7 +50,10 @@ class Simulation
         std::string m_tiseOutput{};
         std::string m_tdseOutput{};
 
+        std::string m_eigenvalueGroup = "eigenvalues";
+        std::string m_eigenvectorGroup = "eigenvectors";
 
-
-      
+        // Private Methods
+        void populateAngularMatrix(AngularMatrixType Type, Matrix& matrix);
+        void populateRadialMatrix(RadialMatrixType Type,Matrix& matrix,bool use_ecs);
 };      

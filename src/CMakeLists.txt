@@ -38,13 +38,15 @@ set(INCLUDEDIRS
 set(SOURCELIST
 
     "${PROJECT_SOURCE_DIR}/src/main.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Simulation.cpp"
+
     "${PROJECT_SOURCE_DIR}/src/Box.cpp"
     "${PROJECT_SOURCE_DIR}/src/Angular.cpp"
     "${PROJECT_SOURCE_DIR}/src/Laser.cpp"
     "${PROJECT_SOURCE_DIR}/src/Atom.cpp"
     "${PROJECT_SOURCE_DIR}/src/Basis.cpp"
     "${PROJECT_SOURCE_DIR}/src/TISE.cpp"
-    "${PROJECT_SOURCE_DIR}/src/TDSE.cpp"
+    #"${PROJECT_SOURCE_DIR}/src/TDSE.cpp"
     #"${PROJECT_SOURCE_DIR}/src/Observables.cpp"
     
     

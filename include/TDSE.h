@@ -5,7 +5,7 @@
 #include "PetscWrappers/PetscVec.h"
 #include "TISE.h"
 #include "Basis.h"
-#include "Angular.h"
+
 
 #include "PetscWrappers/PetscMat.h"
 
@@ -27,28 +27,28 @@ class TDSE
 
         bool getStatus() const {return status;}
         const std::string& getOutputPath() const {return outputPath;}
-        const int getInitialN() const {return initialNLM[0];}
-        const int getInitialL() const {return initialNLM[1];}
-        const int getInitialM() const {return initialNLM[2];}
+        int getInitialN() const {return initialNLM[0];}
+        int getInitialL() const {return initialNLM[1];}
+        int getInitialM() const {return initialNLM[2];}
         PetscReal getTol() const {return tolerance;}
         PetscInt getMaxIter() const {return maxIter;}
         PetscInt getRestart() const {return restart;}
         bool getHHGStatus() const {return hhgStatus;}
 
-        void solve(int rank,const TISE& tise,const Basis& basis, const Angular& angular, const Atom& atom, const Laser& laser);
-        void printConfiguration(int rank);
+        //void solve(int rank,const TISE& tise,const Basis& basis, const Angular& angular, const Atom& atom, const Laser& laser);
+        //void printConfiguration(int rank);
 
-        Vector loadInitialState(const TISE& tise,const Basis& basis, const Angular& angular);
-        std::pair<Matrix,Matrix> constructAtomicInteraction(const Basis& basis, const Angular& angular,const Atom& atom, const Laser& laser);
+        //Vector loadInitialState(const TISE& tise,const Basis& basis, const Angular& angular);
+        //std::pair<Matrix,Matrix> constructAtomicInteraction(const Basis& basis, const Angular& angular,const Atom& atom, const Laser& laser);
         
-        Matrix constructZInteraction(const Basis& basis, const Angular& angular);
-        std::pair<Matrix,Matrix> constructXYInteraction(const Basis& basis, const Angular& angular);
+        //Matrix constructZInteraction(const Basis& basis, const Angular& angular);
+        //std::pair<Matrix,Matrix> constructXYInteraction(const Basis& basis, const Angular& angular);
 
-        Matrix constructXHHG(const Basis& basis, const Angular& angular);
-        Matrix constructYHHG(const Basis& basis, const Angular& angular);
-        Matrix constructZHHG(const Basis& basis, const Angular& angular);
+        // Matrix constructXHHG(const Basis& basis, const Angular& angular);
+        // Matrix constructYHHG(const Basis& basis, const Angular& angular);
+        // Matrix constructZHHG(const Basis& basis, const Angular& angular);
 
-        Matrix constructAtomicS(const Basis& basis, const Angular& angular);
+        // Matrix constructAtomicS(const Basis& basis, const Angular& angular);
 
     private:
         Matrix kroneckerProduct(const Matrix& A, const Matrix& B, PetscInt nnz_A, PetscInt nnz_B);

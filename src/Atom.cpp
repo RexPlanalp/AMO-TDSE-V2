@@ -7,6 +7,7 @@ void Atom::buildPotential()
     {
         m_potential  = Potentials::hydrogen;
         m_derivative = Potentials::hydrogenDeriv;
+        m_type = RadialMatrixType::H;
     }
 }
 
