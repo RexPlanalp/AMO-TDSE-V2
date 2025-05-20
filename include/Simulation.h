@@ -1,63 +1,45 @@
 #pragma once
 
-#include "nlohmann/json.hpp"
-#include <string>
-#include "mpi.h"
+#include "common.h"
 
-#include "Box.h"
-#include "Angular.h"
-#include "Basis.h"
-#include "Laser.h"
-#include "Atom.h"
-#include "misc.h"
-#include "TISE.h"
+#include "Input.h"
+
+
+struct SimulationContext
+{   
+    TISE tise{};
+    TDSE tdse{};
+    Box box{};
+    Laser laser{};
+    Angular angular{};
+    Atom atom{};
+    Basis basis{};
+};
+
 
 class Simulation
 {   
     public:
-        Simulation() = delete;
 
-        explicit Simulation(const nlohmann::json& inputPar, int rank, int size,  MPI_Comm comm)
-        : comm{comm}, size{size}, rank{rank}
-        , box{inputPar}
-        , angular{inputPar}
-        , basis{inputPar,box}
-        , atom{inputPar}
-        , laser{inputPar}
-        , tise{inputPar}
+        explicit Simulation(PetscMPIInt size, PetscMPIInt rank, MPI_Comm communicator, SimulationContext ctx)
+        : m_size{size}
+        , m_rank{rank}
+        , m_communicator{communicator}
+        , m_ctx{ctx}
+        {}
+  
         
-        {
+        
 
-            createDirectory(rank, "misc");
-            createDirectory(rank, "images");
-
-            std::array<int,3> initial_state= inputPar.at("TDSE").at("initial_state").get<std::array<int,3>>();
-            angular.buildMaps(laser,initial_state);
-
-            basis,dumpTo(box,"misc",rank);
-            angular.dumpTo("misc",rank);
-            laser.dumpTo("misc",rank);
-        }
-
-        void solveTISE()
-        {
-            tise.solve(basis,atom, angular);
-        }
-    
        
         
     
     private:
-        // Member List Initialized
-        MPI_Comm comm{};
-        int size{};
-        int rank{};
+        PetscMPIInt m_size{};
+        PetscMPIInt m_rank{};
+        MPI_Comm m_communicator{};
 
-        // Default InitializedBox box;
-        Box box;
-        Angular angular;
-        Basis Basis;
-        Atom atom;
-        Laser laser;
-        TISE tise;
+        SimulationContext m_ctx{};
+
+      
 };      

@@ -19,7 +19,10 @@ class Basis
     };
 
     public:
-        explicit Basis(const Input& input)
+        Basis() = default;
+
+
+        explicit Basis(const Input& input,const Box& box)
         : nbasis{input.getJSON().at("Basis").at("nbasis")}
         , order{input.getJSON().at("Basis").at("order")}
         , R0{input.getJSON().at("Basis").at("R0r")}
@@ -31,6 +34,8 @@ class Basis
             weights = GaussLegendre::RootsAndWeights.at(order).second;
             
             eta *= M_PI;
+
+            buildKnots(box);
         }
 
         int getNbasis() const {return nbasis;}

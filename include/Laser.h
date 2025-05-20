@@ -6,81 +6,77 @@
 class Laser
 {   
     public:
+        Laser() = default;
+
+
         explicit Laser(const Input& input)
-        : N_cycles{input.getJSON().at("Laser").at("N")}
-        , dt{input.getJSON().at("Laser").at("timeSpacing")}
-        , w{input.getJSON().at("Laser").at("w")}
-        , I{input.getJSON().at("Laser").at("I")}
-        , polarization{input.getJSON().at("Laser").at("polarization").get<std::array<double,3>>()}
-        , poynting{input.getJSON().at("Laser").at("poynting").get<std::array<double,3>>()}
-        , ell{input.getJSON().at("Laser").at("ell")}
-        , cep{input.getJSON().at("Laser").at("cepr")}
+        : m_Ncycles{input.getJSON().at("Laser").at("N")}
+        , m_dt{input.getJSON().at("Laser").at("timeSpacing")}
+        , m_w{input.getJSON().at("Laser").at("w")}
+        , m_I{input.getJSON().at("Laser").at("I")}
+        , m_polarization{input.getJSON().at("Laser").at("polarization").get<std::array<double,3>>()}
+        , m_poynting{input.getJSON().at("Laser").at("poynting").get<std::array<double,3>>()}
+        , m_ell{input.getJSON().at("Laser").at("ell")}
+        , m_cep{input.getJSON().at("Laser").at("cepr")}
         {
-            I /= Constants::I_AU;
-            A_0 = std::sqrt(I) / getW();
-
-            t_max = getN() * 2 * M_PI / getW();
-            cep *= M_PI;
-            
-            Nt = static_cast<int>(std::round(getTmax() / getTimeSpacing())) + 1;
-            times.resize(Nt);
-            for (int idx = 0; idx < Nt; ++idx)
-            {
-                times[idx] = idx * getTimeSpacing();
-            }
-
-            ellipticity = crossProduct(getPolarization(),getPoynting());
-
-            normalize(polarization);
-            normalize(poynting);
-            normalize(ellipticity);
-            buildNonzeroComponents();
+            buildParameters();
+            buildNt();
+            buildTimes();
+            buildVectors();
         }
 
-        double getN() const {return N_cycles;} 
-        double getW() const {return w;} 
-        double getTimeSpacing() const {return dt;} 
-        double getI() const {return I;} 
-        double getA0() const {return A_0;} 
-        double getTmax() const {return t_max;}
-        double getEll() const {return ell;}
-        double getCEP() const {return cep;}
-        int getNt() const {return Nt;}
-        const std::array<double,3>& getPolarization() const {return polarization;}
-        const std::array<double,3>& getPoynting() const {return poynting;}
-        const std::array<double,3>& getEllipticity() const {return ellipticity;}
-        const std::array<int,3>& getComponents() const {return components;}
+        // Build Methods
+        void buildParameters();
+        void buildNt();
+        void buildTimes();
+        void buildVectors();
 
-        void printConfiguration(int rank);
-        double getTime(int i) const;
-        void dumpTo(const std::string& directory,int rank);
+
+        // Getters
+        double getN() const {return m_Ncycles;} 
+        double getW() const {return m_w;} 
+        double getTimeSpacing() const {return m_dt;} 
+        double getI() const {return m_I;} 
+        double getA0() const {return m_A_0;} 
+        double getTmax() const {return m_Tmax;}
+        double getEll() const {return m_ell;}
+        double getCEP() const {return m_cep;}
+        int getNt() const {return m_Nt;}
+        const std::array<double,3>& getPolarization() const {return m_polarization;}
+        const std::array<double,3>& getPoynting() const {return m_poynting;}
+        const std::array<double,3>& getEllipticity() const {return m_ellipticity;}
+        const std::array<int,3>& getComponents() const {return m_components;}
+        double operator[](int i) const;
+
+
+        // Public Methods
         double A(double t, int idx) const;
 
+        
 
 
 
     
     private:  
         // Member List initialized
-        double N_cycles{};
-        double dt{};
-        double w{};
-        double I{};
-        std::array<double,3> polarization{};
-        std::array<double,3> poynting{};
-        double ell{};
-        double cep{};
+        double m_Ncycles{};
+        double m_dt{};
+        double m_w{};
+        double m_I{};
+        std::array<double,3> m_polarization{};
+        std::array<double,3> m_poynting{};
+        double m_ell{};
+        double m_cep{};
 
         // Derived
-        double A_0{};
-        double t_max{};
-        int Nt{};
-        std::array<double,3> ellipticity{};
-        std::array<int,3> components{};
-        std::vector<double> times{};
+        double m_A_0{};
+        double m_Tmax{};
+        int m_Nt{};
+        std::array<double,3> m_ellipticity{};
+        std::array<int,3> m_components{};
+        std::vector<double> m_times{};
 
-        // Member functions
-        void buildNonzeroComponents();
+        //  Privae  Member functions
         double sin2_envelope(double t) const;
         void validateInput();
 

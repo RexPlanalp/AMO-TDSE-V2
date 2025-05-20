@@ -5,41 +5,33 @@
 class Box 
 {
     public:
+        Box() = default;
+
 
         explicit Box(const Input& input) 
-        : gridSize{input.getJSON().at("Box").at("gridSize")}
-        , gridSpacing{input.getJSON().at("Box").at("gridSpacing")}
+        : m_gridSize{input.getJSON().at("Box").at("gridSize")}
+        , m_gridSpacing{input.getJSON().at("Box").at("gridSpacing")}
         {   
-           
-
-            Nr = static_cast<int>(std::round(getGridSize() / getGridSpacing())) + 1;
-
-            positions.resize(Nr);
-            for (int idx = 0; idx < Nr; ++idx)
-            {
-                positions[idx] = idx * getGridSpacing();
-            }
-
-        
-
+            buildNr();
+            buildPositions();
         }
 
-        double getGridSize() const {return gridSize;}
-        double getGridSpacing() const {return gridSpacing;}
-        int getNr() const {return Nr;}
+        // Building Methods
+        void buildNr();
+        void buildPositions();
 
-        double getPosition(int i) const;
-        void printConfiguration(int rank) const;
+        // Getters
+        double getGridSize() const {return m_gridSize;}
+        double getGridSpacing() const {return m_gridSpacing;}
+        int getNr() const {return m_Nr;}
+        double operator[](int i) const;
 
     private:
-        // Member List Initialized
-        double gridSize{};
-        double gridSpacing{};
-        
-        // Derived
-        int Nr{};
-        std::vector<double> positions{};
+        // List Initialized
+        double m_gridSize{};
+        double m_gridSpacing{};
 
-        // Member Functions
-        void validateInput();
+        // Derived
+        int m_Nr{};
+        std::vector<double> m_positions{};
 };

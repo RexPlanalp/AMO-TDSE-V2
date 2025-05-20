@@ -12,64 +12,49 @@
 #include "Observables.h"
 
 
-#include <chrono>
-#include "PetscWrappers/PetscMat.h"
-#include "petsc.h"
+#include "Simulation.h"
 
 
-int main(int argc, char **argv)
+int main(int argc, char* argv[])
 {   
-    
     SlepcInitialize(&argc, &argv, nullptr, nullptr);
-    MPI_Comm comm = PETSC_COMM_WORLD;
+    
+    MPI_Comm communicator = PETSC_COMM_WORLD;
     PetscMPIInt rank, size;
-    MPI_Comm_rank(comm, &rank);
-    MPI_Comm_size(comm, &size);
+    MPI_Comm_rank(communicator, &rank);
+    MPI_Comm_size(communicator, &size);
 
     std::string inputPath = argv[1];
+    Input input{inputPath};
 
-    
-    
-    Input input{rank,inputPath};
-
+    TISE tise{input};
+    TDSE tdse{input};
     Box box{input};
-    box.printConfiguration(rank);
-
     Laser laser{input};
-    laser.printConfiguration(rank);
-    laser.dumpTo("misc",rank);
-
-    Angular angular{input};
-    angular.printConfiguration(rank);
-    angular.dumpTo("misc",rank);
-
+    Angular angular{input,laser,tdse};
     Atom atom{input};
-    atom.printConfiguration(rank);
+    Basis basis{input,box};
 
-    Basis basis{input};
-    basis.buildKnots(box);
-    basis.printConfiguration(rank);
-    //basis,dumpTo(box,"misc",rank);
+    SimulationContext ctx = {tise,tdse,box,laser,angular,atom,basis};
 
-    TISE tise{rank,input};
-    tise.printConfiguration(rank);
-    tise.solve(basis,atom,angular);
+    Simulation simulation{size,rank,communicator,ctx};
 
+
+
+
+
+    
+    
    
 
-    TDSE tdse{rank,input};
-    tdse.printConfiguration(rank);
 
-    angular.buildMaps(laser,tdse.getInitialNLM());
-
-
-    tdse.solve(rank,tise,basis,angular,atom,laser);
+    // tdse.solve(rank,tise,basis,angular,atom,laser);
     
 
     Observables observables{input};
-    observables.computeDistribution(rank,basis,tdse,tise,angular);
-    observables.computePhotoelectronSpectrum(rank,tise,tdse,angular,basis,box,atom);
-    observables.computeBoundDistribution(rank,basis,angular,tise,tdse);
+    // observables.computeDistribution(rank,basis,tdse,tise,angular);
+    // observables.computePhotoelectronSpectrum(rank,tise,tdse,angular,basis,box,atom);
+    // observables.computeBoundDistribution(rank,basis,angular,tise,tdse);
 
 
 

@@ -10,8 +10,12 @@
 #include "PetscWrappers/PetscMat.h"
 
 class TDSE
-{   public:
-        explicit TDSE(int rank,const Input& input)
+{   
+    public:
+        TDSE() = default;
+
+
+        explicit TDSE(const Input& input)
         : status{input.getJSON().at("TDSE").at("status")}
         , outputPath{input.getJSON().at("TDSE").at("outputPath")}
         , initialNLM{input.getJSON().at("TDSE").at("initialNLM").get<std::array<int,3>>()}
@@ -19,13 +23,13 @@ class TDSE
         , maxIter{input.getJSON().at("TDSE").at("maxIter")}
         , restart{input.getJSON().at("TDSE").at("restart")}
         , hhgStatus{input.getJSON().at("TDSE").at("HHG")}
-        {
-            createDirectory("TDSE",rank);
-        }
+        {}
 
         bool getStatus() const {return status;}
         const std::string& getOutputPath() const {return outputPath;}
-        const std::array<int,3>& getInitialNLM() const {return initialNLM;}
+        const int getInitialN() const {return initialNLM[0];}
+        const int getInitialL() const {return initialNLM[1];}
+        const int getInitialM() const {return initialNLM[2];}
         PetscReal getTol() const {return tolerance;}
         PetscInt getMaxIter() const {return maxIter;}
         PetscInt getRestart() const {return restart;}

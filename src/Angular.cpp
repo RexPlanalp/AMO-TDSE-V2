@@ -3,40 +3,34 @@
 #include "Angular.h"
 #include "Laser.h"
 
-void Angular::buildMaps(const Laser& laser,const std::array<int,3>& initial_state)
+void Angular::buildMaps(const Laser& laser,const TDSE& tdse)
 {   
-    lm_to_block.emplace();
-    block_to_lm.emplace();
-
-    int l_i = initial_state[1];
-    int m_i = initial_state[2];
-
     if (laser.getComponents()[2] && !(laser.getComponents()[0] || laser.getComponents()[1]))
     {
-        buildZ(m_i);
+        buildZ(tdse.getInitialM());
     }
     else if ((laser.getComponents()[0] || laser.getComponents()[1]) && !laser.getComponents()[2])
     {
-        buildXY(l_i,m_i);
+        buildXY(tdse.getInitialL(),tdse.getInitialM());
     }
     else
     {
         buildXYZ();
     }
 
-    for (const auto& pair : lm_to_block)
+    for (const auto& pair : m_lmToBlock)
     {
-        block_to_lm[pair.second] = pair.first;
+        m_blockTolm[pair.second] = pair.first;
     }
 
-    nlm = lm_to_block.size();
+    m_Nblocks = m_lmToBlock.size();
 }
 
 void Angular::buildZ(int m_i)
 {
     for (int l = 0; l <= getLmax(); ++l)
     {
-        lm_to_block[lm_pair(l,m_i)] = l;
+        m_lmToBlock[lmPair(l,m_i)] = l;
     }
 }
 
@@ -60,7 +54,7 @@ void Angular::buildXYZ()
     {
         for (int m = -l; m <= l; ++m)
         {
-            lm_to_block[lm_pair(l,m)] = block_idx;
+            m_lmToBlock[lmPair(l,m)] = block_idx;
             block_idx++;
         }
     }
@@ -78,7 +72,7 @@ void Angular::buildEven()
         {
             if (temp_idx % 2 == 0)
             {
-                lm_to_block[lm_pair(l,m)] = block_idx;
+                m_lmToBlock[lmPair(l,m)] = block_idx;
                 block_idx++;
             }
             temp_idx++;
@@ -98,7 +92,7 @@ void Angular::buildOdd()
         {
             if (temp_idx % 2 == 0)
             {
-                lm_to_block[lm_pair(l,m)] = block_idx;
+                m_lmToBlock[lmPair(l,m)] = block_idx;
                 block_idx++;
             }
             temp_idx++;
@@ -106,40 +100,40 @@ void Angular::buildOdd()
     }
 }
 
-void Angular::printConfiguration(int rank)
-{
-    if (rank == 0)
-    {   
-        std::cout << std::setfill('\\') << std::setw(24) << "" << "\n\n";
-        std::cout << "Angular Configuration: " << "\n\n";
-        std::cout << std::setfill('\\') << std::setw(24) << "" << "\n\n";
+// void Angular::printConfiguration(int rank)
+// {
+//     if (rank == 0)
+//     {   
+//         std::cout << std::setfill('\\') << std::setw(24) << "" << "\n\n";
+//         std::cout << "Angular Configuration: " << "\n\n";
+//         std::cout << std::setfill('\\') << std::setw(24) << "" << "\n\n";
 
-        std::cout << "lmax: " << getLmax() << "\n\n";
-        std::cout << "mmax: " << getMmax() << "\n\n";
-        std::cout << "mmin: " << getMmin() << "\n\n";
-        std::cout << "nlm: "  << getNlm() << "\n\n";
-    }
-}
+//         std::cout << "lmax: " << getLmax() << "\n\n";
+//         std::cout << "mmax: " << getMmax() << "\n\n";
+//         std::cout << "mmin: " << getMmin() << "\n\n";
+//         std::cout << "nlm: "  << getNlm() << "\n\n";
+//     }
+// }
 
 
-void Angular::dumpTo(const std::string& directory, int rank)
-{   
-    if (rank == 0)
-    {
-        std::string filename = directory + "/lm_map.txt";
+// void Angular::dumpTo(const std::string& directory, int rank)
+// {   
+//     if (rank == 0)
+//     {
+//         std::string filename = directory + "/lm_map.txt";
 
-        std::ofstream outFile(filename);
+//         std::ofstream outFile(filename);
 
-        if (!outFile)
-        {
-            std::cerr << "Error opening file: " << filename << '\n';
-        }
+//         if (!outFile)
+//         {
+//             std::cerr << "Error opening file: " << filename << '\n';
+//         }
 
-        for (const auto& entry : getLMMap()) 
-        {
-            outFile << entry.first.first << " " << entry.first.second << " " << entry.second << "\n";
-        }
+//         for (const auto& entry : getLMMap()) 
+//         {
+//             outFile << entry.first.first << " " << entry.first.second << " " << entry.second << "\n";
+//         }
 
-        outFile.close();
-    }
-}
+//         outFile.close();
+//     }
+// }
